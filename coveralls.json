@@ -19,6 +19,7 @@
   "skip_files": [
     "priv/",
     "test/",
+    "lib/release.ex",
     "lib/fixed_gear_web/telemetry.ex",
     "lib/fixed_gear_web/components/core_components.ex"
   ],
