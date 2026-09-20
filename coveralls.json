@@ -1,0 +1,31 @@
+{
+  "default_stop_words": [
+    "apply",
+    "defdata",
+    "defimpl",
+    "defmodule",
+    "defrecord",
+    "defstruct",
+    "defsum",
+    "def.+(.+\/\/.+).+do",
+    "live_dashboard",
+    "use"
+  ],
+
+  "custom_stop_words": [
+    "Logger."
+  ],
+
+  "skip_files": [
+    "priv/",
+    "test/",
+    "lib/fixed_gear_web/telemetry.ex",
+    "lib/fixed_gear_web/components/core_components.ex"
+  ],
+
+  "coverage_options": {
+    "minimum_coverage": 50,
+    "output_dir": "coverage/report",
+    "treat_no_relevant_lines_as_covered": true
+  }
+}
