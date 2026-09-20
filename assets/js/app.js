@@ -25,11 +25,124 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/fixed_gear"
 import topbar from "../vendor/topbar"
 
+const RankingList = {
+  mounted() {
+    this.positions = {}
+    this.expandedIds = []
+  },
+
+  beforeUpdate() {
+    this.positions = {}
+    this.expandedIds = []
+    this.rows().forEach((row) => {
+      this.positions[row.id] = row.getBoundingClientRect()
+      if (row.querySelector("[aria-expanded='true']")) {
+        this.expandedIds.push(row.id)
+      }
+    })
+  },
+
+  updated() {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const durationMs = reduce ? 0 : 450
+
+    this.rows().forEach((row) => {
+      const first = this.positions[row.id]
+      if (!first) {
+        return
+      }
+
+      const last = row.getBoundingClientRect()
+      const dx = first.left - last.left
+      const dy = first.top - last.top
+      if (Math.abs(dx) < 1 && Math.abs(dy) < 1) {
+        return
+      }
+
+      row.style.transform = "translate(" + dx + "px, " + dy + "px)"
+      row.style.transition = "none"
+      row.style.zIndex = this.expandedIds.indexOf(row.id) >= 0 ? "5" : "1"
+
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          row.style.transition = reduce
+            ? "none"
+            : "transform 450ms cubic-bezier(0.22, 1, 0.36, 1)"
+          row.style.transform = "translate(0, 0)"
+        })
+      })
+
+      const clear = function () {
+        row.style.transform = ""
+        row.style.transition = ""
+        row.style.zIndex = ""
+        row.removeEventListener("transitionend", clear)
+      }
+      row.addEventListener("transitionend", clear)
+    })
+
+    this.followExpanded(durationMs)
+  },
+
+  rows() {
+    return Array.prototype.slice.call(
+      this.el.querySelectorAll(":scope > [id^='bike-']")
+    )
+  },
+
+  followExpanded(delay) {
+    if (this.expandedIds.length === 0) {
+      return
+    }
+
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    const hook = this
+
+    window.setTimeout(function () {
+      const toolbar = document.getElementById("ranking-toolbar")
+      const topPad = toolbar ? toolbar.getBoundingClientRect().bottom : 0
+      const ids = hook.expandedIds
+
+      let target = null
+      for (let i = 0; i < ids.length; i++) {
+        const el = document.getElementById(ids[i])
+        if (!el) {
+          continue
+        }
+        const r = el.getBoundingClientRect()
+        if (r.bottom < topPad + 8 || r.top > window.innerHeight - 8) {
+          target = el
+          break
+        }
+      }
+      if (!target) {
+        target = document.getElementById(ids[0])
+      }
+      if (!target) {
+        return
+      }
+
+      target.classList.add("ranking-followed")
+      const r = target.getBoundingClientRect()
+      const hidden = r.bottom < topPad + 8 || r.top > window.innerHeight - 8
+      if (hidden) {
+        target.scrollIntoView({
+          behavior: reduce ? "auto" : "smooth",
+          block: "center"
+        })
+      }
+      window.setTimeout(function () {
+        target.classList.remove("ranking-followed")
+      }, 900)
+    }, delay)
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {RankingList, ...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits

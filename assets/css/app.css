@@ -103,3 +103,8 @@
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 
 /* This file is for your main application CSS */
+
+.ranking-followed {
+  box-shadow: inset 0 0 0 2px var(--color-primary);
+  border-radius: 1rem;
+}

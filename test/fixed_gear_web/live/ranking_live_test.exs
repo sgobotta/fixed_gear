@@ -9,6 +9,7 @@ defmodule FixedGearWeb.RankingLiveTest do
     {:ok, view, _html} = live(conn, ~p"/")
 
     assert has_element?(view, "#ranking")
+    assert has_element?(view, "#ranking-toolbar")
     assert has_element?(view, "#ranking-empty")
     assert has_element?(view, "#tab-weight")
     refute has_element?(view, "#cadence-form")

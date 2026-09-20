@@ -12,8 +12,11 @@ defmodule FixedGearWeb.RankingLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
-      <section class="space-y-8">
-        <header class="flex flex-col gap-6">
+      <section class="space-y-6">
+        <header
+          id="ranking-toolbar"
+          class="sticky top-0 z-20 -mx-4 flex flex-col gap-4 bg-base-100/95 px-4 py-4 backdrop-blur sm:mx-0 sm:px-0"
+        >
           <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div class="space-y-2">
               <p class="text-xs font-semibold tracking-[0.25em] text-base-content/50 uppercase">
@@ -81,6 +84,7 @@ defmodule FixedGearWeb.RankingLive do
 
         <div
           id="ranking"
+          phx-hook="RankingList"
           class="divide-y divide-base-300 overflow-hidden rounded-3xl border border-base-300 bg-base-100 shadow-sm"
         >
           <div
