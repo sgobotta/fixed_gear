@@ -2,14 +2,20 @@
 #
 #     mix run priv/repo/seeds.exs
 #
-# Set ADMIN_EMAIL / ADMIN_PASSWORD to override the local defaults.
+# Set ADMIN_EMAIL / ADMIN_PASSWORD. There is no default password because the
+# server may listen on every interface.
 
 alias FixedGear.Accounts
 alias FixedGear.Accounts.User
 alias FixedGear.Repo
 
 email = System.get_env("ADMIN_EMAIL", "admin@localhost")
-password = System.get_env("ADMIN_PASSWORD", "fixedgearadmin")
+
+password =
+  System.get_env("ADMIN_PASSWORD") ||
+    raise """
+    Set ADMIN_PASSWORD before seeding (for example in .env).
+    """
 
 case Accounts.get_user_by_email(email) do
   %User{} ->

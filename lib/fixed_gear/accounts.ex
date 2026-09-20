@@ -224,8 +224,16 @@ defmodule FixedGear.Accounts do
      `mix help phx.gen.auth`.
   """
   def login_user_by_magic_link(token) do
-    {:ok, query} = UserToken.verify_magic_link_token_query(token)
+    case UserToken.verify_magic_link_token_query(token) do
+      {:ok, query} ->
+        login_user_by_magic_link_query(query)
 
+      :error ->
+        {:error, :not_found}
+    end
+  end
+
+  defp login_user_by_magic_link_query(query) do
     case Repo.one(query) do
       # Prevent session fixation attacks by disallowing magic links for unconfirmed users with password
       {%User{confirmed_at: nil, hashed_password: hash}, _token}

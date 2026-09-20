@@ -37,7 +37,6 @@ defmodule FixedGearWeb.UserLive.Login do
         </div>
 
         <.form
-          :let={f}
           for={@form}
           id="login_form_magic"
           action={~p"/users/log-in"}
@@ -45,7 +44,8 @@ defmodule FixedGearWeb.UserLive.Login do
         >
           <.input
             readonly={!!@current_scope}
-            field={f[:email]}
+            field={@form[:email]}
+            id="login_form_magic_email"
             type="email"
             label={gettext("Email")}
             autocomplete="username"
@@ -61,7 +61,6 @@ defmodule FixedGearWeb.UserLive.Login do
         <div class="divider">{gettext("or")}</div>
 
         <.form
-          :let={f}
           for={@form}
           id="login_form_password"
           action={~p"/users/log-in"}
@@ -70,7 +69,8 @@ defmodule FixedGearWeb.UserLive.Login do
         >
           <.input
             readonly={!!@current_scope}
-            field={f[:email]}
+            field={@form[:email]}
+            id="login_form_password_email"
             type="email"
             label={gettext("Email")}
             autocomplete="username"

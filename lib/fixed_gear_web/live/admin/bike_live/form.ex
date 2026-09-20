@@ -146,6 +146,12 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
           >
             {error_to_string(err)}
           </p>
+          <p
+            :for={msg <- Enum.map(@form[:photo].errors, &translate_error/1)}
+            class="text-sm text-error"
+          >
+            {msg}
+          </p>
         </div>
 
         <footer class="mt-8">
@@ -225,7 +231,18 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
     save_bike(socket, socket.assigns.live_action, bike_params)
   end
 
-  defp save_bike(socket, :new, bike_params) do
+  defp save_bike(socket, action, bike_params) do
+    changeset = Bikes.change_bike(socket.assigns.bike, bike_params)
+
+    if changeset.valid? do
+      persist_bike(socket, action, bike_params)
+    else
+      {:noreply,
+       assign(socket, :form, to_form(Map.put(changeset, :action, :validate)))}
+    end
+  end
+
+  defp persist_bike(socket, :new, bike_params) do
     case Bikes.create_bike(bike_params, consume_photo(socket)) do
       {:ok, _bike} ->
         {:noreply,
@@ -238,7 +255,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
     end
   end
 
-  defp save_bike(socket, :edit, bike_params) do
+  defp persist_bike(socket, :edit, bike_params) do
     case Bikes.update_bike(
            socket.assigns.bike,
            bike_params,

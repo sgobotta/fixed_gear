@@ -412,6 +412,10 @@ defmodule FixedGear.AccountsTest do
                Accounts.login_user_by_magic_link(encoded_token)
     end
 
+    test "returns not found for a malformed token" do
+      assert {:error, :not_found} = Accounts.login_user_by_magic_link("!!!")
+    end
+
     test "raises when unconfirmed user has password set" do
       user = unconfirmed_user_fixture()
 

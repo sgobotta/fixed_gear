@@ -68,7 +68,7 @@ defmodule FixedGearWeb.Admin.BikeLive.FormTest do
       |> follow_redirect(conn, ~p"/admin/bikes")
 
     bike = FixedGear.Bikes.list_bikes() |> hd()
-    assert {^png, "image/jpeg"} = FixedGear.Bikes.get_bike_photo(bike.id)
+    assert {^png, "image/png"} = FixedGear.Bikes.get_bike_photo(bike.id)
   end
 
   test "rejects a non-image and still saves the bike", %{conn: conn} do
@@ -158,6 +158,43 @@ defmodule FixedGearWeb.Admin.BikeLive.FormTest do
       |> follow_redirect(conn, ~p"/admin/bikes")
 
     assert {^webp, "image/webp"} = FixedGear.Bikes.get_bike_photo(bike.id)
+  end
+
+  test "keeps the selected photo when other fields are invalid", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/admin/bikes/new")
+    {png, _type} = png_photo()
+
+    photo =
+      file_input(view, "#bike-form", :photo, [
+        %{
+          last_modified: 1_594_171_879_000,
+          name: "bike.png",
+          content: png,
+          type: "image/png"
+        }
+      ])
+
+    assert render_upload(photo, "bike.png")
+
+    html =
+      view
+      |> form("#bike-form",
+        bike: %{name: "", owner: "Cam", weight_kg: "7.000"}
+      )
+      |> render_submit()
+
+    assert html =~ dgettext("errors", "can't be blank")
+
+    {:ok, _view, _html} =
+      view
+      |> form("#bike-form",
+        bike: %{name: "Kept Photo", owner: "Cam", weight_kg: "7.000"}
+      )
+      |> render_submit()
+      |> follow_redirect(conn, ~p"/admin/bikes")
+
+    bike = FixedGear.Bikes.list_bikes() |> hd()
+    assert {^png, "image/png"} = FixedGear.Bikes.get_bike_photo(bike.id)
   end
 
   test "redirects unauthenticated visitors from the form", %{conn: _conn} do

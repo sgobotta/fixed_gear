@@ -139,6 +139,18 @@ defmodule FixedGearWeb.UserSessionControllerTest do
 
       assert redirected_to(conn) == ~p"/users/log-in"
     end
+
+    test "redirects when the magic link token is malformed", %{conn: conn} do
+      conn =
+        post(conn, ~p"/users/log-in", %{
+          "user" => %{"token" => "!!!"}
+        })
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               gettext("The link is invalid or it has expired.")
+
+      assert redirected_to(conn) == ~p"/users/log-in"
+    end
   end
 
   describe "DELETE /users/log-out" do

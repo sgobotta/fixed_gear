@@ -18,8 +18,18 @@ defmodule FixedGearWeb.BikePhotoControllerTest do
            )
   end
 
-  test "returns 404 when the bike has no photo", %{conn: conn} do
-    bike = bike_fixture()
+  test "returns 404 when the stored bytes are not a safe image", %{conn: conn} do
+    bike =
+      %FixedGear.Bikes.Bike{}
+      |> Ecto.Changeset.change(%{
+        name: "Unsafe",
+        owner: "Cam",
+        weight_kg: Decimal.new("7.000"),
+        photo: "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>",
+        photo_content_type: "image/svg+xml"
+      })
+      |> FixedGear.Repo.insert!()
+
     conn = get(conn, ~p"/bikes/#{bike}/photo")
     assert response(conn, 404)
   end

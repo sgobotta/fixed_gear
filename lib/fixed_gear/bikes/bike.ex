@@ -5,6 +5,7 @@ defmodule FixedGear.Bikes.Bike do
   import Ecto.Changeset
 
   alias FixedGear.Bikes.Calculations
+  alias FixedGear.Bikes.Photo
 
   @materials Calculations.materials()
   @tire_widths Calculations.tire_widths()
@@ -57,11 +58,16 @@ defmodule FixedGear.Bikes.Bike do
     |> validate_inclusion(:tire_width, @tire_widths)
   end
 
-  def put_photo(changeset, {data, content_type})
-      when is_binary(data) and is_binary(content_type) do
-    changeset
-    |> put_change(:photo, data)
-    |> put_change(:photo_content_type, content_type)
+  def put_photo(changeset, {data, _claimed_type}) when is_binary(data) do
+    case Photo.identify(data) do
+      {:ok, content_type} ->
+        changeset
+        |> put_change(:photo, data)
+        |> put_change(:photo_content_type, content_type)
+
+      :error ->
+        add_error(changeset, :photo, "must be a JPEG, PNG, or WebP")
+    end
   end
 
   def put_photo(changeset, _), do: changeset

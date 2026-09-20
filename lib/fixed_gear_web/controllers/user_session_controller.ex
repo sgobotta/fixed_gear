@@ -4,6 +4,12 @@ defmodule FixedGearWeb.UserSessionController do
   alias FixedGear.Accounts
   alias FixedGearWeb.UserAuth
 
+  def redirect_registration(conn, _params) do
+    conn
+    |> put_flash(:error, gettext("Registration is closed."))
+    |> redirect(to: ~p"/users/log-in")
+  end
+
   def create(conn, %{"_action" => "confirmed"} = params) do
     create(conn, params, gettext("User confirmed successfully."))
   end

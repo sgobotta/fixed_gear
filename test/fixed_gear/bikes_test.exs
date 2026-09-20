@@ -87,6 +87,26 @@ defmodule FixedGear.BikesTest do
       assert type == "image/png"
       assert data == elem(png_photo(), 0)
     end
+
+    test "ignores a claimed MIME type that does not match the bytes" do
+      {png, _type} = png_photo()
+
+      {:ok, bike} =
+        Bikes.create_bike(valid_bike_attributes(), {png, "image/svg+xml"})
+
+      assert {_data, "image/png"} = Bikes.get_bike_photo(bike.id)
+    end
+
+    test "rejects a non-image photo" do
+      assert {:error, changeset} =
+               Bikes.create_bike(
+                 valid_bike_attributes(),
+                 {"<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>",
+                  "image/svg+xml"}
+               )
+
+      assert "must be a JPEG, PNG, or WebP" in errors_on(changeset).photo
+    end
   end
 
   describe "update_bike/3" do
