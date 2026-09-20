@@ -2,6 +2,7 @@ defmodule FixedGearWeb.RankingComponents do
   @moduledoc false
 
   use Phoenix.Component
+  use Gettext, backend: FixedGearWeb.Gettext
 
   import FixedGearWeb.CoreComponents, only: [icon: 1]
 
@@ -75,7 +76,7 @@ defmodule FixedGearWeb.RankingComponents do
             />
           </span>
           <span class="sr-only">
-            {if @expanded, do: "Collapse", else: "Expand"}
+            {if @expanded, do: gettext("Collapse"), else: gettext("Expand")}
           </span>
         </div>
 
@@ -161,10 +162,13 @@ defmodule FixedGearWeb.RankingComponents do
         []
       end
 
+    displayed = if show_ambi?, do: assigns.ambidextrous, else: assigns.patches
+
     assigns =
       assigns
       |> assign(:marks, marks)
       |> assign(:show_ambi, show_ambi?)
+      |> assign(:displayed, displayed)
       |> assign(:spokes, [0, 120, 240])
 
     ~H"""
@@ -223,14 +227,20 @@ defmodule FixedGearWeb.RankingComponents do
           <span class="skid-wheel-ground" aria-hidden="true"></span>
           <span class="skid-sparks" aria-hidden="true"></span>
         </div>
-        <p class="font-mono text-lg leading-none font-semibold tabular-nums">
-          {@patches}
+        <p
+          id={"#{@id}-count"}
+          class="font-mono text-lg leading-none font-semibold tabular-nums"
+        >
+          {@displayed}
         </p>
       </div>
-      <p class="mt-1 ps-20 text-[11px] leading-none text-base-content/55 sm:ps-24">
-        <span class="skid-legend-one">one foot</span>
-        <span :if={@show_ambi} class="skid-legend-ambi mt-1 block">
-          {@ambidextrous} both feet
+      <p
+        :if={@show_ambi}
+        class="mt-1 ps-20 text-[11px] leading-none text-base-content/55 sm:ps-24"
+      >
+        <span class="skid-legend-ambi">{gettext("both pedals")}</span>
+        <span class="skid-legend-one mt-1 block">
+          {gettext("%{count} one foot", count: @patches)}
         </span>
       </p>
     </div>
@@ -290,7 +300,7 @@ defmodule FixedGearWeb.RankingComponents do
             </svg>
           </div>
           <span class="text-[11px] leading-none tracking-wide text-base-content/55 uppercase">
-            Wheel
+            {gettext("Wheel")}
           </span>
         </div>
 
@@ -323,7 +333,7 @@ defmodule FixedGearWeb.RankingComponents do
             </svg>
           </div>
           <span class="text-[11px] leading-none tracking-wide text-base-content/55 uppercase">
-            Pedal
+            {gettext("Pedal")}
           </span>
         </div>
       </div>
@@ -334,7 +344,7 @@ defmodule FixedGearWeb.RankingComponents do
           </p>
         </div>
         <p class="text-[11px] leading-none text-base-content/55">
-          wheel turns per pedal stroke
+          {gettext("wheel turns per pedal stroke")}
         </p>
       </div>
     </div>

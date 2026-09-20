@@ -3,6 +3,6 @@ defmodule FixedGearWeb.PageControllerTest do
 
   test "GET / renders the ranking", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert html_response(conn, 200) =~ "Lightest first"
+    assert html_response(conn, 200) =~ gettext("Lightest first")
   end
 end

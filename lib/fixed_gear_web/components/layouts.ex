@@ -47,14 +47,14 @@ defmodule FixedGearWeb.Layouts do
             navigate={~p"/"}
             class="rounded-full px-3 py-1.5 transition hover:bg-base-200"
           >
-            Ranking
+            {gettext("Ranking")}
           </.link>
           <.link
             :if={@current_scope && @current_scope.user}
             navigate={~p"/admin/bikes"}
             class="rounded-full px-3 py-1.5 transition hover:bg-base-200"
           >
-            Admin
+            {gettext("Admin")}
           </.link>
           <.link
             :if={@current_scope && @current_scope.user}
@@ -69,14 +69,14 @@ defmodule FixedGearWeb.Layouts do
             method="delete"
             class="rounded-full px-3 py-1.5 transition hover:bg-base-200"
           >
-            Log out
+            {gettext("Log out")}
           </.link>
           <.link
             :if={is_nil(@current_scope) || is_nil(@current_scope.user)}
             navigate={~p"/users/log-in"}
             class="rounded-full px-3 py-1.5 transition hover:bg-base-200"
           >
-            Log in
+            {gettext("Log in")}
           </.link>
           <.theme_toggle />
         </nav>

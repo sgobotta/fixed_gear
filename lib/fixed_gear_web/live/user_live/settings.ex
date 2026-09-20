@@ -11,9 +11,9 @@ defmodule FixedGearWeb.UserLive.Settings do
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <div class="text-center">
         <.header>
-          Account Settings
+          {gettext("Account Settings")}
           <:subtitle>
-            Manage your account email address and password settings
+            {gettext("Manage your account email address and password settings")}
           </:subtitle>
         </.header>
       </div>
@@ -27,12 +27,14 @@ defmodule FixedGearWeb.UserLive.Settings do
         <.input
           field={@email_form[:email]}
           type="email"
-          label="Email"
+          label={gettext("Email")}
           autocomplete="username"
           spellcheck="false"
           required
         />
-        <.button variant="primary" phx-disable-with="Changing...">Change Email</.button>
+        <.button variant="primary" phx-disable-with={gettext("Changing...")}>
+          {gettext("Change Email")}
+        </.button>
       </.form>
 
       <div class="divider" />
@@ -56,7 +58,7 @@ defmodule FixedGearWeb.UserLive.Settings do
         <.input
           field={@password_form[:password]}
           type="password"
-          label="New password"
+          label={gettext("New password")}
           autocomplete="new-password"
           spellcheck="false"
           required
@@ -64,12 +66,12 @@ defmodule FixedGearWeb.UserLive.Settings do
         <.input
           field={@password_form[:password_confirmation]}
           type="password"
-          label="Confirm new password"
+          label={gettext("Confirm new password")}
           autocomplete="new-password"
           spellcheck="false"
         />
-        <.button variant="primary" phx-disable-with="Saving...">
-          Save Password
+        <.button variant="primary" phx-disable-with={gettext("Saving...")}>
+          {gettext("Save Password")}
         </.button>
       </.form>
     </Layouts.app>
@@ -81,13 +83,13 @@ defmodule FixedGearWeb.UserLive.Settings do
     socket =
       case Accounts.update_user_email(socket.assigns.current_scope.user, token) do
         {:ok, _user} ->
-          put_flash(socket, :info, "Email changed successfully.")
+          put_flash(socket, :info, gettext("Email changed successfully."))
 
         {:error, _} ->
           put_flash(
             socket,
             :error,
-            "Email change link is invalid or it has expired."
+            gettext("Email change link is invalid or it has expired.")
           )
       end
 
@@ -140,7 +142,9 @@ defmodule FixedGearWeb.UserLive.Settings do
         )
 
         info =
-          "A link to confirm your email change has been sent to the new address."
+          gettext(
+            "A link to confirm your email change has been sent to the new address."
+          )
 
         {:noreply, socket |> put_flash(:info, info)}
 

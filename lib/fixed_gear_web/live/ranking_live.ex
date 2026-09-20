@@ -19,8 +19,11 @@ defmodule FixedGearWeb.RankingLive do
         >
           <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div class="space-y-2">
-              <p class="text-xs font-semibold tracking-[0.25em] text-base-content/50 uppercase">
-                Weigh-in
+              <p
+                id="ranking-kicker"
+                class="text-xs font-semibold tracking-[0.25em] text-base-content/50 uppercase"
+              >
+                {page_kicker(@tab)}
               </p>
               <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
                 {page_heading(@tab, @cadence)}
@@ -41,7 +44,7 @@ defmodule FixedGearWeb.RankingLive do
                 phx-value-tab="weight"
                 class={tab_class(@tab == :weight)}
               >
-                Weight
+                {gettext("Weight")}
               </button>
               <button
                 id="tab-cadence"
@@ -50,7 +53,7 @@ defmodule FixedGearWeb.RankingLive do
                 phx-value-tab="cadence"
                 class={tab_class(@tab == :cadence)}
               >
-                Cadence
+                {gettext("Cadence")}
               </button>
             </div>
           </div>
@@ -65,7 +68,7 @@ defmodule FixedGearWeb.RankingLive do
               for="cadence"
               class="flex items-baseline justify-between text-sm"
             >
-              <span class="text-base-content/60">Cadence</span>
+              <span class="text-base-content/60">{gettext("Cadence")}</span>
               <span id="cadence-value" class="font-mono tabular-nums">
                 {@cadence} rpm
               </span>
@@ -91,7 +94,7 @@ defmodule FixedGearWeb.RankingLive do
             id="ranking-empty"
             class="hidden px-5 py-16 text-center text-sm text-base-content/55 only:block"
           >
-            No bikes weighed yet.
+            {gettext("No bikes weighed yet.")}
           </div>
 
           <.expandable_list_row
@@ -119,7 +122,7 @@ defmodule FixedGearWeb.RankingLive do
                 id={"edit-bike-#{bike.id}"}
                 navigate={~p"/admin/bikes/#{bike}/edit"}
                 class="inline-flex rounded-full p-2 text-base-content/50 transition hover:bg-base-200 hover:text-base-content"
-                aria-label={"Edit #{bike.name}"}
+                aria-label={gettext("Edit %{name}", name: bike.name)}
               >
                 <.icon name="hero-pencil-square" class="size-5" />
               </.link>
@@ -188,7 +191,7 @@ defmodule FixedGearWeb.RankingLive do
       >
         <img
           src={~p"/bikes/#{@bike}/photo"}
-          alt={"Photo of #{@bike.name}"}
+          alt={gettext("Photo of %{name}", name: @bike.name)}
           class="aspect-[4/3] h-full w-full object-cover"
         />
       </div>
@@ -196,29 +199,35 @@ defmodule FixedGearWeb.RankingLive do
         :if={not Bike.photo?(@bike)}
         class="flex aspect-[4/3] items-center justify-center rounded-xl border border-dashed border-base-300 text-xs text-base-content/45"
       >
-        No photo
+        {gettext("No photo")}
       </div>
 
       <div class="space-y-5">
         <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-          <.stat :if={@bike.frame_material} label="Frame">
+          <.stat :if={@bike.frame_material} label={gettext("Frame")}>
             {frame_copy(@bike)}
           </.stat>
-          <.stat :if={@bike.handlebar_material} label="Handlebar">
-            {Calculations.material_label(@bike.handlebar_material)}
+          <.stat :if={@bike.handlebar_material} label={gettext("Handlebar")}>
+            {translate_material(@bike.handlebar_material)}
           </.stat>
-          <.stat :if={@bike.chain_ring && @bike.rear_sprocket} label="Gearing">
+          <.stat
+            :if={@bike.chain_ring && @bike.rear_sprocket}
+            label={gettext("Gearing")}
+          >
             {@bike.chain_ring}t / {@bike.rear_sprocket}t
           </.stat>
-          <.stat :if={@bike.tire_width} label="Tire">
+          <.stat :if={@bike.tire_width} label={gettext("Tire")}>
             {Calculations.tire_label(@bike.tire_width)}
           </.stat>
-          <.stat :if={@speed} label={"Speed at #{@cadence} rpm"}>
+          <.stat
+            :if={@speed}
+            label={gettext("Speed at %{cadence} rpm", cadence: @cadence)}
+          >
             {Calculations.format_speed(@speed)} km/h
           </.stat>
         </dl>
 
-        <.stat :if={@ratio} label="Ratio">
+        <.stat :if={@ratio} label={gettext("Ratio")}>
           <.ratio_motion
             id={"ratio-motion-#{@bike.id}"}
             ratio={@ratio}
@@ -227,7 +236,7 @@ defmodule FixedGearWeb.RankingLive do
           />
         </.stat>
 
-        <.stat :if={@patches} label="Skid patches">
+        <.stat :if={@patches} label={gettext("Skid patches")}>
           <.skid_wheel
             id={"skid-wheel-#{@bike.id}"}
             patches={@patches.one_sided}
@@ -257,7 +266,7 @@ defmodule FixedGearWeb.RankingLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:page_title, "Ranking")
+     |> assign(:page_title, gettext("Ranking"))
      |> assign(:tab, :weight)
      |> assign(:cadence, @default_cadence)
      |> assign(:expanded, ExpandableList.new())
@@ -325,16 +334,27 @@ defmodule FixedGearWeb.RankingLive do
   defp tab_from_param("cadence"), do: :cadence
   defp tab_from_param(_), do: :weight
 
-  defp page_heading(:weight, _cadence), do: "Lightest first"
+  defp page_kicker(:cadence), do: gettext("Cadence")
+  defp page_kicker(_tab), do: gettext("Weigh-in")
+
+  defp page_heading(:weight, _cadence), do: gettext("Lightest first")
 
   defp page_heading(:cadence, cadence),
-    do: "Fastest at #{cadence} rpm"
+    do: gettext("Fastest at %{cadence} rpm", cadence: cadence)
 
   defp page_blurb(:weight),
-    do: "Ranked by scale weight. Open a bike for gearing and details."
+    do: gettext("Ranked by scale weight. Open a bike for gearing and details.")
 
   defp page_blurb(:cadence),
-    do: "Who covers more ground at this cadence. Missing gearing sits last."
+    do:
+      gettext(
+        "Who covers more ground at this cadence. Missing gearing sits last."
+      )
+
+  defp translate_material(:aluminum), do: gettext("Aluminum")
+  defp translate_material(:steel), do: gettext("Steel")
+  defp translate_material(:carbon_fiber), do: gettext("Carbon fiber")
+  defp translate_material(_material), do: nil
 
   defp tab_class(true),
     do: "rounded-full bg-base-100 px-4 py-1.5 text-sm font-medium shadow-sm"
@@ -349,7 +369,7 @@ defmodule FixedGearWeb.RankingLive do
   defp rank_class(_rank), do: "bg-base-200 text-base-content/70"
 
   defp frame_copy(bike) do
-    material = Calculations.material_label(bike.frame_material)
+    material = translate_material(bike.frame_material)
 
     cond do
       bike.frame_name not in [nil, ""] and material ->

@@ -25,7 +25,7 @@ defmodule FixedGearWeb.Admin.BikeLive.FormTest do
       |> render_submit()
       |> follow_redirect(conn, ~p"/admin/bikes")
 
-    assert html =~ "Bike created"
+    assert html =~ gettext("Bike created")
     assert html =~ "Pre Cursa"
   end
 
@@ -39,7 +39,7 @@ defmodule FixedGearWeb.Admin.BikeLive.FormTest do
       |> render_submit()
       |> follow_redirect(conn, ~p"/admin/bikes")
 
-    assert html =~ "Bike updated"
+    assert html =~ gettext("Bike updated")
     assert html =~ "New Name"
   end
 

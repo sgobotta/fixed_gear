@@ -10,12 +10,14 @@ defmodule FixedGearWeb.UserLive.Login do
       <div class="mx-auto max-w-sm space-y-4">
         <div class="text-center">
           <.header>
-            <p>Log in</p>
+            <p>{gettext("Log in")}</p>
             <:subtitle>
               <%= if @current_scope do %>
-                You need to reauthenticate to perform sensitive actions on your account.
+                {gettext(
+                  "You need to reauthenticate to perform sensitive actions on your account."
+                )}
               <% else %>
-                Sign in to add and edit bikes.
+                {gettext("Sign in to add and edit bikes.")}
               <% end %>
             </:subtitle>
           </.header>
@@ -24,9 +26,12 @@ defmodule FixedGearWeb.UserLive.Login do
         <div :if={local_mail_adapter?()} class="alert alert-info">
           <.icon name="hero-information-circle" class="size-6 shrink-0" />
           <div>
-            <p>You are running the local mail adapter.</p>
+            <p>{gettext("You are running the local mail adapter.")}</p>
             <p>
-              To see sent emails, visit <.link href="/dev/mailbox" class="underline">the mailbox page</.link>.
+              {gettext("To see sent emails, visit")}
+              <.link href="/dev/mailbox" class="underline">
+                {gettext("the mailbox page")}
+              </.link>.
             </p>
           </div>
         </div>
@@ -42,18 +47,18 @@ defmodule FixedGearWeb.UserLive.Login do
             readonly={!!@current_scope}
             field={f[:email]}
             type="email"
-            label="Email"
+            label={gettext("Email")}
             autocomplete="username"
             spellcheck="false"
             required
             phx-mounted={JS.focus()}
           />
           <.button class="btn btn-primary w-full">
-            Log in with email <span aria-hidden="true">→</span>
+            {gettext("Log in with email")} <span aria-hidden="true">→</span>
           </.button>
         </.form>
 
-        <div class="divider">or</div>
+        <div class="divider">{gettext("or")}</div>
 
         <.form
           :let={f}
@@ -67,7 +72,7 @@ defmodule FixedGearWeb.UserLive.Login do
             readonly={!!@current_scope}
             field={f[:email]}
             type="email"
-            label="Email"
+            label={gettext("Email")}
             autocomplete="username"
             spellcheck="false"
             required
@@ -75,7 +80,7 @@ defmodule FixedGearWeb.UserLive.Login do
           <.input
             field={@form[:password]}
             type="password"
-            label="Password"
+            label={gettext("Password")}
             autocomplete="current-password"
             spellcheck="false"
           />
@@ -84,10 +89,10 @@ defmodule FixedGearWeb.UserLive.Login do
             name={@form[:remember_me].name}
             value="true"
           >
-            Log in and stay logged in <span aria-hidden="true">→</span>
+            {gettext("Log in and stay logged in")} <span aria-hidden="true">→</span>
           </.button>
           <.button class="btn btn-primary btn-soft w-full mt-2">
-            Log in only this time
+            {gettext("Log in only this time")}
           </.button>
         </.form>
       </div>
@@ -108,7 +113,11 @@ defmodule FixedGearWeb.UserLive.Login do
     form = to_form(%{"email" => email}, as: "user")
 
     {:ok,
-     assign(socket, page_title: "Log in", form: form, trigger_submit: false)}
+     assign(socket,
+       page_title: gettext("Log in"),
+       form: form,
+       trigger_submit: false
+     )}
   end
 
   @impl true
@@ -125,7 +134,9 @@ defmodule FixedGearWeb.UserLive.Login do
     end
 
     info =
-      "If your email is in our system, you will receive instructions for logging in shortly."
+      gettext(
+        "If your email is in our system, you will receive instructions for logging in shortly."
+      )
 
     {:noreply,
      socket

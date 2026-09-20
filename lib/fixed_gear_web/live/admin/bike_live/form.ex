@@ -10,10 +10,12 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <.header>
         {@page_title}
-        <:subtitle>Weight is required. Everything else can wait.</:subtitle>
+        <:subtitle>
+          {gettext("Weight is required. Everything else can wait.")}
+        </:subtitle>
         <:actions>
           <.button navigate={~p"/admin/bikes"} class="btn-ghost">
-            Back
+            {gettext("Back")}
           </.button>
         </:actions>
       </.header>
@@ -24,12 +26,12 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:name]} type="text" label="Name" required />
-        <.input field={@form[:owner]} type="text" label="Owner" required />
+        <.input field={@form[:name]} type="text" label={gettext("Name")} required />
+        <.input field={@form[:owner]} type="text" label={gettext("Owner")} required />
         <.input
           field={@form[:weight_kg]}
           type="number"
-          label="Weight (kg)"
+          label={gettext("Weight (kg)")}
           step="0.001"
           min="0.001"
           required
@@ -39,48 +41,52 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
           <.input
             field={@form[:frame_material]}
             type="select"
-            label="Frame"
+            label={gettext("Frame")}
             prompt="—"
-            options={Bikes.material_options()}
+            options={material_options()}
           />
-          <.input field={@form[:frame_name]} type="text" label="Frame name" />
+          <.input
+            field={@form[:frame_name]}
+            type="text"
+            label={gettext("Frame name")}
+          />
           <.input
             field={@form[:handlebar_material]}
             type="select"
-            label="Handlebar"
+            label={gettext("Handlebar")}
             prompt="—"
-            options={Bikes.material_options()}
+            options={material_options()}
           />
           <.input
             field={@form[:chain_ring]}
             type="select"
-            label="Chain ring"
+            label={gettext("Chain ring")}
             prompt="—"
             options={Bikes.chain_ring_options()}
           />
           <.input
             field={@form[:rear_sprocket]}
             type="select"
-            label="Rear sprocket"
+            label={gettext("Rear sprocket")}
             prompt="—"
             options={Bikes.sprocket_options()}
           />
           <.input
             field={@form[:tire_width]}
             type="select"
-            label="Tire"
+            label={gettext("Tire")}
             prompt="—"
             options={Bikes.tire_options()}
           />
         </div>
 
         <div class="mt-6 space-y-3">
-          <p class="label mb-1">Photo</p>
+          <p class="label mb-1">{gettext("Photo")}</p>
           <img
             :if={@bike.id && Bike.photo?(@bike)}
             id="current-photo"
             src={~p"/bikes/#{@bike}/photo"}
-            alt={"Current photo of #{@bike.name}"}
+            alt={gettext("Current photo of %{name}", name: @bike.name)}
             class="h-36 w-36 rounded-xl object-cover"
           />
           <.live_file_input
@@ -90,8 +96,9 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
             class="file-input file-input-bordered w-full"
           />
           <p class="text-xs text-base-content/55">
-            Optional. On a phone this opens the camera. JPEG, PNG, or WebP
-            up to 5MB.
+            {gettext(
+              "Optional. On a phone this opens the camera. JPEG, PNG, or WebP up to 5MB."
+            )}
           </p>
           <article
             :for={entry <- @uploads.photo.entries}
@@ -116,7 +123,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
               phx-click="cancel-upload"
               phx-value-ref={entry.ref}
             >
-              Remove photo
+              {gettext("Remove photo")}
             </button>
           </article>
           <p
@@ -129,11 +136,11 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
 
         <footer class="mt-8">
           <.button
-            phx-disable-with="Saving..."
+            phx-disable-with={gettext("Saving...")}
             class="btn btn-primary"
             id="save-bike"
           >
-            Save bike
+            {gettext("Save bike")}
           </.button>
         </footer>
       </.form>
@@ -161,7 +168,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
     bike = %Bike{}
 
     socket
-    |> assign(:page_title, "New bike")
+    |> assign(:page_title, gettext("New bike"))
     |> assign(:bike, bike)
     |> assign(:form, to_form(Bikes.change_bike(bike)))
   end
@@ -170,7 +177,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
     bike = Bikes.get_bike!(id)
 
     socket
-    |> assign(:page_title, "Edit bike")
+    |> assign(:page_title, gettext("Edit bike"))
     |> assign(:bike, bike)
     |> assign(:form, to_form(Bikes.change_bike(bike)))
   end
@@ -199,7 +206,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
       {:ok, _bike} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Bike created")
+         |> put_flash(:info, gettext("Bike created"))
          |> push_navigate(to: ~p"/admin/bikes")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -216,7 +223,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
       {:ok, _bike} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Bike updated")
+         |> put_flash(:info, gettext("Bike updated"))
          |> push_navigate(to: ~p"/admin/bikes")}
 
       {:error, %Ecto.Changeset{} = changeset} ->
@@ -233,8 +240,19 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
     end
   end
 
-  defp error_to_string(:too_large), do: "Photo is too large"
-  defp error_to_string(:too_many_files), do: "Only one photo is allowed"
-  defp error_to_string(:not_accepted), do: "Use JPEG, PNG, or WebP"
-  defp error_to_string(_), do: "Could not upload photo"
+  defp error_to_string(:too_large), do: gettext("Photo is too large")
+
+  defp error_to_string(:too_many_files),
+    do: gettext("Only one photo is allowed")
+
+  defp error_to_string(:not_accepted), do: gettext("Use JPEG, PNG, or WebP")
+  defp error_to_string(_), do: gettext("Could not upload photo")
+
+  defp material_options do
+    [
+      {gettext("Aluminum"), :aluminum},
+      {gettext("Steel"), :steel},
+      {gettext("Carbon fiber"), :carbon_fiber}
+    ]
+  end
 end

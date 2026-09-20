@@ -8,8 +8,8 @@ defmodule FixedGearWeb.UserLive.RegistrationTest do
     test "renders registration page", %{conn: conn} do
       {:ok, _lv, html} = live(conn, ~p"/users/register")
 
-      assert html =~ "Register"
-      assert html =~ "Log in"
+      assert html =~ gettext("Register for an account")
+      assert html =~ gettext("Log in")
     end
 
     test "redirects if already logged in", %{conn: conn} do
@@ -30,8 +30,8 @@ defmodule FixedGearWeb.UserLive.RegistrationTest do
         |> element("#registration_form")
         |> render_change(user: %{"email" => "with spaces"})
 
-      assert result =~ "Register"
-      assert result =~ "must have the @ sign and no spaces"
+      assert result =~ gettext("Register for an account")
+      assert result =~ dgettext("errors", "must have the @ sign and no spaces")
     end
   end
 
@@ -51,7 +51,10 @@ defmodule FixedGearWeb.UserLive.RegistrationTest do
         |> follow_redirect(conn, ~p"/users/log-in")
 
       assert html =~
-               ~r/An email was sent to .*, please access it to confirm your account/
+               gettext(
+                 "An email was sent to %{email}, please access it to confirm your account.",
+                 email: email
+               )
     end
 
     test "renders errors for duplicated email", %{conn: conn} do
@@ -66,7 +69,7 @@ defmodule FixedGearWeb.UserLive.RegistrationTest do
         )
         |> render_submit()
 
-      assert result =~ "has already been taken"
+      assert result =~ dgettext("errors", "has already been taken")
     end
   end
 
@@ -78,11 +81,11 @@ defmodule FixedGearWeb.UserLive.RegistrationTest do
 
       {:ok, _login_live, login_html} =
         lv
-        |> element("main a", "Log in")
+        |> element("main a", gettext("Log in"))
         |> render_click()
         |> follow_redirect(conn, ~p"/users/log-in")
 
-      assert login_html =~ "Log in"
+      assert login_html =~ gettext("Log in")
     end
   end
 end

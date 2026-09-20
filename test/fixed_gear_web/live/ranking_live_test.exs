@@ -12,6 +12,7 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert has_element?(view, "#ranking-toolbar")
     assert has_element?(view, "#ranking-empty")
     assert has_element?(view, "#tab-weight")
+    assert has_element?(view, "#ranking-kicker", gettext("Weigh-in"))
     refute has_element?(view, "#cadence-form")
   end
 
@@ -45,8 +46,20 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert has_element?(view, "#skid-wheel-#{heavy.id}")
     assert has_element?(view, "#skid-wheel-#{heavy.id} .skid-patch")
     assert has_element?(view, "#skid-wheel-#{heavy.id} .skid-patch-ambi")
-    assert has_element?(view, "#skid-wheel-#{heavy.id}", "both feet")
-    refute has_element?(view, "#ratio-motion-#{heavy.id}", "both feet")
+    assert has_element?(view, "#skid-wheel-#{heavy.id}-count", "2")
+    assert has_element?(view, "#skid-wheel-#{heavy.id}", gettext("both pedals"))
+
+    assert has_element?(
+             view,
+             "#skid-wheel-#{heavy.id}",
+             gettext("%{count} one foot", count: 1)
+           )
+
+    refute has_element?(
+             view,
+             "#ratio-motion-#{heavy.id}",
+             gettext("both pedals")
+           )
   end
 
   test "cadence tab shows the slider and ranks by speed", %{conn: conn} do
@@ -78,6 +91,8 @@ defmodule FixedGearWeb.RankingLiveTest do
     |> render_click()
 
     assert has_element?(view, "#cadence-form")
+    assert has_element?(view, "#ranking-kicker", gettext("Cadence"))
+    refute has_element?(view, "#ranking-kicker", gettext("Weigh-in"))
     assert has_element?(view, "#cadence-value", "90 rpm")
 
     html = render(view)

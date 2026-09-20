@@ -9,19 +9,19 @@ defmodule FixedGearWeb.Admin.BikeLive.Index do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <.header>
-        Bikes
-        <:subtitle>Edit weigh-in entries as needed.</:subtitle>
+        {gettext("Bikes")}
+        <:subtitle>{gettext("Edit weigh-in entries as needed.")}</:subtitle>
         <:actions>
           <.button navigate={~p"/admin/bikes/new"} id="new-bike">
-            New bike
+            {gettext("New bike")}
           </.button>
         </:actions>
       </.header>
 
       <.table id="bikes" rows={@bikes}>
-        <:col :let={bike} label="Name">{bike.name}</:col>
-        <:col :let={bike} label="Owner">{bike.owner}</:col>
-        <:col :let={bike} label="Weight">
+        <:col :let={bike} label={gettext("Name")}>{bike.name}</:col>
+        <:col :let={bike} label={gettext("Owner")}>{bike.owner}</:col>
+        <:col :let={bike} label={gettext("Weight")}>
           {Calculations.format_weight(bike.weight_kg)} kg
         </:col>
         <:action :let={bike}>
@@ -29,7 +29,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Index do
             id={"edit-bike-#{bike.id}"}
             navigate={~p"/admin/bikes/#{bike}/edit"}
           >
-            Edit
+            {gettext("Edit")}
           </.link>
         </:action>
       </.table>
@@ -41,7 +41,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Index do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:page_title, "Bikes")
+     |> assign(:page_title, gettext("Bikes"))
      |> assign(:bikes, Bikes.list_bikes())}
   end
 end

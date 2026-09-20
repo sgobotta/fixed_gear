@@ -19,6 +19,8 @@ defmodule FixedGearWeb.ConnCase do
 
   using do
     quote do
+      use Gettext, backend: FixedGearWeb.Gettext
+
       # The default endpoint for testing
       @endpoint FixedGearWeb.Endpoint
 

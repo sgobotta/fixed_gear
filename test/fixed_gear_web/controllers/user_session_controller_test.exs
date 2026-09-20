@@ -61,7 +61,9 @@ defmodule FixedGearWeb.UserSessionControllerTest do
         })
 
       assert redirected_to(conn) == "/foo/bar"
-      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Welcome back!"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
+               gettext("Welcome back!")
     end
 
     test "redirects to login page with invalid credentials", %{
@@ -74,7 +76,7 @@ defmodule FixedGearWeb.UserSessionControllerTest do
         })
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-               "Invalid email or password"
+               gettext("Invalid email or password")
 
       assert redirected_to(conn) == ~p"/users/log-in"
     end
@@ -114,7 +116,7 @@ defmodule FixedGearWeb.UserSessionControllerTest do
       assert redirected_to(conn) == ~p"/"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
-               "User confirmed successfully."
+               gettext("User confirmed successfully.")
 
       assert Accounts.get_user!(user.id).confirmed_at
 
@@ -133,7 +135,7 @@ defmodule FixedGearWeb.UserSessionControllerTest do
         })
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
-               "The link is invalid or it has expired."
+               gettext("The link is invalid or it has expired.")
 
       assert redirected_to(conn) == ~p"/users/log-in"
     end
@@ -146,7 +148,7 @@ defmodule FixedGearWeb.UserSessionControllerTest do
       refute get_session(conn, :user_token)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
-               "Logged out successfully"
+               gettext("Logged out successfully.")
     end
 
     test "succeeds even if the user is not logged in", %{conn: conn} do
@@ -155,7 +157,7 @@ defmodule FixedGearWeb.UserSessionControllerTest do
       refute get_session(conn, :user_token)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
-               "Logged out successfully"
+               gettext("Logged out successfully.")
     end
   end
 end
