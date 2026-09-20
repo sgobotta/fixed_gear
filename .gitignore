@@ -31,6 +31,12 @@ fixed_gear-*.tar
 # Ignore digested assets cache.
 /priv/static/cache_manifest.json
 
+# mix phx.digest hashed/gzip copies of committed static files (rebuilt on deploy)
+/priv/static/**/*.gz
+/priv/static/favicon-*.ico
+/priv/static/robots-*.txt
+/priv/static/images/logo-*.svg
+
 # In case you use Node.js/npm, you want to ignore these.
 npm-debug.log
 /assets/node_modules/
