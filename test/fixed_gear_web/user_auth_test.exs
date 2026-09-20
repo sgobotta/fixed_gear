@@ -1,10 +1,10 @@
 defmodule FixedGearWeb.UserAuthTest do
   use FixedGearWeb.ConnCase, async: true
 
-  alias Phoenix.LiveView
   alias FixedGear.Accounts
   alias FixedGear.Accounts.Scope
   alias FixedGearWeb.UserAuth
+  alias Phoenix.LiveView
 
   import FixedGear.AccountsFixtures
 

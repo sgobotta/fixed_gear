@@ -6,7 +6,7 @@ defmodule FixedGear.Accounts do
   import Ecto.Query, warn: false
   alias FixedGear.Repo
 
-  alias FixedGear.Accounts.{User, UserToken, UserNotifier}
+  alias FixedGear.Accounts.{User, UserNotifier, UserToken}
 
   ## Database getters
 
