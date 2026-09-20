@@ -138,11 +138,310 @@ const RankingList = {
   }
 }
 
+const RatioMotion = {
+  mounted() {
+    this.anims = []
+    this.startSpins()
+    this.syncRate()
+  },
+
+  updated() {
+    if (!this.anims || this.anims.length === 0) {
+      this.startSpins()
+    }
+    this.syncRate()
+  },
+
+  destroyed() {
+    this.stopSpins()
+  },
+
+  startSpins() {
+    this.stopSpins()
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      this.anims = []
+      return
+    }
+
+    const pedal = this.el.querySelector("[data-spin='pedal']")
+    const wheel = this.el.querySelector("[data-spin='wheel']")
+    this.anims = [
+      this.spin(pedal, this.msAttr("data-pedal-ms", 667)),
+      this.spin(wheel, this.msAttr("data-wheel-ms", 250))
+    ]
+  },
+
+  stopSpins() {
+    if (!this.anims) {
+      return
+    }
+    this.anims.forEach(function (anim) {
+      if (anim) {
+        anim.cancel()
+      }
+    })
+    this.anims = []
+  },
+
+  spin(node, ms) {
+    if (!node) {
+      return null
+    }
+    return node.animate(
+      [{ transform: "rotate(0deg)" }, { transform: "rotate(360deg)" }],
+      { duration: ms, iterations: Infinity, easing: "linear" }
+    )
+  },
+
+  syncRate() {
+    const rpm = parseInt(this.el.getAttribute("data-cadence"), 10)
+    const rate = !rpm || rpm < 1 ? 1 : rpm / 90
+    this.anims.forEach(function (anim) {
+      if (anim) {
+        anim.playbackRate = rate
+      }
+    })
+  },
+
+  msAttr(name, fallback) {
+    const n = parseInt(this.el.getAttribute(name), 10)
+    if (!n || n < 1) {
+      return fallback
+    }
+    return n
+  }
+}
+
+const SkidWheel = {
+  mounted() {
+    this.running = true
+    this.rotation = 0
+    this.anim = null
+    this.timer = null
+    this.startCycle()
+  },
+
+  updated() {
+    const next = this.patchCount()
+    if (next !== this.n) {
+      this.stopCycle()
+      this.running = true
+      this.rotation = 0
+      this.startCycle()
+      return
+    }
+    this.syncPlayback()
+  },
+
+  destroyed() {
+    this.stopCycle()
+  },
+
+  startCycle() {
+    this.rotor = this.el.querySelector(".skid-wheel-rotor")
+    this.n = this.patchCount()
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
+    if (!this.rotor || this.n < 1) {
+      return
+    }
+
+    if (reduce) {
+      this.markAll("is-marked")
+      return
+    }
+
+    this.clearMarks()
+    this.rotation = 0
+    this.rotor.style.transform = "rotate(0deg)"
+    this.runCycle(0)
+  },
+
+  stopCycle() {
+    this.running = false
+    if (this.anim) {
+      this.anim.cancel()
+      this.anim = null
+    }
+    if (this.timer) {
+      window.clearTimeout(this.timer)
+      this.timer = null
+    }
+  },
+
+  patchCount() {
+    return this.el.querySelectorAll(".skid-patch").length
+  },
+
+  patches() {
+    return Array.prototype.slice.call(this.el.querySelectorAll(".skid-patch"))
+  },
+
+  runCycle(stepIndex) {
+    if (!this.running || !this.rotor) {
+      return
+    }
+
+    const step = 360 / this.n
+    const target = 540 + stepIndex * (360 + step)
+    const delta = target - this.rotation
+    const hook = this
+
+    if (stepIndex > 0 && stepIndex % this.n === 0) {
+      this.clearMarks()
+    }
+
+    this.spinTo(target, this.spinMs(delta), function () {
+      const patch = hook.patchAt(stepIndex % hook.n)
+      if (patch) {
+        patch.classList.add("is-skidding")
+      }
+      hook.burstSparks()
+
+      hook.timer = window.setTimeout(function () {
+        if (!hook.running) {
+          return
+        }
+        if (patch) {
+          patch.classList.remove("is-skidding")
+          patch.classList.add("is-marked")
+        }
+        hook.runCycle(stepIndex + 1)
+      }, hook.brakeMs())
+    })
+  },
+
+  spinTo(deg, ms, done) {
+    const rotor = this.rotor
+    const from = this.rotation
+    const hook = this
+
+    if (this.anim) {
+      this.anim.cancel()
+    }
+
+    this.spinRevMs = this.revMs()
+    const cruise = from + (deg - from) * 0.78
+    this.anim = rotor.animate(
+      [
+        { transform: "rotate(" + from + "deg)", easing: "linear" },
+        { transform: "rotate(" + cruise + "deg)", offset: 0.72, easing: "cubic-bezier(0.12, 0.82, 0.18, 1)" },
+        { transform: "rotate(" + deg + "deg)" }
+      ],
+      {
+        duration: ms,
+        fill: "forwards"
+      }
+    )
+
+    this.anim.onfinish = function () {
+      if (!hook.running) {
+        return
+      }
+      hook.rotation = deg
+      rotor.style.transform = "rotate(" + deg + "deg)"
+      if (hook.anim) {
+        hook.anim.cancel()
+        hook.anim = null
+      }
+      done()
+    }
+  },
+
+  spinMs(deltaDeg) {
+    const revMs = this.revMs()
+    const ms = Math.abs(deltaDeg) / 360 * revMs
+    if (ms < 60) {
+      return 60
+    }
+    return ms
+  },
+
+  revMs() {
+    const n = parseInt(this.el.getAttribute("data-rev-ms"), 10)
+    if (!n || n < 1) {
+      return 250
+    }
+    return n
+  },
+
+  syncPlayback() {
+    if (!this.anim || !this.spinRevMs) {
+      return
+    }
+    const next = this.revMs()
+    if (next < 1) {
+      return
+    }
+    this.anim.playbackRate = this.spinRevMs / next
+  },
+
+  brakeMs() {
+    const rpm = parseInt(this.el.getAttribute("data-cadence"), 10)
+    if (!rpm || rpm < 1) {
+      return 450
+    }
+    const ms = Math.round(180 * (90 / rpm))
+    if (ms < 90) {
+      return 90
+    }
+    if (ms > 280) {
+      return 280
+    }
+    return ms
+  },
+
+  burstSparks() {
+    const layer = this.el.querySelector(".skid-sparks")
+    if (!layer) {
+      return
+    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return
+    }
+
+    let i
+    for (i = 0; i < 8; i++) {
+      const spark = document.createElement("span")
+      const dust = i % 3 === 0
+      spark.className = dust ? "skid-spark is-dust" : "skid-spark"
+      spark.style.setProperty("--dx", (Math.random() - 0.5) * 22 + "px")
+      spark.style.setProperty("--dy", 5 + Math.random() * 12 + "px")
+      spark.style.setProperty("--rot", (Math.random() - 0.5) * 90 + "deg")
+      spark.style.setProperty("--delay", i * 16 + "ms")
+      layer.appendChild(spark)
+      spark.addEventListener("animationend", function () {
+        if (spark.parentNode) {
+          spark.parentNode.removeChild(spark)
+        }
+      })
+    }
+  },
+
+  patchAt(index) {
+    const nodes = this.patches()
+    return nodes[index] || null
+  },
+
+  markAll(className) {
+    this.patches().forEach(function (patch) {
+      patch.classList.add(className)
+    })
+  },
+
+  clearMarks() {
+    this.patches().forEach(function (patch) {
+      patch.classList.remove("is-skidding")
+      patch.classList.remove("is-marked")
+    })
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {RankingList, ...colocatedHooks},
+  hooks: {RankingList, RatioMotion, SkidWheel, ...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits

@@ -222,6 +222,7 @@ defmodule FixedGearWeb.RankingLive do
           <.ratio_motion
             id={"ratio-motion-#{@bike.id}"}
             ratio={@ratio}
+            cadence={@cadence}
             label={Calculations.format_ratio(@ratio)}
           />
         </.stat>
@@ -230,10 +231,10 @@ defmodule FixedGearWeb.RankingLive do
           <.skid_wheel
             id={"skid-wheel-#{@bike.id}"}
             patches={@patches.one_sided}
+            ambidextrous={@patches.ambidextrous}
+            cadence={@cadence}
+            ratio={@ratio}
           />
-          <p class="mt-1 text-xs text-base-content/55">
-            {@patches.ambidextrous} both feet
-          </p>
         </.stat>
       </div>
     </div>

@@ -8,7 +8,8 @@ defmodule FixedGearWeb.RankingComponents do
   alias Phoenix.LiveView.JS
 
   @max_skid_ticks 24
-  @pedal_seconds 2.5
+  @reference_rpm 90
+  @seconds_per_minute 60
 
   attr :id, :string, required: true
   attr :expanded, :boolean, required: true
@@ -116,54 +117,109 @@ defmodule FixedGearWeb.RankingComponents do
 
   attr :id, :string, required: true
   attr :patches, :integer, required: true
+  attr :ambidextrous, :integer, default: nil
+  attr :cadence, :integer, required: true
+  attr :ratio, :float, required: true
 
   def skid_wheel(assigns) do
-    ticks =
+    count =
       if assigns.patches in 1..@max_skid_ticks do
-        Enum.map(0..(assigns.patches - 1), fn i ->
-          i * 360 / assigns.patches
+        assigns.patches
+      else
+        0
+      end
+
+    step = if count > 0, do: 360 / count, else: 0
+    blob_rx = skid_blob_rx(count)
+    blob_ry = blob_rx * 0.78
+
+    marks =
+      if count > 0 do
+        Enum.map(0..(count - 1), fn i ->
+          %{
+            index: i,
+            angle: -i * step,
+            rx: blob_rx,
+            ry: blob_ry
+          }
         end)
       else
         []
       end
 
-    assigns = assign(assigns, :ticks, ticks)
+    assigns =
+      assigns
+      |> assign(:marks, marks)
+      |> assign(:spokes, [0, 120, 240])
+      |> assign(:rev_ms, visual_rev_ms(assigns.cadence, assigns.ratio))
 
     ~H"""
-    <div id={@id} class="flex items-center gap-3">
-      <svg
-        viewBox="0 0 80 80"
-        class="size-20 shrink-0 text-base-content"
-        aria-hidden="true"
-      >
-        <circle
-          cx="40"
-          cy="40"
-          r="28"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="6"
-          class="opacity-80"
-        />
-        <circle cx="40" cy="40" r="6" fill="currentColor" class="opacity-40" />
-        <line
-          :for={angle <- @ticks}
-          x1="40"
-          y1="16"
-          x2="40"
-          y2="28"
-          stroke="currentColor"
-          stroke-width="3"
-          stroke-linecap="round"
-          transform={"rotate(#{angle} 40 40)"}
-        />
-      </svg>
-      <div>
-        <p class="font-mono text-lg font-semibold tabular-nums">
+    <div
+      id={@id}
+      phx-hook="SkidWheel"
+      data-patches={@patches}
+      data-cadence={@cadence}
+      data-rev-ms={@rev_ms}
+    >
+      <div class="flex items-center gap-4">
+        <div
+          id={"#{@id}-stage"}
+          phx-update="ignore"
+          class="relative size-16 shrink-0 sm:size-20"
+        >
+          <svg
+            viewBox="0 0 80 80"
+            class="skid-wheel-rotor size-full text-base-content"
+            aria-hidden="true"
+          >
+            <circle
+              cx="40"
+              cy="40"
+              r="28"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="8"
+              class="opacity-35"
+            />
+            <g :for={angle <- @spokes} transform={"rotate(#{angle} 40 40)"}>
+              <line
+                x1="40"
+                y1="33"
+                x2="40"
+                y2="18"
+                stroke="currentColor"
+                stroke-width="3.5"
+                stroke-linecap="round"
+                class="opacity-30"
+              />
+            </g>
+            <circle cx="40" cy="40" r="5.5" fill="currentColor" class="opacity-40" />
+            <g
+              :for={mark <- @marks}
+              class="skid-patch"
+              data-index={mark.index}
+              transform={"rotate(#{mark.angle} 40 40)"}
+            >
+              <ellipse cx="40" cy="12" rx={mark.rx} ry={mark.ry} />
+              <ellipse
+                cx="41.8"
+                cy="10.8"
+                rx={mark.rx * 0.62}
+                ry={mark.ry * 0.58}
+              />
+            </g>
+          </svg>
+          <span class="skid-wheel-ground" aria-hidden="true"></span>
+          <span class="skid-sparks" aria-hidden="true"></span>
+        </div>
+        <p class="font-mono text-lg leading-none font-semibold tabular-nums">
           {@patches}
         </p>
-        <p class="text-xs text-base-content/55">marks on the tire</p>
       </div>
+      <p class="mt-1 ps-20 text-xs text-base-content/55 sm:ps-24">
+        marks on the tire
+        <span :if={@ambidextrous} class="block">{@ambidextrous} both feet</span>
+      </p>
     </div>
     """
   end
@@ -171,90 +227,122 @@ defmodule FixedGearWeb.RankingComponents do
   attr :id, :string, required: true
   attr :ratio, :float, required: true
   attr :label, :string, required: true
+  attr :cadence, :integer, required: true
 
   def ratio_motion(assigns) do
-    wheel_seconds = @pedal_seconds / assigns.ratio
+    pedal_seconds = visual_pedal_seconds(@reference_rpm)
+    wheel_seconds = pedal_seconds / assigns.ratio
 
     assigns =
       assigns
-      |> assign(:pedal_seconds, @pedal_seconds)
-      |> assign(
-        :wheel_duration,
-        :erlang.float_to_binary(wheel_seconds, decimals: 2)
-      )
+      |> assign(:pedal_ms, round(pedal_seconds * 1000))
+      |> assign(:wheel_ms, round(wheel_seconds * 1000))
 
     ~H"""
-    <div id={@id} class="flex flex-wrap items-center gap-5">
-      <div class="flex items-center gap-4">
-        <div class="flex flex-col items-center gap-1">
-          <svg
-            viewBox="0 0 64 64"
-            class="size-14 origin-center animate-spin motion-reduce:animate-none"
-            style={"animation-duration: #{@pedal_seconds}s; animation-timing-function: linear;"}
-            aria-hidden="true"
-          >
-            <circle
-              cx="32"
-              cy="32"
-              r="20"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="3"
-            />
-            <line
-              x1="32"
-              y1="32"
-              x2="32"
-              y2="14"
-              stroke="currentColor"
-              stroke-width="3"
-              stroke-linecap="round"
-            />
-            <circle cx="32" cy="14" r="4" fill="currentColor" />
-          </svg>
-          <span class="text-[11px] tracking-wide text-base-content/55 uppercase">
+    <div
+      id={@id}
+      class="flex items-end gap-4"
+      phx-hook="RatioMotion"
+      data-cadence={@cadence}
+      data-pedal-ms={@pedal_ms}
+      data-wheel-ms={@wheel_ms}
+    >
+      <div class="flex items-end gap-3">
+        <div class="flex w-14 flex-col items-center gap-1 sm:w-16">
+          <div class="flex h-14 w-14 items-center justify-center sm:h-16 sm:w-16">
+            <svg
+              viewBox="0 0 64 64"
+              data-spin="pedal"
+              class="ratio-spin size-11 origin-center motion-reduce:animate-none sm:size-12"
+              aria-hidden="true"
+            >
+              <circle
+                cx="32"
+                cy="32"
+                r="20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+              />
+              <line
+                x1="32"
+                y1="32"
+                x2="32"
+                y2="14"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+              <circle cx="32" cy="14" r="4" fill="currentColor" />
+            </svg>
+          </div>
+          <span class="text-[11px] leading-none tracking-wide text-base-content/55 uppercase">
             Pedal
           </span>
         </div>
 
-        <div class="flex flex-col items-center gap-1">
-          <svg
-            viewBox="0 0 64 64"
-            class="size-16 origin-center animate-spin motion-reduce:animate-none"
-            style={"animation-duration: #{@wheel_duration}s; animation-timing-function: linear;"}
-            aria-hidden="true"
-          >
-            <circle
-              cx="32"
-              cy="32"
-              r="24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="5"
-            />
-            <circle cx="32" cy="32" r="4" fill="currentColor" />
-            <line
-              x1="32"
-              y1="32"
-              x2="32"
-              y2="10"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-          </svg>
-          <span class="text-[11px] tracking-wide text-base-content/55 uppercase">
+        <div class="flex w-14 flex-col items-center gap-1 sm:w-16">
+          <div class="flex h-14 w-14 items-center justify-center sm:h-16 sm:w-16">
+            <svg
+              viewBox="0 0 64 64"
+              data-spin="wheel"
+              class="ratio-spin size-14 origin-center motion-reduce:animate-none sm:size-16"
+              aria-hidden="true"
+            >
+              <circle
+                cx="32"
+                cy="32"
+                r="24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="5"
+              />
+              <circle cx="32" cy="32" r="4" fill="currentColor" />
+              <line
+                x1="32"
+                y1="32"
+                x2="32"
+                y2="10"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+          <span class="text-[11px] leading-none tracking-wide text-base-content/55 uppercase">
             Wheel
           </span>
         </div>
       </div>
-      <p class="max-w-[12rem] text-sm text-base-content/70">
-        <span class="font-mono font-semibold tabular-nums">{@label}</span>
-        wheel turns per pedal stroke
-      </p>
+      <div class="flex min-w-0 flex-col gap-1">
+        <div class="flex h-14 items-center sm:h-16">
+          <p class="font-mono text-lg leading-none font-semibold tabular-nums">
+            {@label}
+          </p>
+        </div>
+        <p class="text-[11px] leading-none text-base-content/55">
+          wheel turns per pedal stroke
+        </p>
+      </div>
     </div>
     """
   end
+
+  defp skid_blob_rx(n) when n > 12, do: 3.8
+  defp skid_blob_rx(n) when n > 6, do: 4.7
+  defp skid_blob_rx(_n), do: 5.6
+
+  defp visual_pedal_seconds(rpm) when is_integer(rpm) and rpm > 0 do
+    @seconds_per_minute / rpm
+  end
+
+  defp visual_pedal_seconds(_rpm), do: @seconds_per_minute / @reference_rpm
+
+  defp visual_rev_ms(rpm, ratio) when is_number(ratio) and ratio > 0 do
+    round(visual_pedal_seconds(rpm) / ratio * 1000)
+  end
+
+  defp visual_rev_ms(rpm, _ratio), do: round(visual_pedal_seconds(rpm) * 1000)
 
   defp keep_panel_during_collapse do
     JS.hide(

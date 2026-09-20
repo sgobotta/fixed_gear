@@ -43,6 +43,7 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert has_element?(view, "#bike-#{heavy.id}-expand-inner", "48t / 16t")
     assert has_element?(view, "#ratio-motion-#{heavy.id}")
     assert has_element?(view, "#skid-wheel-#{heavy.id}")
+    assert has_element?(view, "#skid-wheel-#{heavy.id} .skid-patch")
   end
 
   test "cadence tab shows the slider and ranks by speed", %{conn: conn} do
@@ -84,6 +85,9 @@ defmodule FixedGearWeb.RankingLiveTest do
     |> render_click()
 
     assert has_element?(view, "#bike-#{fast.id}-expand-inner", "90 rpm")
+    assert has_element?(view, ~s(#skid-wheel-#{fast.id}[data-cadence="90"]))
+    assert has_element?(view, ~s(#ratio-motion-#{fast.id}[data-cadence="90"]))
+    assert has_element?(view, ~s(#ratio-motion-#{fast.id}[data-pedal-ms]))
 
     view
     |> form("#cadence-form", cadence: "100")
@@ -91,6 +95,8 @@ defmodule FixedGearWeb.RankingLiveTest do
 
     assert has_element?(view, "#cadence-value", "100 rpm")
     assert has_element?(view, "#bike-#{fast.id}-expand-inner", "100 rpm")
+    assert has_element?(view, ~s(#skid-wheel-#{fast.id}[data-cadence="100"]))
+    assert has_element?(view, ~s(#ratio-motion-#{fast.id}[data-cadence="100"]))
   end
 
   test "shows an edit pencil for signed-in admins", %{conn: conn} do

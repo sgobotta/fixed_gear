@@ -108,3 +108,80 @@
   box-shadow: inset 0 0 0 2px var(--color-primary);
   border-radius: 1rem;
 }
+
+.skid-wheel-rotor {
+  transform-origin: center;
+  transform-box: view-box;
+}
+
+.ratio-spin {
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
+.skid-wheel-ground {
+  position: absolute;
+  left: 50%;
+  bottom: 5%;
+  width: 46%;
+  height: 3px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.45;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.skid-sparks {
+  position: absolute;
+  left: 50%;
+  bottom: 7%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.skid-spark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 5px;
+  height: 3px;
+  border-radius: 999px;
+  background: oklch(0.72 0.22 350);
+  opacity: 0;
+  animation: skid-spark-fly 480ms ease-out forwards;
+  animation-delay: var(--delay, 0ms);
+}
+
+.skid-spark.is-dust {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: oklch(0.78 0.04 80);
+}
+
+@keyframes skid-spark-fly {
+  0% {
+    opacity: 0.95;
+    transform: translate(-50%, 0) scale(1) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), var(--dy)) scale(0.35) rotate(var(--rot));
+  }
+}
+
+.skid-patch {
+  fill: oklch(0.86 0.10 350);
+  transition: fill 160ms linear;
+}
+
+.skid-patch.is-marked {
+  fill: oklch(0.68 0.20 350);
+}
+
+.skid-patch.is-skidding {
+  fill: oklch(0.58 0.26 350);
+}
