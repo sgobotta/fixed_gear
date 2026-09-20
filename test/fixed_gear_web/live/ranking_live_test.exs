@@ -2,14 +2,16 @@ defmodule FixedGearWeb.RankingLiveTest do
   use FixedGearWeb.ConnCase, async: true
 
   import Phoenix.LiveViewTest
+  import FixedGear.AccountsFixtures
   import FixedGear.BikesFixtures
 
-  test "renders empty ranking", %{conn: conn} do
+  test "renders empty ranking without a cadence slider", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/")
 
     assert has_element?(view, "#ranking")
     assert has_element?(view, "#ranking-empty")
-    assert has_element?(view, "#cadence-value", "90 rpm")
+    assert has_element?(view, "#tab-weight")
+    refute has_element?(view, "#cadence-form")
   end
 
   test "lists bikes lightest first and expands details", %{conn: conn} do
@@ -30,6 +32,7 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert has_element?(view, "#bike-#{light.id}", "Feather")
     assert has_element?(view, "#bike-#{heavy.id}", "Heavy")
     refute has_element?(view, "#bike-#{heavy.id}-expand-inner")
+    refute has_element?(view, "#edit-bike-#{light.id}")
 
     view
     |> element("#bike-#{heavy.id}-header")
@@ -37,31 +40,76 @@ defmodule FixedGearWeb.RankingLiveTest do
 
     assert has_element?(view, "#bike-#{heavy.id}-expand-inner")
     assert has_element?(view, "#bike-#{heavy.id}-expand-inner", "48t / 16t")
-    assert has_element?(view, "#bike-#{heavy.id}-expand-inner", "3.00")
+    assert has_element?(view, "#ratio-motion-#{heavy.id}")
+    assert has_element?(view, "#skid-wheel-#{heavy.id}")
   end
 
-  test "updates cadence speed for expanded bikes", %{conn: conn} do
-    bike =
+  test "cadence tab shows the slider and ranks by speed", %{conn: conn} do
+    slow =
       bike_fixture(%{
-        chain_ring: 48,
-        rear_sprocket: 16,
-        tire_width: 23
+        name: "Low gear",
+        weight_kg: "6.000",
+        chain_ring: 44,
+        rear_sprocket: 18,
+        tire_width: 25
+      })
+
+    fast =
+      bike_fixture(%{
+        name: "High gear",
+        weight_kg: "8.000",
+        chain_ring: 52,
+        rear_sprocket: 14,
+        tire_width: 25
       })
 
     {:ok, view, _html} = live(conn, ~p"/")
 
+    html = render(view)
+    assert bike_index(html, slow.id) < bike_index(html, fast.id)
+
     view
-    |> element("#bike-#{bike.id}-header")
+    |> element("#tab-cadence")
     |> render_click()
 
+    assert has_element?(view, "#cadence-form")
     assert has_element?(view, "#cadence-value", "90 rpm")
-    assert has_element?(view, "#bike-#{bike.id}-expand-inner", "90 rpm")
+
+    html = render(view)
+    assert bike_index(html, fast.id) < bike_index(html, slow.id)
+
+    view
+    |> element("#bike-#{fast.id}-header")
+    |> render_click()
+
+    assert has_element?(view, "#bike-#{fast.id}-expand-inner", "90 rpm")
 
     view
     |> form("#cadence-form", cadence: "100")
     |> render_change()
 
     assert has_element?(view, "#cadence-value", "100 rpm")
-    assert has_element?(view, "#bike-#{bike.id}-expand-inner", "100 rpm")
+    assert has_element?(view, "#bike-#{fast.id}-expand-inner", "100 rpm")
+  end
+
+  test "shows an edit pencil for signed-in admins", %{conn: conn} do
+    bike = bike_fixture(%{name: "Track"})
+    conn = log_in_user(conn, user_fixture())
+
+    {:ok, view, _html} = live(conn, ~p"/")
+
+    assert has_element?(view, "#edit-bike-#{bike.id}")
+    refute has_element?(view, "#bike-#{bike.id}-expand-inner")
+
+    {:ok, _view, _html} =
+      view
+      |> element("#edit-bike-#{bike.id}")
+      |> render_click()
+      |> follow_redirect(conn, ~p"/admin/bikes/#{bike}/edit")
+  end
+
+  defp bike_index(html, id) do
+    {index, _} = :binary.match(html, "bike-#{id}")
+    index
   end
 end
