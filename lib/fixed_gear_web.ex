@@ -86,6 +86,7 @@ defmodule FixedGearWeb do
       import Phoenix.HTML
       # Core UI components
       import FixedGearWeb.CoreComponents
+      import FixedGearWeb.RankingComponents
 
       # Common modules used in templates
       alias FixedGearWeb.Layouts
