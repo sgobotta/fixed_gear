@@ -33,4 +33,8 @@ defmodule FixedGear.BikesFixtures do
 
     {data, "image/png"}
   end
+
+  def webp_photo do
+    {"RIFF" <> <<20::little-32>> <> "WEBPVP8L", "image/webp"}
+  end
 end

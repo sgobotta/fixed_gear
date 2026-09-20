@@ -11,6 +11,11 @@ defmodule FixedGearWeb.BikePhotoControllerTest do
 
     assert response(conn, 200) == png
     assert response_content_type(conn, :png)
+
+    assert "public, max-age=31536000, immutable" in get_resp_header(
+             conn,
+             "cache-control"
+           )
   end
 
   test "returns 404 when the bike has no photo", %{conn: conn} do

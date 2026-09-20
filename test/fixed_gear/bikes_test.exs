@@ -90,15 +90,18 @@ defmodule FixedGear.BikesTest do
   end
 
   describe "update_bike/3" do
-    test "keeps the existing photo when none is uploaded" do
+    test "replaces the photo when a new one is uploaded" do
       bike = bike_fixture(%{name: "Old"}, png_photo())
+      {webp, type} = webp_photo()
 
-      {:ok, updated} =
-        Bikes.update_bike(Bikes.get_bike!(bike.id), %{name: "New"})
+      {:ok, _updated} =
+        Bikes.update_bike(
+          Bikes.get_bike!(bike.id),
+          %{name: "New"},
+          {webp, type}
+        )
 
-      assert updated.name == "New"
-      {data, "image/png"} = Bikes.get_bike_photo(bike.id)
-      assert data == elem(png_photo(), 0)
+      assert {^webp, "image/webp"} = Bikes.get_bike_photo(bike.id)
     end
   end
 

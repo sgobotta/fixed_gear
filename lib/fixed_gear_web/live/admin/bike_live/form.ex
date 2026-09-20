@@ -85,20 +85,22 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
           <img
             :if={@bike.id && Bike.photo?(@bike)}
             id="current-photo"
-            src={~p"/bikes/#{@bike}/photo"}
+            src={
+              ~p"/bikes/#{@bike}/photo?#{[v: DateTime.to_unix(@bike.updated_at)]}"
+            }
             alt={gettext("Current photo of %{name}", name: @bike.name)}
             class="h-36 w-36 rounded-xl object-cover"
           />
-          <.live_file_input
-            upload={@uploads.photo}
-            accept="image/*"
-            capture="environment"
-            class="file-input file-input-bordered w-full"
-          />
+          <div id="photo-input" phx-hook="CompressPhoto">
+            <.live_file_input
+              upload={@uploads.photo}
+              accept="image/*"
+              capture="environment"
+              class="file-input file-input-bordered w-full"
+            />
+          </div>
           <p class="text-xs text-base-content/55">
-            {gettext(
-              "Optional. On a phone this opens the camera. JPEG, PNG, or WebP up to 5MB."
-            )}
+            {gettext("Optional. On a phone this opens the camera.")}
           </p>
           <article
             :for={entry <- @uploads.photo.entries}
@@ -116,6 +118,18 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
             >
               {entry.progress}%
             </progress>
+            <p
+              :if={entry.valid? and not entry.done?}
+              class="text-xs text-base-content/55"
+            >
+              {gettext("Uploading photo...")}
+            </p>
+            <p
+              :for={err <- upload_errors(@uploads.photo, entry)}
+              class="text-sm text-error"
+            >
+              {error_to_string(err)}
+            </p>
             <button
               type="button"
               id={"cancel-upload-#{entry.ref}"}
@@ -139,6 +153,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
             phx-disable-with={gettext("Saving...")}
             class="btn btn-primary"
             id="save-bike"
+            disabled={photo_uploading?(@uploads.photo)}
           >
             {gettext("Save bike")}
           </.button>
@@ -153,9 +168,11 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
     {:ok,
      socket
      |> allow_upload(:photo,
-       accept: ~w(.jpg .jpeg .png .webp),
+       accept: ~w(image/* .jpg .jpeg .png .webp .heic .heif),
        max_entries: 1,
-       max_file_size: 5_000_000
+       max_file_size: 15_000_000,
+       chunk_timeout: 30_000,
+       auto_upload: true
      )}
   end
 
@@ -190,7 +207,14 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
       |> Map.put(:action, :validate)
       |> to_form()
 
-    {:noreply, assign(socket, :form, form)}
+    {:noreply,
+     socket
+     |> drop_invalid_photo()
+     |> assign(:form, form)}
+  end
+
+  def handle_event("validate", _params, socket) do
+    {:noreply, drop_invalid_photo(socket)}
   end
 
   def handle_event("cancel-upload", %{"ref" => ref}, socket) do
@@ -232,12 +256,44 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
   end
 
   defp consume_photo(socket) do
-    case consume_uploaded_entries(socket, :photo, fn %{path: path}, entry ->
-           {:ok, {File.read!(path), entry.client_type}}
-         end) do
-      [photo | _] -> photo
-      [] -> nil
+    {done, in_progress} = uploaded_entries(socket, :photo)
+
+    if in_progress == [] do
+      case consume_uploaded_entries(socket, :photo, fn %{path: path}, entry ->
+             {:ok, {File.read!(path), entry.client_type}}
+           end) do
+        [photo | _] -> photo
+        [] -> nil
+      end
+    else
+      consume_done_photo(socket, done)
     end
+  end
+
+  defp consume_done_photo(_socket, []), do: nil
+
+  defp consume_done_photo(socket, [entry | _]) do
+    consume_uploaded_entry(socket, entry, fn %{path: path} ->
+      {:ok, {File.read!(path), entry.client_type}}
+    end)
+  end
+
+  defp drop_invalid_photo(socket) do
+    Enum.reduce(socket.assigns.uploads.photo.entries, socket, fn entry, acc ->
+      errors = upload_errors(acc.assigns.uploads.photo, entry)
+
+      if errors == [] do
+        acc
+      else
+        acc
+        |> cancel_upload(:photo, entry.ref)
+        |> put_flash(:error, error_to_string(hd(errors)))
+      end
+    end)
+  end
+
+  defp photo_uploading?(upload) do
+    Enum.any?(upload.entries, &(&1.valid? and not &1.done?))
   end
 
   defp error_to_string(:too_large), do: gettext("Photo is too large")

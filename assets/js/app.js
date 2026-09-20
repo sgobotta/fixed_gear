@@ -425,11 +425,126 @@ const SkidWheel = {
   }
 }
 
+const CompressPhoto = {
+  mounted() {
+    this.passthrough = false
+    this.busy = false
+    this.input = null
+    this._onChange = (event) => this.handleChange(event)
+    this.bindInput()
+  },
+
+  updated() {
+    this.bindInput()
+  },
+
+  destroyed() {
+    this.unbindInput()
+  },
+
+  bindInput() {
+    const input = this.el.querySelector("input[type=\"file\"]")
+    if (input === this.input) {
+      return
+    }
+    this.unbindInput()
+    this.input = input
+    if (this.input) {
+      this.input.addEventListener("change", this._onChange, true)
+    }
+  },
+
+  unbindInput() {
+    if (this.input) {
+      this.input.removeEventListener("change", this._onChange, true)
+    }
+    this.input = null
+  },
+
+  handleChange(event) {
+    if (this.passthrough) {
+      this.passthrough = false
+      return
+    }
+    if (this.busy) {
+      event.stopPropagation()
+      event.stopImmediatePropagation()
+      return
+    }
+    const input = event.target
+    if (input == null || input.files == null || input.files.length === 0) {
+      return
+    }
+    const file = input.files[0]
+    if (file == null) {
+      return
+    }
+    event.stopPropagation()
+    event.stopImmediatePropagation()
+    this.busy = true
+    this.prepare(file).then((next) => {
+      this.replaceFile(input, next)
+      this.busy = false
+      this.passthrough = true
+      input.dispatchEvent(new Event("change", {bubbles: true}))
+    })
+  },
+
+  replaceFile(input, file) {
+    try {
+      const transfer = new DataTransfer()
+      transfer.items.add(file)
+      input.files = transfer.files
+    } catch (_err) {
+      // Some mobile browsers refuse to assign input.files; keep the original.
+    }
+  },
+
+  prepare(file) {
+    const maxEdge = 1600
+    const quality = 0.82
+    if (typeof createImageBitmap !== "function") {
+      return Promise.resolve(file)
+    }
+    return createImageBitmap(file, {imageOrientation: "from-image"}).then((bitmap) => {
+      let width = bitmap.width
+      let height = bitmap.height
+      if (width > maxEdge || height > maxEdge) {
+        const scale = Math.min(maxEdge / width, maxEdge / height)
+        width = Math.round(width * scale)
+        height = Math.round(height * scale)
+      }
+      const canvas = document.createElement("canvas")
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext("2d")
+      if (ctx == null) {
+        bitmap.close()
+        return file
+      }
+      ctx.drawImage(bitmap, 0, 0, width, height)
+      bitmap.close()
+      return new Promise((resolve) => {
+        canvas.toBlob(function (blob) {
+          if (blob == null) {
+            resolve(file)
+            return
+          }
+          const name = file.name.replace(/\.[^.]+$/, "") + ".jpg"
+          resolve(new File([blob], name, {type: "image/jpeg", lastModified: Date.now()}))
+        }, "image/jpeg", quality)
+      })
+    }).catch(function () {
+      return file
+    })
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {RankingList, RatioMotion, SkidWheel, ...colocatedHooks},
+  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, ...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits

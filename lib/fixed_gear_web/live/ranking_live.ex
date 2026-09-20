@@ -190,7 +190,7 @@ defmodule FixedGearWeb.RankingLive do
         class="overflow-hidden rounded-xl bg-base-300"
       >
         <img
-          src={~p"/bikes/#{@bike}/photo"}
+          src={~p"/bikes/#{@bike}/photo?#{[v: DateTime.to_unix(@bike.updated_at)]}"}
           alt={gettext("Photo of %{name}", name: @bike.name)}
           class="aspect-[4/3] h-full w-full object-cover"
         />
