@@ -118,8 +118,6 @@ defmodule FixedGearWeb.RankingComponents do
   attr :id, :string, required: true
   attr :patches, :integer, required: true
   attr :ambidextrous, :integer, default: nil
-  attr :cadence, :integer, required: true
-  attr :ratio, :float, required: true
 
   def skid_wheel(assigns) do
     count =
@@ -130,18 +128,34 @@ defmodule FixedGearWeb.RankingComponents do
       end
 
     step = if count > 0, do: 360 / count, else: 0
-    blob_rx = skid_blob_rx(count)
+    show_ambi? = ambi_extra?(assigns.ambidextrous, count)
+    blob_n = if show_ambi?, do: count * 2, else: count
+    blob_rx = skid_blob_rx(blob_n)
     blob_ry = blob_rx * 0.78
 
     marks =
       if count > 0 do
-        Enum.map(0..(count - 1), fn i ->
-          %{
-            index: i,
+        Enum.flat_map(0..(count - 1), fn i ->
+          one = %{
+            ambi: false,
             angle: -i * step,
             rx: blob_rx,
             ry: blob_ry
           }
+
+          if show_ambi? do
+            [
+              one,
+              %{
+                ambi: true,
+                angle: -i * step - step / 2,
+                rx: blob_rx,
+                ry: blob_ry
+              }
+            ]
+          else
+            [one]
+          end
         end)
       else
         []
@@ -150,16 +164,14 @@ defmodule FixedGearWeb.RankingComponents do
     assigns =
       assigns
       |> assign(:marks, marks)
+      |> assign(:show_ambi, show_ambi?)
       |> assign(:spokes, [0, 120, 240])
-      |> assign(:rev_ms, visual_rev_ms(assigns.cadence, assigns.ratio))
 
     ~H"""
     <div
       id={@id}
       phx-hook="SkidWheel"
       data-patches={@patches}
-      data-cadence={@cadence}
-      data-rev-ms={@rev_ms}
     >
       <div class="flex items-center gap-4">
         <div
@@ -196,8 +208,7 @@ defmodule FixedGearWeb.RankingComponents do
             <circle cx="40" cy="40" r="5.5" fill="currentColor" class="opacity-40" />
             <g
               :for={mark <- @marks}
-              class="skid-patch"
-              data-index={mark.index}
+              class={["skid-patch", mark.ambi && "skid-patch-ambi"]}
               transform={"rotate(#{mark.angle} 40 40)"}
             >
               <ellipse cx="40" cy="12" rx={mark.rx} ry={mark.ry} />
@@ -216,9 +227,11 @@ defmodule FixedGearWeb.RankingComponents do
           {@patches}
         </p>
       </div>
-      <p class="mt-1 ps-20 text-xs text-base-content/55 sm:ps-24">
-        marks on the tire
-        <span :if={@ambidextrous} class="block">{@ambidextrous} both feet</span>
+      <p class="mt-1 ps-20 text-[11px] leading-none text-base-content/55 sm:ps-24">
+        <span class="skid-legend-one">one foot</span>
+        <span :if={@show_ambi} class="skid-legend-ambi mt-1 block">
+          {@ambidextrous} both feet
+        </span>
       </p>
     </div>
     """
@@ -252,39 +265,6 @@ defmodule FixedGearWeb.RankingComponents do
           <div class="flex h-14 w-14 items-center justify-center sm:h-16 sm:w-16">
             <svg
               viewBox="0 0 64 64"
-              data-spin="pedal"
-              class="ratio-spin size-11 origin-center motion-reduce:animate-none sm:size-12"
-              aria-hidden="true"
-            >
-              <circle
-                cx="32"
-                cy="32"
-                r="20"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="3"
-              />
-              <line
-                x1="32"
-                y1="32"
-                x2="32"
-                y2="14"
-                stroke="currentColor"
-                stroke-width="3"
-                stroke-linecap="round"
-              />
-              <circle cx="32" cy="14" r="4" fill="currentColor" />
-            </svg>
-          </div>
-          <span class="text-[11px] leading-none tracking-wide text-base-content/55 uppercase">
-            Pedal
-          </span>
-        </div>
-
-        <div class="flex w-14 flex-col items-center gap-1 sm:w-16">
-          <div class="flex h-14 w-14 items-center justify-center sm:h-16 sm:w-16">
-            <svg
-              viewBox="0 0 64 64"
               data-spin="wheel"
               class="ratio-spin size-14 origin-center motion-reduce:animate-none sm:size-16"
               aria-hidden="true"
@@ -313,6 +293,39 @@ defmodule FixedGearWeb.RankingComponents do
             Wheel
           </span>
         </div>
+
+        <div class="flex w-14 flex-col items-center gap-1 sm:w-16">
+          <div class="flex h-14 w-14 items-center justify-center sm:h-16 sm:w-16">
+            <svg
+              viewBox="0 0 64 64"
+              data-spin="pedal"
+              class="ratio-spin size-11 origin-center motion-reduce:animate-none sm:size-12"
+              aria-hidden="true"
+            >
+              <circle
+                cx="32"
+                cy="32"
+                r="20"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="3"
+              />
+              <line
+                x1="32"
+                y1="32"
+                x2="32"
+                y2="14"
+                stroke="currentColor"
+                stroke-width="3"
+                stroke-linecap="round"
+              />
+              <circle cx="32" cy="14" r="4" fill="currentColor" />
+            </svg>
+          </div>
+          <span class="text-[11px] leading-none tracking-wide text-base-content/55 uppercase">
+            Pedal
+          </span>
+        </div>
       </div>
       <div class="flex min-w-0 flex-col gap-1">
         <div class="flex h-14 items-center sm:h-16">
@@ -332,17 +345,17 @@ defmodule FixedGearWeb.RankingComponents do
   defp skid_blob_rx(n) when n > 6, do: 4.7
   defp skid_blob_rx(_n), do: 5.6
 
+  defp ambi_extra?(ambi, one_sided)
+       when is_integer(ambi) and is_integer(one_sided) and ambi > one_sided,
+       do: true
+
+  defp ambi_extra?(_ambi, _one_sided), do: false
+
   defp visual_pedal_seconds(rpm) when is_integer(rpm) and rpm > 0 do
     @seconds_per_minute / rpm
   end
 
   defp visual_pedal_seconds(_rpm), do: @seconds_per_minute / @reference_rpm
-
-  defp visual_rev_ms(rpm, ratio) when is_number(ratio) and ratio > 0 do
-    round(visual_pedal_seconds(rpm) / ratio * 1000)
-  end
-
-  defp visual_rev_ms(rpm, _ratio), do: round(visual_pedal_seconds(rpm) * 1000)
 
   defp keep_panel_during_collapse do
     JS.hide(

@@ -228,9 +228,7 @@ const SkidWheel = {
       this.running = true
       this.rotation = 0
       this.startCycle()
-      return
     }
-    this.syncPlayback()
   },
 
   destroyed() {
@@ -291,55 +289,80 @@ const SkidWheel = {
       this.clearMarks()
     }
 
-    this.spinTo(target, this.spinMs(delta), function () {
+    this.rollTo(target, this.spinMs(delta), function () {
       const patch = hook.patchAt(stepIndex % hook.n)
       if (patch) {
         patch.classList.add("is-skidding")
       }
-      hook.burstSparks()
-
-      hook.timer = window.setTimeout(function () {
-        if (!hook.running) {
-          return
-        }
+      hook.skidFight(target, function () {
         if (patch) {
           patch.classList.remove("is-skidding")
           patch.classList.add("is-marked")
         }
         hook.runCycle(stepIndex + 1)
-      }, hook.brakeMs())
+      })
     })
   },
 
-  spinTo(deg, ms, done) {
-    const rotor = this.rotor
+  rollTo(deg, ms, done) {
     const from = this.rotation
+    const slam = from + (deg - from) * 0.96
+    this.play(
+      [
+        { transform: "rotate(" + from + "deg)", easing: "cubic-bezier(0.42, 0, 1, 1)" },
+        { transform: "rotate(" + slam + "deg)", offset: 0.9, easing: "cubic-bezier(0.15, 0, 0, 1)" },
+        { transform: "rotate(" + deg + "deg)" }
+      ],
+      ms,
+      deg,
+      done
+    )
+  },
+
+  skidFight(contact, done) {
+    const reverse = contact - 8
+    const stuck = contact - 11
+    const creep = contact - 5
+    const hook = this
+
+    this.burstSparks()
+    this.timer = window.setTimeout(function () {
+      hook.burstSparks()
+    }, 160)
+
+    this.play(
+      [
+        { transform: "rotate(" + contact + "deg)", easing: "cubic-bezier(0.2, 0.85, 0.3, 1)" },
+        { transform: "rotate(" + reverse + "deg)", offset: 0.18, easing: "cubic-bezier(0.45, 0.05, 0.6, 1)" },
+        { transform: "rotate(" + stuck + "deg)", offset: 0.48, easing: "cubic-bezier(0.4, 0.1, 0.7, 1)" },
+        { transform: "rotate(" + creep + "deg)", offset: 0.78, easing: "cubic-bezier(0.55, 0, 0.7, 1)" },
+        { transform: "rotate(" + contact + "deg)" }
+      ],
+      560,
+      contact,
+      done
+    )
+  },
+
+  play(keyframes, ms, endDeg, done) {
+    const rotor = this.rotor
     const hook = this
 
     if (this.anim) {
       this.anim.cancel()
     }
 
-    this.spinRevMs = this.revMs()
-    const cruise = from + (deg - from) * 0.78
-    this.anim = rotor.animate(
-      [
-        { transform: "rotate(" + from + "deg)", easing: "linear" },
-        { transform: "rotate(" + cruise + "deg)", offset: 0.72, easing: "cubic-bezier(0.12, 0.82, 0.18, 1)" },
-        { transform: "rotate(" + deg + "deg)" }
-      ],
-      {
-        duration: ms,
-        fill: "forwards"
-      }
-    )
+    this.anim = rotor.animate(keyframes, {
+      duration: ms,
+      fill: "forwards"
+    })
 
     this.anim.onfinish = function () {
       if (!hook.running) {
         return
       }
-      hook.rotation = deg
-      rotor.style.transform = "rotate(" + deg + "deg)"
+      hook.rotation = endDeg
+      rotor.style.transform = "rotate(" + endDeg + "deg)"
       if (hook.anim) {
         hook.anim.cancel()
         hook.anim = null
@@ -349,43 +372,8 @@ const SkidWheel = {
   },
 
   spinMs(deltaDeg) {
-    const revMs = this.revMs()
-    const ms = Math.abs(deltaDeg) / 360 * revMs
-    if (ms < 60) {
-      return 60
-    }
-    return ms
-  },
-
-  revMs() {
-    const n = parseInt(this.el.getAttribute("data-rev-ms"), 10)
-    if (!n || n < 1) {
-      return 250
-    }
-    return n
-  },
-
-  syncPlayback() {
-    if (!this.anim || !this.spinRevMs) {
-      return
-    }
-    const next = this.revMs()
-    if (next < 1) {
-      return
-    }
-    this.anim.playbackRate = this.spinRevMs / next
-  },
-
-  brakeMs() {
-    const rpm = parseInt(this.el.getAttribute("data-cadence"), 10)
-    if (!rpm || rpm < 1) {
-      return 450
-    }
-    const ms = Math.round(180 * (90 / rpm))
-    if (ms < 90) {
-      return 90
-    }
-    if (ms > 280) {
+    const ms = Math.abs(deltaDeg) / 360 * 720
+    if (ms < 280) {
       return 280
     }
     return ms

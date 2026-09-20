@@ -232,8 +232,6 @@ defmodule FixedGearWeb.RankingLive do
             id={"skid-wheel-#{@bike.id}"}
             patches={@patches.one_sided}
             ambidextrous={@patches.ambidextrous}
-            cadence={@cadence}
-            ratio={@ratio}
           />
         </.stat>
       </div>
