@@ -37,22 +37,24 @@ defmodule FixedGearWeb.SkidPatchLive do
           phx-change="update"
           class="space-y-5 rounded-3xl border border-base-300 bg-base-100 p-4 shadow-sm sm:p-5"
         >
-          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <.input
-              id="chain-ring"
+          <div class="space-y-4">
+            <.gear_slider
+              id="chain-ring-slider"
+              input_id="chain-ring"
               name="chain_ring"
-              type="select"
               label={gettext("Chain ring")}
               value={@chain_ring}
-              options={Bikes.chain_ring_options()}
+              min={Calculations.chain_ring_min()}
+              max={Calculations.chain_ring_max()}
             />
-            <.input
-              id="rear-sprocket"
+            <.gear_slider
+              id="rear-sprocket-slider"
+              input_id="rear-sprocket"
               name="rear_sprocket"
-              type="select"
               label={gettext("Rear sprocket")}
               value={@rear_sprocket}
-              options={Bikes.sprocket_options()}
+              min={Calculations.sprocket_min()}
+              max={Calculations.sprocket_max()}
             />
             <.input
               id="tire-width"

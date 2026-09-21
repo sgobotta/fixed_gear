@@ -218,12 +218,14 @@ const SkidWheel = {
     this.rotation = 0
     this.anim = null
     this.timer = null
+    this.signature = this.patchSignature()
     this.startCycle()
   },
 
   updated() {
-    const next = this.patchCount()
-    if (next !== this.n) {
+    const next = this.patchSignature()
+    if (next !== this.signature) {
+      this.signature = next
       this.stopCycle()
       this.running = true
       this.rotation = 0
@@ -269,6 +271,14 @@ const SkidWheel = {
 
   patchCount() {
     return this.el.querySelectorAll(".skid-patch").length
+  },
+
+  patchSignature() {
+    return (
+      (this.el.getAttribute("data-patches") || "") +
+      ":" +
+      (this.el.getAttribute("data-ambidextrous") || "")
+    )
   },
 
   patches() {
@@ -642,11 +652,41 @@ const CadenceSlider = {
   }
 }
 
+const SliderValue = {
+  mounted() {
+    this.input = this.el.querySelector("input[type='range']")
+    this.valueEl = this.el.querySelector("[data-slider-value]")
+    this.suffix = this.el.getAttribute("data-suffix") || ""
+    this.onInput = this.syncFromInput.bind(this)
+    if (this.input) {
+      this.input.addEventListener("input", this.onInput)
+    }
+    this.syncFromInput()
+  },
+
+  updated() {
+    this.syncFromInput()
+  },
+
+  destroyed() {
+    if (this.input && this.onInput) {
+      this.input.removeEventListener("input", this.onInput)
+    }
+  },
+
+  syncFromInput() {
+    if (!this.input || !this.valueEl) {
+      return
+    }
+    this.valueEl.textContent = this.input.value + this.suffix
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, ...colocatedHooks},
+  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, SliderValue, ...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits

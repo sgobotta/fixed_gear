@@ -7,7 +7,7 @@ defmodule FixedGearWeb.CadenceColorTest do
     assert CadenceColor.parse("-10") == 0
     assert CadenceColor.parse("200") == 180
     assert CadenceColor.parse("90") == 90
-    assert CadenceColor.parse("nope") == 90
+    assert CadenceColor.parse("nope") == 60
   end
 
   test "lerps oklch across the advertised bands" do

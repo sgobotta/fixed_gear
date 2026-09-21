@@ -107,7 +107,7 @@ defmodule FixedGearWeb.Layouts do
           aria-current={@section == :skid_patch && "page"}
           class={nav_tab_class(@section == :skid_patch)}
         >
-          <.icon name="hero-stop-circle" class="size-5" />
+          <.nav_wheel_icon />
           {gettext("Skid Patch")}
         </.link>
       </div>
@@ -119,11 +119,27 @@ defmodule FixedGearWeb.Layouts do
 
   defp nav_tab_class(true),
     do:
-      "flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs font-medium text-primary transition"
+      "mx-2 flex flex-1 flex-col items-center gap-0.5 rounded-2xl bg-base-200 py-2.5 text-xs font-semibold text-base-content transition"
 
   defp nav_tab_class(false),
     do:
-      "flex flex-1 flex-col items-center gap-0.5 py-2.5 text-xs text-base-content/50 transition hover:text-base-content"
+      "mx-2 flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-2.5 text-xs text-base-content/45 transition hover:text-base-content"
+
+  defp nav_wheel_icon(assigns) do
+    ~H"""
+    <svg
+      viewBox="0 0 24 24"
+      class="size-5"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="1.8"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="8.2" />
+      <circle cx="12" cy="12" r="2.2" />
+    </svg>
+    """
+  end
 
   @doc """
   Shows the flash group with standard titles and content.

@@ -426,7 +426,7 @@ msgstr "Entrá para cargar y editar bicis."
 #: lib/fixed_gear_web/components/ranking_components.ex:350
 #, elixir-autogen, elixir-format
 msgid "Skid patches"
-msgstr "Parches de skid"
+msgstr "Skid patches"
 
 #: lib/fixed_gear_web/components/layouts.ex:165
 #, elixir-autogen, elixir-format
@@ -603,7 +603,7 @@ msgstr "Inspirado en"
 #: lib/fixed_gear_web/live/skid_patch_live.ex:29
 #, elixir-autogen, elixir-format
 msgid "Play with chainring, sprocket, and tire to see ratio, speed, and skid patches."
-msgstr "Probá plato, piñón y cubierta para ver ratio, velocidad y parches de skid."
+msgstr "Probá plato, piñón y cubierta para ver ratio, velocidad y skid patches."
 
 #: lib/fixed_gear_web/live/skid_patch_live.ex:23
 #, elixir-autogen, elixir-format

@@ -112,7 +112,7 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert has_element?(view, ~s(#cadence[min="0"][max="180"]))
     assert has_element?(view, "#ranking-kicker", gettext("Cadence"))
     refute has_element?(view, "#ranking-kicker", gettext("Weigh-in"))
-    assert has_element?(view, "#cadence-value", "90 rpm")
+    assert has_element?(view, "#cadence-value", "60 rpm")
 
     html = render(view)
     assert bike_index(html, fast.id) < bike_index(html, slow.id)
@@ -121,8 +121,8 @@ defmodule FixedGearWeb.RankingLiveTest do
     |> element("#bike-#{fast.id}-header")
     |> render_click()
 
-    assert has_element?(view, "#bike-#{fast.id}-expand-inner", "90 rpm")
-    assert has_element?(view, ~s(#ratio-motion-#{fast.id}[data-cadence="90"]))
+    assert has_element?(view, "#bike-#{fast.id}-expand-inner", "60 rpm")
+    assert has_element?(view, ~s(#ratio-motion-#{fast.id}[data-cadence="60"]))
     assert has_element?(view, ~s(#ratio-motion-#{fast.id}[data-pedal-ms]))
 
     view
