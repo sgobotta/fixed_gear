@@ -37,6 +37,9 @@ defmodule FixedGearWeb.Layouts do
 
   slot :inner_block, required: true
 
+  slot :bottom_dock,
+    doc: "optional sheet rendered just above the bottom navigation bar"
+
   def app(assigns) do
     ~H"""
     <header class="border-b border-base-300/80 px-4 sm:px-6 lg:px-8">
@@ -80,31 +83,34 @@ defmodule FixedGearWeb.Layouts do
       </div>
     </main>
 
-    <nav
-      id="app-bottom-nav"
-      class="fixed inset-x-0 bottom-0 z-30 border-t border-base-300/80 bg-base-100/95 backdrop-blur pb-[env(safe-area-inset-bottom)]"
-    >
-      <div class="mx-auto flex max-w-4xl">
-        <.link
-          id="nav-ranking"
-          navigate={~p"/ranking/weight"}
-          aria-current={@section == :ranking && "page"}
-          class={nav_tab_class(@section == :ranking)}
-        >
-          <.icon name="hero-bars-3" class="size-5" />
-          {gettext("Ranking")}
-        </.link>
-        <.link
-          id="nav-skid-patch"
-          navigate={~p"/skid-patch"}
-          aria-current={@section == :skid_patch && "page"}
-          class={nav_tab_class(@section == :skid_patch)}
-        >
-          <.nav_wheel_icon />
-          {gettext("Skid Patch")}
-        </.link>
-      </div>
-    </nav>
+    <div class="fixed inset-x-0 bottom-0 z-30">
+      {render_slot(@bottom_dock)}
+      <nav
+        id="app-bottom-nav"
+        class="relative z-10 border-t border-base-300/80 bg-base-100/95 backdrop-blur pb-[env(safe-area-inset-bottom)]"
+      >
+        <div class="mx-auto flex max-w-4xl">
+          <.link
+            id="nav-ranking"
+            navigate={~p"/ranking/weight"}
+            aria-current={@section == :ranking && "page"}
+            class={nav_tab_class(@section == :ranking)}
+          >
+            <.icon name="hero-bars-3" class="size-5" />
+            {gettext("Ranking")}
+          </.link>
+          <.link
+            id="nav-skid-patch"
+            navigate={~p"/skid-patch"}
+            aria-current={@section == :skid_patch && "page"}
+            class={nav_tab_class(@section == :skid_patch)}
+          >
+            <.nav_wheel_icon />
+            {gettext("Skid Patch")}
+          </.link>
+        </div>
+      </nav>
+    </div>
 
     <.flash_group flash={@flash} />
     """

@@ -23,7 +23,7 @@ defmodule FixedGearWeb.RankingLiveTest do
            )
 
     assert has_element?(view, "#ranking-kicker", gettext("Weigh-in"))
-    refute has_element?(view, "#cadence-form")
+    assert has_element?(view, ~s(#cadence-form[aria-hidden="true"]))
     refute has_element?(view, ~s(a[href="/users/log-in"]))
   end
 
@@ -179,7 +179,8 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert_patch(view, ~p"/ranking/cadence")
     assert has_element?(view, ~s(#tab-cadence[aria-selected="true"]))
     assert has_element?(view, ~s(#tab-weight[aria-selected="false"]))
-    assert has_element?(view, "#cadence-form")
+    assert has_element?(view, ~s(#cadence-form[aria-hidden="false"]))
+    assert has_element?(view, "#cadence-dock")
     assert has_element?(view, ~s(#cadence[min="0"][max="180"]))
     assert has_element?(view, "#ranking-kicker", gettext("Cadence"))
     refute has_element?(view, "#ranking-kicker", gettext("Weigh-in"))

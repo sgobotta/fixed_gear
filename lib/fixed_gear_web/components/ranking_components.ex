@@ -288,6 +288,38 @@ defmodule FixedGearWeb.RankingComponents do
     """
   end
 
+  attr :tab, :atom, required: true
+  attr :cadence, :integer, required: true
+
+  def cadence_dock(assigns) do
+    ~H"""
+    <form
+      id="cadence-form"
+      phx-change="set_cadence"
+      aria-hidden={to_string(@tab != :cadence)}
+      inert={@tab != :cadence}
+      class={[
+        "cadence-dock absolute inset-x-0 bottom-full z-0 px-4 pb-2 sm:px-6 lg:px-8",
+        "transition-transform duration-300 ease-out motion-reduce:transition-none",
+        @tab == :cadence && "translate-y-0",
+        @tab != :cadence &&
+          "pointer-events-none translate-y-[calc(100%+1.5rem)]"
+      ]}
+    >
+      <div
+        id="cadence-dock"
+        class="mx-auto max-w-4xl rounded-3xl border border-base-300 bg-base-100/95 p-4 shadow-lg backdrop-blur"
+      >
+        <div
+          class="mx-auto mb-3 h-1 w-10 rounded-full bg-base-content/15"
+          aria-hidden="true"
+        />
+        <.cadence_slider cadence={@cadence} />
+      </div>
+    </form>
+    """
+  end
+
   attr :id, :string, default: "cadence-slider"
   attr :cadence, :integer, required: true
   attr :name, :string, default: "cadence"
