@@ -721,10 +721,11 @@ const SliderValue = {
 const BottomNav = {
   mounted() {
     const hook = this
+    this.nav = this.el.closest("#app-bottom-nav")
     this.pill = this.el.querySelector("#app-bottom-nav-pill")
     this.onClick = function (event) {
       const link = event.target.closest("a")
-      if (!link || !hook.el.contains(link)) {
+      if (!link || !hook.nav || !hook.nav.contains(link)) {
         return
       }
       hook.pop(link)
@@ -736,7 +737,9 @@ const BottomNav = {
     this.onResize = function () {
       hook.layoutActive(false)
     }
-    this.el.addEventListener("click", this.onClick)
+    if (this.nav) {
+      this.nav.addEventListener("click", this.onClick)
+    }
     window.addEventListener("resize", this.onResize)
     this.restoreAndMove()
   },
@@ -746,7 +749,9 @@ const BottomNav = {
   },
 
   destroyed() {
-    this.el.removeEventListener("click", this.onClick)
+    if (this.nav) {
+      this.nav.removeEventListener("click", this.onClick)
+    }
     window.removeEventListener("resize", this.onResize)
   },
 
@@ -755,7 +760,7 @@ const BottomNav = {
   },
 
   activeLink() {
-    return this.el.querySelector("[aria-current='page']")
+    return this.nav && this.nav.querySelector("[aria-current='page']")
   },
 
   restoreAndMove() {

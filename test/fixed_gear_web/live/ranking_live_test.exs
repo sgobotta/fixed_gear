@@ -15,6 +15,7 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert has_element?(view, ~s(#tab-weight[role="tab"][aria-selected="true"]))
     assert has_element?(view, "#nav-ranking[aria-current=page]")
     assert has_element?(view, "#app-bottom-nav-pill")
+    assert has_element?(view, ~s(#app-bottom-nav-stage[phx-update="ignore"]))
     assert has_element?(view, "#nav-skid-patch")
     refute has_element?(view, "#nav-skid-patch[aria-current=page]")
 

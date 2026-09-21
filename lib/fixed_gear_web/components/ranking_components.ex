@@ -286,12 +286,14 @@ defmodule FixedGearWeb.RankingComponents do
     """
   end
 
+  attr :form, Phoenix.HTML.Form, required: true
   attr :tab, :atom, required: true
   attr :cadence, :integer, required: true
 
   def cadence_dock(assigns) do
     ~H"""
-    <form
+    <.form
+      for={@form}
       id="cadence-form"
       phx-change="set_cadence"
       aria-hidden={to_string(@tab != :cadence)}
@@ -314,7 +316,7 @@ defmodule FixedGearWeb.RankingComponents do
         />
         <.cadence_slider cadence={@cadence} />
       </div>
-    </form>
+    </.form>
     """
   end
 

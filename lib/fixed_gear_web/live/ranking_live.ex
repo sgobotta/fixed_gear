@@ -118,7 +118,7 @@ defmodule FixedGearWeb.RankingLive do
       </section>
 
       <:bottom_dock>
-        <.cadence_dock tab={@tab} cadence={@cadence} />
+        <.cadence_dock tab={@tab} cadence={@cadence} form={@cadence_form} />
       </:bottom_dock>
     </Layouts.app>
     """
@@ -201,7 +201,8 @@ defmodule FixedGearWeb.RankingLive do
      |> assign(:cadence, CadenceColor.default_rpm())
      |> assign(:expanded_id, nil)
      |> assign(:bikes, Bikes.list_bikes())
-     |> assign(:ranked_bikes, [])}
+     |> assign(:ranked_bikes, [])
+     |> assign_cadence_form()}
   end
 
   @impl true
@@ -226,6 +227,7 @@ defmodule FixedGearWeb.RankingLive do
     {:noreply,
      socket
      |> assign(:cadence, CadenceColor.parse(cadence))
+     |> assign_cadence_form()
      |> maybe_assign_ranking()}
   end
 
@@ -253,6 +255,14 @@ defmodule FixedGearWeb.RankingLive do
        do: socket
 
   defp maybe_assign_ranking(socket), do: assign_ranking(socket)
+
+  defp assign_cadence_form(socket) do
+    assign(
+      socket,
+      :cadence_form,
+      to_form(%{"cadence" => socket.assigns.cadence}, as: nil)
+    )
+  end
 
   defp skip_zero_cadence_rerank?(%{
          assigns: %{tab: :cadence, cadence: cadence, ranked_bikes: ranked}

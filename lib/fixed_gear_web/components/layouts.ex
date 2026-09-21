@@ -87,11 +87,17 @@ defmodule FixedGearWeb.Layouts do
       {render_slot(@bottom_dock)}
       <nav
         id="app-bottom-nav"
-        phx-hook="BottomNav"
         class="relative z-10 border-t border-base-300/80 bg-base-100/95 backdrop-blur pb-[env(safe-area-inset-bottom)]"
       >
         <div class="relative mx-auto flex max-w-4xl">
-          <div id="app-bottom-nav-pill" class="nav-tab-pill" aria-hidden="true">
+          <div
+            id="app-bottom-nav-stage"
+            phx-hook="BottomNav"
+            phx-update="ignore"
+            class="pointer-events-none absolute inset-0 z-0"
+          >
+            <div id="app-bottom-nav-pill" class="nav-tab-pill" aria-hidden="true">
+            </div>
           </div>
           <.link
             id="nav-ranking"
