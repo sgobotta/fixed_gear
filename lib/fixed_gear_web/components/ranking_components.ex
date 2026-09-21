@@ -6,9 +6,15 @@ defmodule FixedGearWeb.RankingComponents do
 
   import FixedGearWeb.CoreComponents, only: [icon: 1]
 
+  alias FixedGear.Bikes.Calculations
+  alias FixedGearWeb.CadenceColor
   alias Phoenix.LiveView.JS
 
   @max_skid_ticks 24
+  @spoke_count 32
+  @spoke_angles Enum.map(0..(@spoke_count - 1), fn i ->
+                  i * 360.0 / @spoke_count
+                end)
   @reference_rpm 90
   @seconds_per_minute 60
 
@@ -169,17 +175,18 @@ defmodule FixedGearWeb.RankingComponents do
       |> assign(:marks, marks)
       |> assign(:show_ambi, show_ambi?)
       |> assign(:displayed, displayed)
-      |> assign(:spokes, [0, 120, 240])
+      |> assign(:spokes, @spoke_angles)
 
     ~H"""
     <div
       id={@id}
       phx-hook="SkidWheel"
       data-patches={@patches}
+      data-ambidextrous={@ambidextrous}
     >
       <div class="flex items-center gap-4">
         <div
-          id={"#{@id}-stage"}
+          id={"#{@id}-stage-#{@patches}-#{@displayed}"}
           phx-update="ignore"
           class="relative size-16 shrink-0 sm:size-20"
         >
@@ -200,18 +207,18 @@ defmodule FixedGearWeb.RankingComponents do
             <g :for={angle <- @spokes} transform={"rotate(#{angle} 40 40)"}>
               <line
                 x1="40"
-                y1="33"
+                y1="33.2"
                 x2="40"
-                y2="18"
+                y2="16.5"
                 stroke="currentColor"
-                stroke-width="3.5"
-                stroke-linecap="round"
-                class="opacity-30"
+                stroke-width="0.7"
+                class="opacity-35"
               />
             </g>
             <circle cx="40" cy="40" r="5.5" fill="currentColor" class="opacity-40" />
             <g
-              :for={mark <- @marks}
+              :for={{mark, index} <- Enum.with_index(@marks)}
+              id={"#{@id}-mark-#{index}"}
               class={["skid-patch", mark.ambi && "skid-patch-ambi"]}
               transform={"rotate(#{mark.angle} 40 40)"}
             >
@@ -233,16 +240,204 @@ defmodule FixedGearWeb.RankingComponents do
         >
           {@displayed}
         </p>
+        <p
+          :if={@show_ambi}
+          class="min-w-0 flex-1 text-[11px] leading-snug text-base-content/55"
+        >
+          <span class="skid-legend-ambi">{gettext("both pedals")}</span>
+          <span class="skid-legend-one mt-1 block">
+            {gettext("%{count} one foot", count: @patches)}
+          </span>
+        </p>
       </div>
-      <p
-        :if={@show_ambi}
-        class="mt-1 ps-20 text-[11px] leading-none text-base-content/55 sm:ps-24"
+    </div>
+    """
+  end
+
+  attr :id, :string, default: "cadence-slider"
+  attr :cadence, :integer, required: true
+  attr :name, :string, default: "cadence"
+  attr :input_id, :string, default: "cadence"
+
+  def cadence_slider(assigns) do
+    assigns =
+      assigns
+      |> assign(:color, CadenceColor.css(assigns.cadence))
+      |> assign(:progress, CadenceColor.progress_percent(assigns.cadence))
+
+    ~H"""
+    <div
+      id={@id}
+      class="cadence-slider w-full"
+      phx-hook="CadenceSlider"
+      style={"--cadence-color: #{@color}; --cadence-progress: #{@progress}%"}
+      data-cadence-color={@color}
+      data-cadence-progress={"#{@progress}%"}
+    >
+      <label
+        for={@input_id}
+        class="flex items-baseline justify-between text-sm"
       >
-        <span class="skid-legend-ambi">{gettext("both pedals")}</span>
-        <span class="skid-legend-one mt-1 block">
-          {gettext("%{count} one foot", count: @patches)}
+        <span class="text-base-content/60">{gettext("Cadence")}</span>
+        <span
+          id="cadence-value"
+          data-cadence-value
+          class="font-mono tabular-nums"
+          style={"color: #{@color}"}
+        >
+          {@cadence} rpm
         </span>
-      </p>
+      </label>
+      <input
+        id={@input_id}
+        type="range"
+        name={@name}
+        min={CadenceColor.min_rpm()}
+        max={CadenceColor.max_rpm()}
+        value={@cadence}
+        class="cadence-slider-input mt-2 w-full"
+      />
+    </div>
+    """
+  end
+
+  attr :id, :string, required: true
+  attr :input_id, :string, required: true
+  attr :name, :string, required: true
+  attr :label, :string, required: true
+  attr :value, :integer, required: true
+  attr :min, :integer, required: true
+  attr :max, :integer, required: true
+  attr :suffix, :string, default: "t"
+
+  def gear_slider(assigns) do
+    ~H"""
+    <div
+      id={@id}
+      class="plain-slider w-full"
+      phx-hook="SliderValue"
+      data-suffix={@suffix}
+    >
+      <label
+        for={@input_id}
+        class="flex items-baseline justify-between text-sm"
+      >
+        <span class="text-base-content/60">{@label}</span>
+        <span
+          id={"#{@input_id}-value"}
+          data-slider-value
+          class="font-mono tabular-nums"
+        >
+          {@value}{@suffix}
+        </span>
+      </label>
+      <input
+        id={@input_id}
+        type="range"
+        name={@name}
+        min={@min}
+        max={@max}
+        step="1"
+        value={@value}
+        class="plain-slider-input mt-2 w-full"
+      />
+    </div>
+    """
+  end
+
+  attr :id_prefix, :string, required: true
+  attr :chain_ring, :integer, default: nil
+  attr :rear_sprocket, :integer, default: nil
+  attr :tire_width, :integer, default: nil
+  attr :cadence, :integer, required: true
+
+  def gear_readout(assigns) do
+    ratio = Calculations.gear_ratio(assigns.chain_ring, assigns.rear_sprocket)
+
+    patches =
+      Calculations.skid_patches(assigns.chain_ring, assigns.rear_sprocket)
+
+    speed =
+      Calculations.speed_kmh(
+        assigns.chain_ring,
+        assigns.rear_sprocket,
+        assigns.tire_width,
+        assigns.cadence
+      )
+
+    assigns =
+      assigns
+      |> assign(:ratio, ratio)
+      |> assign(:patches, patches)
+      |> assign(:speed, speed)
+
+    ~H"""
+    <div class="space-y-5">
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+        <.stat
+          :if={@chain_ring && @rear_sprocket}
+          label={gettext("Gearing")}
+        >
+          {@chain_ring}t / {@rear_sprocket}t
+        </.stat>
+        <.stat :if={@tire_width} label={gettext("Tire")}>
+          {Calculations.tire_label(@tire_width)}
+        </.stat>
+        <.stat
+          :if={@speed}
+          label={gettext("Speed at %{cadence} rpm", cadence: @cadence)}
+        >
+          {Calculations.format_speed(@speed)} km/h
+        </.stat>
+      </dl>
+
+      <.stat :if={@ratio} label={gettext("Ratio")}>
+        <.ratio_motion
+          id={"ratio-motion-#{@id_prefix}"}
+          ratio={@ratio}
+          cadence={@cadence}
+          label={Calculations.format_ratio(@ratio)}
+        />
+      </.stat>
+
+      <.stat :if={@patches} label={gettext("Skid patches")}>
+        <.skid_wheel
+          id={"skid-wheel-#{@id_prefix}"}
+          patches={@patches.one_sided}
+          ambidextrous={@patches.ambidextrous}
+        />
+        <.skid_patch_credit />
+      </.stat>
+    </div>
+    """
+  end
+
+  def skid_patch_credit(assigns) do
+    ~H"""
+    <p class="skid-patch-credit mt-2 text-[10px] leading-snug text-base-content/40">
+      {gettext("Inspired by")}
+      <a
+        href="https://www.surplace.fr/ffgc/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="underline decoration-base-content/25 underline-offset-2 transition hover:text-base-content/70 hover:decoration-base-content/50"
+      >
+        surplace.fr/ffgc
+      </a>
+    </p>
+    """
+  end
+
+  attr :label, :string, required: true
+  slot :inner_block, required: true
+
+  def stat(assigns) do
+    ~H"""
+    <div>
+      <dt class="text-xs tracking-wide text-base-content/50 uppercase">
+        {@label}
+      </dt>
+      <dd class="mt-0.5 font-medium">{render_slot(@inner_block)}</dd>
     </div>
     """
   end
@@ -264,7 +459,7 @@ defmodule FixedGearWeb.RankingComponents do
     ~H"""
     <div
       id={@id}
-      class="flex items-end gap-4"
+      class="flex items-center gap-4"
       phx-hook="RatioMotion"
       data-cadence={@cadence}
       data-pedal-ms={@pedal_ms}
@@ -337,13 +532,11 @@ defmodule FixedGearWeb.RankingComponents do
           </span>
         </div>
       </div>
-      <div class="flex min-w-0 flex-col gap-1">
-        <div class="flex h-14 items-center sm:h-16">
-          <p class="font-mono text-lg leading-none font-semibold tabular-nums">
-            {@label}
-          </p>
-        </div>
-        <p class="text-[11px] leading-none text-base-content/55">
+      <div class="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-0.5">
+        <p class="font-mono text-lg leading-none font-semibold tabular-nums">
+          {@label}
+        </p>
+        <p class="text-[11px] leading-snug text-base-content/55">
           {gettext("wheel turns per pedal stroke")}
         </p>
       </div>

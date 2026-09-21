@@ -4,14 +4,13 @@ defmodule FixedGearWeb.RankingLive do
   alias FixedGear.Bikes
   alias FixedGear.Bikes.Bike
   alias FixedGear.Bikes.Calculations
+  alias FixedGearWeb.CadenceColor
   alias FixedGearWeb.ExpandableList
-
-  @default_cadence 90
 
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope}>
+    <Layouts.app flash={@flash} current_scope={@current_scope} section={:ranking}>
       <section class="space-y-6">
         <header
           id="ranking-toolbar"
@@ -72,24 +71,7 @@ defmodule FixedGearWeb.RankingLive do
             phx-change="set_cadence"
             class="w-full max-w-xs self-end"
           >
-            <label
-              for="cadence"
-              class="flex items-baseline justify-between text-sm"
-            >
-              <span class="text-base-content/60">{gettext("Cadence")}</span>
-              <span id="cadence-value" class="font-mono tabular-nums">
-                {@cadence} rpm
-              </span>
-            </label>
-            <input
-              id="cadence"
-              type="range"
-              name="cadence"
-              min="60"
-              max="120"
-              value={@cadence}
-              class="range range-sm mt-2 w-full"
-            />
+            <.cadence_slider cadence={@cadence} />
           </form>
         </header>
 
@@ -175,26 +157,6 @@ defmodule FixedGearWeb.RankingLive do
   end
 
   defp bike_details(assigns) do
-    ratio =
-      Calculations.gear_ratio(
-        assigns.bike.chain_ring,
-        assigns.bike.rear_sprocket
-      )
-
-    patches =
-      Calculations.skid_patches(
-        assigns.bike.chain_ring,
-        assigns.bike.rear_sprocket
-      )
-
-    speed = bike_speed(assigns.bike, assigns.cadence)
-
-    assigns =
-      assigns
-      |> assign(:ratio, ratio)
-      |> assign(:patches, patches)
-      |> assign(:speed, speed)
-
     ~H"""
     <div class="grid gap-6 sm:grid-cols-[minmax(0,14rem)_1fr]">
       <div
@@ -222,54 +184,16 @@ defmodule FixedGearWeb.RankingLive do
           <.stat :if={@bike.handlebar_material} label={gettext("Handlebar")}>
             {translate_material(@bike.handlebar_material)}
           </.stat>
-          <.stat
-            :if={@bike.chain_ring && @bike.rear_sprocket}
-            label={gettext("Gearing")}
-          >
-            {@bike.chain_ring}t / {@bike.rear_sprocket}t
-          </.stat>
-          <.stat :if={@bike.tire_width} label={gettext("Tire")}>
-            {Calculations.tire_label(@bike.tire_width)}
-          </.stat>
-          <.stat
-            :if={@speed}
-            label={gettext("Speed at %{cadence} rpm", cadence: @cadence)}
-          >
-            {Calculations.format_speed(@speed)} km/h
-          </.stat>
         </dl>
 
-        <.stat :if={@ratio} label={gettext("Ratio")}>
-          <.ratio_motion
-            id={"ratio-motion-#{@bike.id}"}
-            ratio={@ratio}
-            cadence={@cadence}
-            label={Calculations.format_ratio(@ratio)}
-          />
-        </.stat>
-
-        <.stat :if={@patches} label={gettext("Skid patches")}>
-          <.skid_wheel
-            id={"skid-wheel-#{@bike.id}"}
-            patches={@patches.one_sided}
-            ambidextrous={@patches.ambidextrous}
-          />
-        </.stat>
+        <.gear_readout
+          id_prefix={to_string(@bike.id)}
+          chain_ring={@bike.chain_ring}
+          rear_sprocket={@bike.rear_sprocket}
+          tire_width={@bike.tire_width}
+          cadence={@cadence}
+        />
       </div>
-    </div>
-    """
-  end
-
-  attr :label, :string, required: true
-  slot :inner_block, required: true
-
-  defp stat(assigns) do
-    ~H"""
-    <div>
-      <dt class="text-xs tracking-wide text-base-content/50 uppercase">
-        {@label}
-      </dt>
-      <dd class="mt-0.5 font-medium">{render_slot(@inner_block)}</dd>
     </div>
     """
   end
@@ -280,7 +204,7 @@ defmodule FixedGearWeb.RankingLive do
      socket
      |> assign(:page_title, gettext("Ranking"))
      |> assign(:tab, :weight)
-     |> assign(:cadence, @default_cadence)
+     |> assign(:cadence, CadenceColor.default_rpm())
      |> assign(:expanded, ExpandableList.new())
      |> assign(:bikes, Bikes.list_bikes())
      |> assign_ranking()}
@@ -300,15 +224,9 @@ defmodule FixedGearWeb.RankingLive do
   end
 
   def handle_event("set_cadence", %{"cadence" => cadence}, socket) do
-    rpm =
-      case Integer.parse(cadence) do
-        {value, _} -> value |> max(60) |> min(120)
-        :error -> @default_cadence
-      end
-
     {:noreply,
      socket
-     |> assign(:cadence, rpm)
+     |> assign(:cadence, CadenceColor.parse(cadence))
      |> assign_ranking()}
   end
 

@@ -220,3 +220,118 @@
 .skid-legend-ambi::before {
   background: oklch(0.72 0.12 230);
 }
+
+.cadence-slider {
+  --cadence-color: oklch(0.8000 0.1700 120.0000);
+  --cadence-progress: 50%;
+  --cadence-track-height: 0.25rem;
+  --cadence-thumb-size: 1.125rem;
+  --cadence-track: linear-gradient(
+    to right,
+    var(--cadence-color) 0,
+    var(--cadence-color) var(--cadence-progress),
+    color-mix(in oklch, var(--cadence-color) 16%, var(--color-base-300))
+      var(--cadence-progress)
+  );
+}
+
+.cadence-slider-input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: var(--cadence-thumb-size);
+  margin: 0;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+}
+
+.cadence-slider-input::-webkit-slider-runnable-track {
+  height: var(--cadence-track-height);
+  border-radius: 999px;
+  background: var(--cadence-track);
+}
+
+.cadence-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--cadence-thumb-size);
+  height: var(--cadence-thumb-size);
+  margin-top: calc((var(--cadence-track-height) - var(--cadence-thumb-size)) / 2);
+  border: 0;
+  border-radius: 999px;
+  background: var(--cadence-color);
+  box-shadow: 0 0 0 2px var(--color-base-100);
+  cursor: pointer;
+}
+
+.cadence-slider-input::-moz-range-track {
+  height: var(--cadence-track-height);
+  border: 0;
+  border-radius: 999px;
+  background: var(--cadence-track);
+}
+
+.cadence-slider-input::-moz-range-progress {
+  height: var(--cadence-track-height);
+  border: 0;
+  border-radius: 999px;
+  background: var(--cadence-color);
+}
+
+.cadence-slider-input::-moz-range-thumb {
+  width: var(--cadence-thumb-size);
+  height: var(--cadence-thumb-size);
+  border: 0;
+  border-radius: 999px;
+  background: var(--cadence-color);
+  box-shadow: 0 0 0 2px var(--color-base-100);
+  cursor: pointer;
+}
+
+.plain-slider-input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 1.125rem;
+  margin: 0;
+  background: transparent;
+  outline: none;
+  cursor: pointer;
+}
+
+.plain-slider-input::-webkit-slider-runnable-track {
+  height: 0.25rem;
+  border-radius: 999px;
+  background: var(--color-base-300);
+}
+
+.plain-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin-top: calc((0.25rem - 1.125rem) / 2);
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-base-content);
+  box-shadow: 0 0 0 2px var(--color-base-100);
+  cursor: pointer;
+}
+
+.plain-slider-input::-moz-range-track {
+  height: 0.25rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-base-300);
+}
+
+.plain-slider-input::-moz-range-thumb {
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-base-content);
+  box-shadow: 0 0 0 2px var(--color-base-100);
+  cursor: pointer;
+}
