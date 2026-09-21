@@ -223,6 +223,14 @@
 
 .cadence-slider {
   --cadence-color: oklch(0.8000 0.1700 120.0000);
+  --cadence-progress: 50%;
+  --cadence-track: linear-gradient(
+    to right,
+    var(--cadence-color) 0,
+    var(--cadence-color) var(--cadence-progress),
+    color-mix(in oklch, var(--cadence-color) 16%, var(--color-base-300))
+      var(--cadence-progress)
+  );
 }
 
 .cadence-slider-input {
@@ -230,7 +238,7 @@
   appearance: none;
   height: 0.5rem;
   border-radius: 999px;
-  background: color-mix(in oklch, var(--cadence-color) 28%, var(--color-base-300));
+  background: var(--cadence-track);
   outline: none;
   cursor: pointer;
 }
@@ -259,8 +267,20 @@
   transition: background-color 90ms linear, box-shadow 90ms linear;
 }
 
+.cadence-slider-input::-webkit-slider-runnable-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--cadence-track);
+}
+
 .cadence-slider-input::-moz-range-track {
   height: 0.5rem;
   border-radius: 999px;
-  background: color-mix(in oklch, var(--cadence-color) 28%, var(--color-base-300));
+  background: var(--cadence-track);
+}
+
+.cadence-slider-input::-moz-range-progress {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--cadence-color);
 }

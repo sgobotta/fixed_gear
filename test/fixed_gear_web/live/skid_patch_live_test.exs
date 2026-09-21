@@ -56,5 +56,7 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
              view,
              "#cadence-slider[data-cadence-color='oklch(0.6500 0.2200 25.0000)']"
            )
+
+    assert has_element?(view, "#cadence-slider[data-cadence-progress='88.89%']")
   end
 end

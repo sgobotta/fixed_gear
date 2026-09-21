@@ -47,6 +47,11 @@ defmodule FixedGearWeb.CadenceColor do
     "oklch(#{fmt(l)} #{fmt(c)} #{fmt(h)})"
   end
 
+  def progress_percent(rpm) do
+    rpm = clamp(rpm)
+    Float.round(100.0 * rpm / @max_rpm, 2)
+  end
+
   defp lerp_stops([{_rpm, l, c, h}], _at), do: {l, c, h}
 
   defp lerp_stops([{rpm, l, c, h} | [{next_rpm, _, _, _} | _] = rest], at) do

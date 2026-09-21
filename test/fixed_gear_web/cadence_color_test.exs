@@ -21,4 +21,10 @@ defmodule FixedGearWeb.CadenceColorTest do
   test "takes the short hue path from red to purple" do
     assert CadenceColor.css(170) == "oklch(0.6250 0.2300 347.5000)"
   end
+
+  test "progress percent fills from 0 to 100 across the slider" do
+    assert CadenceColor.progress_percent(0) == 0.0
+    assert CadenceColor.progress_percent(90) == 50.0
+    assert CadenceColor.progress_percent(180) == 100.0
+  end
 end

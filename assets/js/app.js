@@ -628,8 +628,13 @@ const CadenceSlider = {
       return
     }
     const rpm = parseInt(this.input.value, 10) || 0
+    const min = parseFloat(this.input.min)
+    const max = parseFloat(this.input.max)
+    const span = max - min
+    const progress = !span ? 0 : ((rpm - min) / span) * 100
     const color = cadenceCss(rpm)
     this.el.style.setProperty("--cadence-color", color)
+    this.el.style.setProperty("--cadence-progress", progress + "%")
     if (this.valueEl) {
       this.valueEl.textContent = rpm + " rpm"
       this.valueEl.style.color = color

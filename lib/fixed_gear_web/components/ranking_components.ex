@@ -255,15 +255,19 @@ defmodule FixedGearWeb.RankingComponents do
   attr :input_id, :string, default: "cadence"
 
   def cadence_slider(assigns) do
-    assigns = assign(assigns, :color, CadenceColor.css(assigns.cadence))
+    assigns =
+      assigns
+      |> assign(:color, CadenceColor.css(assigns.cadence))
+      |> assign(:progress, CadenceColor.progress_percent(assigns.cadence))
 
     ~H"""
     <div
       id={@id}
       class="cadence-slider w-full"
       phx-hook="CadenceSlider"
-      style={"--cadence-color: #{@color}"}
+      style={"--cadence-color: #{@color}; --cadence-progress: #{@progress}%"}
       data-cadence-color={@color}
+      data-cadence-progress={"#{@progress}%"}
     >
       <label
         for={@input_id}
