@@ -1,10 +1,8 @@
 defmodule FixedGearWeb.PageControllerTest do
-  use FixedGearWeb.ConnCase
+  use FixedGearWeb.ConnCase, async: true
 
-  test "GET /", %{conn: conn} do
+  test "GET / renders the ranking", %{conn: conn} do
     conn = get(conn, ~p"/")
-
-    assert html_response(conn, 200) =~
-             "Peace of mind from prototype to production"
+    assert html_response(conn, 200) =~ gettext("Lightest first")
   end
 end
