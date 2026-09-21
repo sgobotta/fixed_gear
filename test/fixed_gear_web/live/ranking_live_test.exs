@@ -76,6 +76,30 @@ defmodule FixedGearWeb.RankingLiveTest do
              "#ratio-motion-#{heavy.id}",
              gettext("both pedals")
            )
+
+    assert has_element?(
+             view,
+             "#bike-#{heavy.id}-expand-inner",
+             gettext("No photo")
+           )
+  end
+
+  test "shows bike photos in a landscape frame", %{conn: conn} do
+    bike = bike_fixture(%{name: "Shot"}, png_photo())
+    {:ok, view, _html} = live(conn, ~p"/ranking")
+
+    view
+    |> element("#bike-#{bike.id}-header")
+    |> render_click()
+
+    assert has_element?(view, "#bike-#{bike.id}-photo")
+    assert has_element?(view, ~s(#bike-#{bike.id}-photo[class*="aspect-[3/2]"]))
+
+    refute has_element?(
+             view,
+             "#bike-#{bike.id}-expand-inner",
+             gettext("No photo")
+           )
   end
 
   test "cadence tab shows the slider and ranks by speed", %{conn: conn} do
@@ -132,6 +156,43 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert has_element?(view, "#cadence-value", "100 rpm")
     assert has_element?(view, "#bike-#{fast.id}-expand-inner", "100 rpm")
     assert has_element?(view, ~s(#ratio-motion-#{fast.id}[data-cadence="100"]))
+  end
+
+  test "keeps cadence ranking order at 0 rpm", %{conn: conn} do
+    slow =
+      bike_fixture(%{
+        name: "Low gear",
+        weight_kg: "6.000",
+        chain_ring: 44,
+        rear_sprocket: 18,
+        tire_width: 25
+      })
+
+    fast =
+      bike_fixture(%{
+        name: "High gear",
+        weight_kg: "8.000",
+        chain_ring: 52,
+        rear_sprocket: 14,
+        tire_width: 25
+      })
+
+    {:ok, view, _html} = live(conn, ~p"/ranking")
+
+    view
+    |> element("#tab-cadence")
+    |> render_click()
+
+    html = render(view)
+    assert bike_index(html, fast.id) < bike_index(html, slow.id)
+
+    view
+    |> form("#cadence-form", cadence: "0")
+    |> render_change()
+
+    assert has_element?(view, "#cadence-value", "0 rpm")
+    html = render(view)
+    assert bike_index(html, fast.id) < bike_index(html, slow.id)
   end
 
   test "shows an edit pencil for signed-in admins", %{conn: conn} do

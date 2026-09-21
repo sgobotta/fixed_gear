@@ -122,6 +122,38 @@ defmodule FixedGearWeb.RankingComponents do
     """
   end
 
+  @bike_photo_img_class "aspect-[3/2] h-full w-full object-contain"
+
+  attr :id, :string, default: nil
+  attr :src, :string, required: true
+  attr :alt, :string, required: true
+
+  def bike_photo(assigns) do
+    assigns = assign(assigns, :img_class, @bike_photo_img_class)
+
+    ~H"""
+    <div class="overflow-hidden rounded-xl bg-base-300">
+      <img id={@id} src={@src} alt={@alt} class={@img_class} />
+    </div>
+    """
+  end
+
+  def bike_photo_img_class, do: @bike_photo_img_class
+
+  attr :id, :string, default: nil
+  slot :inner_block, required: true
+
+  def bike_photo_placeholder(assigns) do
+    ~H"""
+    <div
+      id={@id}
+      class="flex aspect-[3/2] items-center justify-center rounded-xl border border-dashed border-base-300 text-xs text-base-content/45"
+    >
+      {render_slot(@inner_block)}
+    </div>
+    """
+  end
+
   attr :id, :string, required: true
   attr :patches, :integer, required: true
   attr :ambidextrous, :integer, default: nil

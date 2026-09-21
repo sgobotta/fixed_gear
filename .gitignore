@@ -34,6 +34,8 @@ fixed_gear-*.tar
 # mix phx.digest hashed/gzip copies of committed static files (rebuilt on deploy)
 /priv/static/**/*.gz
 /priv/static/favicon-*.ico
+/priv/static/favicon-*.svg
+/priv/static/apple-touch-icon-*.png
 /priv/static/robots-*.txt
 /priv/static/images/logo-*.svg
 

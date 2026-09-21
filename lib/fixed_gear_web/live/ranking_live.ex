@@ -158,23 +158,16 @@ defmodule FixedGearWeb.RankingLive do
 
   defp bike_details(assigns) do
     ~H"""
-    <div class="grid gap-6 sm:grid-cols-[minmax(0,14rem)_1fr]">
-      <div
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,28rem)_1fr]">
+      <.bike_photo
         :if={Bike.photo?(@bike)}
-        class="overflow-hidden rounded-xl bg-base-300"
-      >
-        <img
-          src={~p"/bikes/#{@bike}/photo?#{[v: DateTime.to_unix(@bike.updated_at)]}"}
-          alt={gettext("Photo of %{name}", name: @bike.name)}
-          class="aspect-[4/3] h-full w-full object-cover"
-        />
-      </div>
-      <div
-        :if={not Bike.photo?(@bike)}
-        class="flex aspect-[4/3] items-center justify-center rounded-xl border border-dashed border-base-300 text-xs text-base-content/45"
-      >
+        id={"bike-#{@bike.id}-photo"}
+        src={~p"/bikes/#{@bike}/photo?#{[v: DateTime.to_unix(@bike.updated_at)]}"}
+        alt={gettext("Photo of %{name}", name: @bike.name)}
+      />
+      <.bike_photo_placeholder :if={not Bike.photo?(@bike)}>
         {gettext("No photo")}
-      </div>
+      </.bike_photo_placeholder>
 
       <div class="space-y-5">
         <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
@@ -220,15 +213,23 @@ defmodule FixedGearWeb.RankingLive do
     {:noreply,
      socket
      |> assign(:tab, tab_from_param(tab))
-     |> assign_ranking()}
+     |> maybe_assign_ranking()}
   end
 
   def handle_event("set_cadence", %{"cadence" => cadence}, socket) do
     {:noreply,
      socket
      |> assign(:cadence, CadenceColor.parse(cadence))
-     |> assign_ranking()}
+     |> maybe_assign_ranking()}
   end
+
+  defp maybe_assign_ranking(
+         %{assigns: %{tab: :cadence, cadence: cadence}} = socket
+       )
+       when cadence < 1,
+       do: socket
+
+  defp maybe_assign_ranking(socket), do: assign_ranking(socket)
 
   defp assign_ranking(socket) do
     ranked =
