@@ -30,6 +30,8 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
 
     assert skid_patch_mark_count(render(view)) == 2
     assert has_element?(view, "#nav-skid-patch[aria-current=page]")
+    assert has_element?(view, "#app-bottom-nav-pill")
+    assert has_element?(view, ~s(#app-bottom-nav-stage[phx-update="ignore"]))
     assert has_element?(view, "#nav-ranking")
     refute has_element?(view, "#nav-ranking[aria-current=page]")
 

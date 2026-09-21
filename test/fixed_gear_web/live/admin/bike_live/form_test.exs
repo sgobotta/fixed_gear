@@ -170,6 +170,8 @@ defmodule FixedGearWeb.Admin.BikeLive.FormTest do
 
     {:ok, view, html} = live(conn, ~p"/admin/bikes/#{bike}/edit")
     assert html =~ "v=#{DateTime.to_unix(bike.updated_at)}"
+    assert has_element?(view, "#current-photo")
+    assert has_element?(view, ~s(#current-photo[class*="aspect-[3/2]"]))
 
     photo =
       file_input(view, "#bike-form", :photo, [

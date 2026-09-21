@@ -718,11 +718,186 @@ const SliderValue = {
   }
 }
 
+const BottomNav = {
+  mounted() {
+    const hook = this
+    this.nav = this.el.closest("#app-bottom-nav")
+    this.pill = this.el.querySelector("#app-bottom-nav-pill")
+    this.onClick = function (event) {
+      const link = event.target.closest("a")
+      if (!link || !hook.nav || !hook.nav.contains(link)) {
+        return
+      }
+      hook.pop(link)
+      const current = hook.activeLink()
+      if (current) {
+        hook.storePill(current)
+      }
+    }
+    this.onResize = function () {
+      hook.layoutActive(false)
+    }
+    if (this.nav) {
+      this.nav.addEventListener("click", this.onClick)
+    }
+    window.addEventListener("resize", this.onResize)
+    this.restoreAndMove()
+  },
+
+  updated() {
+    this.layoutActive(true)
+  },
+
+  destroyed() {
+    if (this.nav) {
+      this.nav.removeEventListener("click", this.onClick)
+    }
+    window.removeEventListener("resize", this.onResize)
+  },
+
+  reduce() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  },
+
+  activeLink() {
+    return this.nav && this.nav.querySelector("[aria-current='page']")
+  },
+
+  restoreAndMove() {
+    const active = this.activeLink()
+    if (!active) {
+      return
+    }
+    const saved = this.readStore()
+    const dest = this.rectOf(active)
+    const hook = this
+    if (saved && dest && !this.reduce() && this.moved(saved, dest)) {
+      this.applyPill(saved.x, saved.y, saved.w, saved.h, false)
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+          hook.applyPill(dest.x, dest.y, dest.w, dest.h, true)
+          hook.pop(active)
+          hook.storePill(active)
+        })
+      })
+    } else {
+      this.movePill(active, false)
+      this.storePill(active)
+    }
+  },
+
+  layoutActive(animate) {
+    const active = this.activeLink()
+    if (active) {
+      this.movePill(active, animate)
+      this.storePill(active)
+    }
+  },
+
+  rectOf(link) {
+    if (!this.pill || !this.pill.parentElement) {
+      return null
+    }
+    const trackRect = this.pill.parentElement.getBoundingClientRect()
+    const rect = link.getBoundingClientRect()
+    return {
+      x: rect.left - trackRect.left,
+      y: rect.top - trackRect.top,
+      w: rect.width,
+      h: rect.height
+    }
+  },
+
+  moved(from, to) {
+    return Math.abs(from.x - to.x) > 1 || Math.abs(from.y - to.y) > 1
+  },
+
+  movePill(link, animate) {
+    const rect = this.rectOf(link)
+    if (!rect) {
+      return
+    }
+    this.applyPill(rect.x, rect.y, rect.w, rect.h, animate)
+  },
+
+  applyPill(x, y, width, height, animate) {
+    if (!this.pill) {
+      return
+    }
+    if (!animate || this.reduce()) {
+      this.pill.style.transition = "none"
+    }
+    this.pill.style.width = width + "px"
+    this.pill.style.height = height + "px"
+    this.pill.style.transform = "translate(" + x + "px, " + y + "px)"
+    this.pill.classList.add("is-ready")
+    if (!animate || this.reduce()) {
+      this.pill.offsetWidth
+      this.pill.style.transition = ""
+    }
+  },
+
+  pop(link) {
+    if (this.reduce()) {
+      return
+    }
+    link.classList.remove("nav-tab-pop")
+    link.offsetWidth
+    link.classList.add("nav-tab-pop")
+    const clear = function () {
+      link.classList.remove("nav-tab-pop")
+      link.removeEventListener("animationend", clear)
+    }
+    link.addEventListener("animationend", clear)
+  },
+
+  storePill(link) {
+    const track = this.pill && this.pill.parentElement
+    if (!track) {
+      return
+    }
+    const trackRect = track.getBoundingClientRect()
+    const rect = link.getBoundingClientRect()
+    try {
+      sessionStorage.setItem(
+        "fixed-gear-bottom-nav",
+        JSON.stringify({
+          x: rect.left - trackRect.left,
+          y: rect.top - trackRect.top,
+          w: rect.width,
+          h: rect.height
+        })
+      )
+    } catch (_error) {}
+  },
+
+  readStore() {
+    try {
+      const raw = sessionStorage.getItem("fixed-gear-bottom-nav")
+      if (!raw) {
+        return null
+      }
+      const data = JSON.parse(raw)
+      if (
+        typeof data.x !== "number" ||
+        typeof data.y !== "number" ||
+        typeof data.w !== "number" ||
+        typeof data.h !== "number"
+      ) {
+        return null
+      }
+      return data
+    } catch (_error) {
+      return null
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, SliderValue, ...colocatedHooks},
+  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, SliderValue, BottomNav, ...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits

@@ -20,8 +20,7 @@ defmodule FixedGearWeb.RankingComponents do
 
   attr :id, :string, required: true
   attr :expanded, :boolean, required: true
-  attr :toggle_event, :string, default: "toggle_expand"
-  attr :toggle_key, :any, required: true
+  attr :toggle_href, :string, required: true
   attr :content_class, :string, default: nil
 
   slot :leading
@@ -35,15 +34,10 @@ defmodule FixedGearWeb.RankingComponents do
     ~H"""
     <div id={@id} class="flex min-w-0 flex-col px-4 py-4 sm:px-5">
       <div class="flex w-full min-w-0 items-center gap-2">
-        <div
+        <.link
           id={"#{@id}-header"}
-          role="button"
-          tabindex="0"
-          phx-click={@toggle_event}
-          phx-keydown={JS.dispatch("click")}
-          phx-key="Enter"
+          patch={@toggle_href}
           onkeydown="if (event.key === ' ') { event.preventDefault(); event.currentTarget.click() }"
-          phx-value-key={@toggle_key}
           aria-expanded={@expanded}
           aria-controls={"#{@id}-expand"}
           class="flex min-w-0 flex-1 cursor-pointer items-center gap-4"
@@ -84,7 +78,7 @@ defmodule FixedGearWeb.RankingComponents do
           <span class="sr-only">
             {if @expanded, do: gettext("Collapse"), else: gettext("Expand")}
           </span>
-        </div>
+        </.link>
 
         <div :if={@actions != []} class="shrink-0">
           {render_slot(@actions)}
@@ -118,6 +112,44 @@ defmodule FixedGearWeb.RankingComponents do
           </div>
         <% end %>
       </div>
+    </div>
+    """
+  end
+
+  @bike_photo_frame_class "aspect-[3/2] w-full self-start overflow-hidden rounded-xl bg-base-300"
+  @bike_photo_img_class "h-full w-full object-contain"
+
+  attr :id, :string, default: nil
+  attr :src, :string, required: true
+  attr :alt, :string, required: true
+
+  def bike_photo(assigns) do
+    assigns =
+      assigns
+      |> assign(:frame_class, @bike_photo_frame_class)
+      |> assign(:img_class, @bike_photo_img_class)
+
+    ~H"""
+    <div id={@id} class={@frame_class}>
+      <img src={@src} alt={@alt} class={@img_class} />
+    </div>
+    """
+  end
+
+  def bike_photo_frame_class, do: @bike_photo_frame_class
+
+  def bike_photo_img_class, do: @bike_photo_img_class
+
+  attr :id, :string, default: nil
+  slot :inner_block, required: true
+
+  def bike_photo_placeholder(assigns) do
+    ~H"""
+    <div
+      id={@id}
+      class="flex aspect-[3/2] w-full self-start items-center justify-center rounded-xl border border-dashed border-base-300 text-xs text-base-content/45"
+    >
+      {render_slot(@inner_block)}
     </div>
     """
   end
@@ -251,6 +283,40 @@ defmodule FixedGearWeb.RankingComponents do
         </p>
       </div>
     </div>
+    """
+  end
+
+  attr :form, Phoenix.HTML.Form, required: true
+  attr :tab, :atom, required: true
+  attr :cadence, :integer, required: true
+
+  def cadence_dock(assigns) do
+    ~H"""
+    <.form
+      for={@form}
+      id="cadence-form"
+      phx-change="set_cadence"
+      aria-hidden={to_string(@tab != :cadence)}
+      inert={@tab != :cadence}
+      class={[
+        "cadence-dock absolute inset-x-0 bottom-full z-0 px-4 pb-2 sm:px-6 lg:px-8",
+        "transition-transform duration-300 ease-out motion-reduce:transition-none",
+        @tab == :cadence && "translate-y-0",
+        @tab != :cadence &&
+          "pointer-events-none translate-y-[calc(100%+1.5rem)]"
+      ]}
+    >
+      <div
+        id="cadence-dock"
+        class="mx-auto max-w-4xl rounded-3xl border border-base-300 bg-base-100/95 p-4 shadow-lg backdrop-blur"
+      >
+        <div
+          class="mx-auto mb-3 h-1 w-10 rounded-full bg-base-content/15"
+          aria-hidden="true"
+        />
+        <.cadence_slider cadence={@cadence} />
+      </div>
+    </.form>
     """
   end
 

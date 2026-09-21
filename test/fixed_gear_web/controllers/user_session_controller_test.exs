@@ -21,10 +21,10 @@ defmodule FixedGearWeb.UserSessionControllerTest do
         })
 
       assert get_session(conn, :user_token)
-      assert redirected_to(conn) == ~p"/ranking"
+      assert redirected_to(conn) == ~p"/ranking/weight"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/ranking")
+      conn = get(conn, ~p"/ranking/weight")
       response = html_response(conn, 200)
       assert response =~ user.email
       assert response =~ ~p"/users/settings"
@@ -44,7 +44,7 @@ defmodule FixedGearWeb.UserSessionControllerTest do
         })
 
       assert conn.resp_cookies["_fixed_gear_web_user_remember_me"]
-      assert redirected_to(conn) == ~p"/ranking"
+      assert redirected_to(conn) == ~p"/ranking/weight"
     end
 
     test "logs the user in with return to", %{conn: conn, user: user} do
@@ -101,10 +101,10 @@ defmodule FixedGearWeb.UserSessionControllerTest do
         })
 
       assert get_session(conn, :user_token)
-      assert redirected_to(conn) == ~p"/ranking"
+      assert redirected_to(conn) == ~p"/ranking/weight"
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/ranking")
+      conn = get(conn, ~p"/ranking/weight")
       response = html_response(conn, 200)
       assert response =~ user.email
       assert response =~ ~p"/users/settings"
@@ -122,7 +122,7 @@ defmodule FixedGearWeb.UserSessionControllerTest do
         })
 
       assert get_session(conn, :user_token)
-      assert redirected_to(conn) == ~p"/ranking"
+      assert redirected_to(conn) == ~p"/ranking/weight"
 
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
                gettext("User confirmed successfully.")
@@ -130,7 +130,7 @@ defmodule FixedGearWeb.UserSessionControllerTest do
       assert Accounts.get_user!(user.id).confirmed_at
 
       # Now do a logged in request and assert on the menu
-      conn = get(conn, ~p"/ranking")
+      conn = get(conn, ~p"/ranking/weight")
       response = html_response(conn, 200)
       assert response =~ user.email
       assert response =~ ~p"/users/settings"
@@ -244,7 +244,7 @@ defmodule FixedGearWeb.UserSessionControllerTest do
   describe "DELETE /users/log-out" do
     test "logs the user out", %{conn: conn, user: user} do
       conn = conn |> log_in_user(user) |> delete(~p"/users/log-out")
-      assert redirected_to(conn) == ~p"/ranking"
+      assert redirected_to(conn) == ~p"/ranking/weight"
       refute get_session(conn, :user_token)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
@@ -253,7 +253,7 @@ defmodule FixedGearWeb.UserSessionControllerTest do
 
     test "succeeds even if the user is not logged in", %{conn: conn} do
       conn = delete(conn, ~p"/users/log-out")
-      assert redirected_to(conn) == ~p"/ranking"
+      assert redirected_to(conn) == ~p"/ranking/weight"
       refute get_session(conn, :user_token)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :info) =~

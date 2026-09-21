@@ -82,14 +82,13 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
 
         <div class="mt-6 space-y-3">
           <p class="label mb-1">{gettext("Photo")}</p>
-          <img
+          <.bike_photo
             :if={@bike.id && Bike.photo?(@bike)}
             id="current-photo"
             src={
               ~p"/bikes/#{@bike}/photo?#{[v: DateTime.to_unix(@bike.updated_at)]}"
             }
             alt={gettext("Current photo of %{name}", name: @bike.name)}
-            class="h-36 w-36 rounded-xl object-cover"
           />
           <div id="photo-input" phx-hook="CompressPhoto">
             <.live_file_input
@@ -107,10 +106,12 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
             id={"upload-#{entry.ref}"}
             class="space-y-2"
           >
-            <.live_img_preview
-              entry={entry}
-              class="h-36 w-36 rounded-xl object-cover"
-            />
+            <div class={bike_photo_frame_class()}>
+              <.live_img_preview
+                entry={entry}
+                class={bike_photo_img_class()}
+              />
+            </div>
             <progress
               value={entry.progress}
               max="100"

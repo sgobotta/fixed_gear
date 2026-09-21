@@ -5,13 +5,13 @@ defmodule FixedGearWeb.RankingLive do
   alias FixedGear.Bikes.Bike
   alias FixedGear.Bikes.Calculations
   alias FixedGearWeb.CadenceColor
-  alias FixedGearWeb.ExpandableList
+  alias FixedGearWeb.TimeAgo
 
   @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={@flash} current_scope={@current_scope} section={:ranking}>
-      <section class="space-y-6">
+      <section class={["space-y-6", @tab == :cadence && "pb-28"]}>
         <header
           id="ranking-toolbar"
           class="sticky top-0 z-20 -mx-4 flex flex-col gap-4 bg-base-100/95 px-4 py-4 backdrop-blur sm:mx-0 sm:px-0"
@@ -38,41 +38,30 @@ defmodule FixedGearWeb.RankingLive do
               aria-label={gettext("Ranking")}
               class="flex w-fit rounded-full border border-base-300 bg-base-200 p-1"
             >
-              <button
+              <.link
                 id="tab-weight"
-                type="button"
+                patch={ranking_href(:weight, @expanded_id)}
+                replace
                 role="tab"
                 aria-selected={to_string(@tab == :weight)}
                 aria-controls="ranking"
-                phx-click="set_tab"
-                phx-value-tab="weight"
                 class={tab_class(@tab == :weight)}
               >
                 {gettext("Weight")}
-              </button>
-              <button
+              </.link>
+              <.link
                 id="tab-cadence"
-                type="button"
+                patch={ranking_href(:cadence, @expanded_id)}
+                replace
                 role="tab"
                 aria-selected={to_string(@tab == :cadence)}
                 aria-controls="ranking"
-                phx-click="set_tab"
-                phx-value-tab="cadence"
                 class={tab_class(@tab == :cadence)}
               >
                 {gettext("Cadence")}
-              </button>
+              </.link>
             </div>
           </div>
-
-          <form
-            :if={@tab == :cadence}
-            id="cadence-form"
-            phx-change="set_cadence"
-            class="w-full max-w-xs self-end"
-          >
-            <.cadence_slider cadence={@cadence} />
-          </form>
         </header>
 
         <div
@@ -94,8 +83,8 @@ defmodule FixedGearWeb.RankingLive do
           <.expandable_list_row
             :for={{bike, rank} <- @ranked_bikes}
             id={"bike-#{bike.id}"}
-            toggle_key={bike.id}
-            expanded={ExpandableList.expanded?(@expanded, to_string(bike.id))}
+            toggle_href={row_href(@tab, @expanded_id, bike.id)}
+            expanded={@expanded_id == bike.id}
           >
             <:leading>
               <span class={[
@@ -127,6 +116,10 @@ defmodule FixedGearWeb.RankingLive do
           </.expandable_list_row>
         </div>
       </section>
+
+      <:bottom_dock>
+        <.cadence_dock tab={@tab} cadence={@cadence} form={@cadence_form} />
+      </:bottom_dock>
     </Layouts.app>
     """
   end
@@ -158,23 +151,16 @@ defmodule FixedGearWeb.RankingLive do
 
   defp bike_details(assigns) do
     ~H"""
-    <div class="grid gap-6 sm:grid-cols-[minmax(0,14rem)_1fr]">
-      <div
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,28rem)_1fr]">
+      <.bike_photo
         :if={Bike.photo?(@bike)}
-        class="overflow-hidden rounded-xl bg-base-300"
-      >
-        <img
-          src={~p"/bikes/#{@bike}/photo?#{[v: DateTime.to_unix(@bike.updated_at)]}"}
-          alt={gettext("Photo of %{name}", name: @bike.name)}
-          class="aspect-[4/3] h-full w-full object-cover"
-        />
-      </div>
-      <div
-        :if={not Bike.photo?(@bike)}
-        class="flex aspect-[4/3] items-center justify-center rounded-xl border border-dashed border-base-300 text-xs text-base-content/45"
-      >
+        id={"bike-#{@bike.id}-photo"}
+        src={~p"/bikes/#{@bike}/photo?#{[v: DateTime.to_unix(@bike.updated_at)]}"}
+        alt={gettext("Photo of %{name}", name: @bike.name)}
+      />
+      <.bike_photo_placeholder :if={not Bike.photo?(@bike)}>
         {gettext("No photo")}
-      </div>
+      </.bike_photo_placeholder>
 
       <div class="space-y-5">
         <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
@@ -183,6 +169,14 @@ defmodule FixedGearWeb.RankingLive do
           </.stat>
           <.stat :if={@bike.handlebar_material} label={gettext("Handlebar")}>
             {translate_material(@bike.handlebar_material)}
+          </.stat>
+          <.stat label={gettext("Updated")}>
+            <time
+              id={"bike-#{@bike.id}-updated"}
+              datetime={DateTime.to_iso8601(@bike.updated_at)}
+            >
+              {TimeAgo.format(@bike.updated_at)}
+            </time>
           </.stat>
         </dl>
 
@@ -205,30 +199,78 @@ defmodule FixedGearWeb.RankingLive do
      |> assign(:page_title, gettext("Ranking"))
      |> assign(:tab, :weight)
      |> assign(:cadence, CadenceColor.default_rpm())
-     |> assign(:expanded, ExpandableList.new())
+     |> assign(:expanded_id, nil)
      |> assign(:bikes, Bikes.list_bikes())
-     |> assign_ranking()}
+     |> assign(:ranked_bikes, [])
+     |> assign_cadence_form()}
   end
 
   @impl true
-  def handle_event("toggle_expand", %{"key" => key}, socket) do
-    expanded = ExpandableList.toggle(socket.assigns.expanded, key)
-    {:noreply, assign(socket, :expanded, expanded)}
+  def handle_params(params, _uri, socket) do
+    case accepted_tab(params["tab"]) do
+      nil ->
+        {:noreply, push_navigate(socket, to: ~p"/ranking/weight")}
+
+      tab ->
+        case expanded_id_from_params(params, socket.assigns.bikes) do
+          {:ok, expanded_id} ->
+            {:noreply, apply_ranking_params(socket, tab, expanded_id)}
+
+          :error ->
+            {:noreply, push_navigate(socket, to: ranking_href(tab, nil))}
+        end
+    end
   end
 
-  def handle_event("set_tab", %{"tab" => tab}, socket) do
-    {:noreply,
-     socket
-     |> assign(:tab, tab_from_param(tab))
-     |> assign_ranking()}
-  end
-
+  @impl true
   def handle_event("set_cadence", %{"cadence" => cadence}, socket) do
     {:noreply,
      socket
      |> assign(:cadence, CadenceColor.parse(cadence))
-     |> assign_ranking()}
+     |> assign_cadence_form()
+     |> maybe_assign_ranking()}
   end
+
+  defp apply_ranking_params(socket, tab, expanded_id) do
+    previous_tab = socket.assigns.tab
+
+    socket
+    |> assign(:tab, tab)
+    |> assign(:expanded_id, expanded_id)
+    |> maybe_assign_ranking_for_params(previous_tab)
+  end
+
+  defp maybe_assign_ranking_for_params(socket, previous_tab) do
+    if previous_tab == socket.assigns.tab and skip_zero_cadence_rerank?(socket) do
+      socket
+    else
+      assign_ranking(socket)
+    end
+  end
+
+  defp maybe_assign_ranking(
+         %{assigns: %{tab: :cadence, cadence: cadence}} = socket
+       )
+       when cadence < 1,
+       do: socket
+
+  defp maybe_assign_ranking(socket), do: assign_ranking(socket)
+
+  defp assign_cadence_form(socket) do
+    assign(
+      socket,
+      :cadence_form,
+      to_form(%{"cadence" => socket.assigns.cadence}, as: nil)
+    )
+  end
+
+  defp skip_zero_cadence_rerank?(%{
+         assigns: %{tab: :cadence, cadence: cadence, ranked_bikes: ranked}
+       })
+       when cadence < 1 and ranked != [],
+       do: true
+
+  defp skip_zero_cadence_rerank?(_socket), do: false
 
   defp assign_ranking(socket) do
     ranked =
@@ -261,8 +303,35 @@ defmodule FixedGearWeb.RankingLive do
     )
   end
 
-  defp tab_from_param("cadence"), do: :cadence
-  defp tab_from_param(_), do: :weight
+  defp accepted_tab("cadence"), do: :cadence
+  defp accepted_tab("weight"), do: :weight
+  defp accepted_tab(_tab), do: nil
+
+  defp expanded_id_from_params(%{"id" => id}, bikes) do
+    case Integer.parse(id) do
+      {int, ""} ->
+        if Enum.any?(bikes, &(&1.id == int)), do: {:ok, int}, else: :error
+
+      _ ->
+        :error
+    end
+  end
+
+  defp expanded_id_from_params(_params, _bikes), do: {:ok, nil}
+
+  defp row_href(tab, expanded_id, bike_id) do
+    if expanded_id == bike_id do
+      ranking_href(tab, nil)
+    else
+      ranking_href(tab, bike_id)
+    end
+  end
+
+  defp ranking_href(tab, nil), do: ~p"/ranking/#{tab_param(tab)}"
+  defp ranking_href(tab, id), do: ~p"/ranking/#{id}/#{tab_param(tab)}"
+
+  defp tab_param(:cadence), do: "cadence"
+  defp tab_param(_tab), do: "weight"
 
   defp page_kicker(:cadence), do: gettext("Cadence")
   defp page_kicker(_tab), do: gettext("Weigh-in")
@@ -278,7 +347,7 @@ defmodule FixedGearWeb.RankingLive do
   defp page_blurb(:cadence),
     do:
       gettext(
-        "Who covers more ground at this cadence. Missing gearing sits last."
+        "Setups from the heaviest to the lightest. Higher top speed at a lower cadence."
       )
 
   defp translate_material(:aluminum), do: gettext("Aluminum")
