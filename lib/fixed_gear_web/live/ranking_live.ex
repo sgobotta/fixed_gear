@@ -337,7 +337,7 @@ defmodule FixedGearWeb.RankingLive do
   defp page_blurb(:cadence),
     do:
       gettext(
-        "Who covers more ground at this cadence. Missing gearing sits last."
+        "Setups from the heaviest to the lightest. Higher top speed at a lower cadence."
       )
 
   defp translate_material(:aluminum), do: gettext("Aluminum")

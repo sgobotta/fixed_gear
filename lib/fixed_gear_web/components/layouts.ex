@@ -87,16 +87,21 @@ defmodule FixedGearWeb.Layouts do
       {render_slot(@bottom_dock)}
       <nav
         id="app-bottom-nav"
+        phx-hook="BottomNav"
         class="relative z-10 border-t border-base-300/80 bg-base-100/95 backdrop-blur pb-[env(safe-area-inset-bottom)]"
       >
-        <div class="mx-auto flex max-w-4xl">
+        <div class="relative mx-auto flex max-w-4xl">
+          <div id="app-bottom-nav-pill" class="nav-tab-pill" aria-hidden="true">
+          </div>
           <.link
             id="nav-ranking"
             navigate={~p"/ranking/weight"}
             aria-current={@section == :ranking && "page"}
             class={nav_tab_class(@section == :ranking)}
           >
-            <.icon name="hero-bars-3" class="size-5" />
+            <span class="nav-tab-icon inline-flex">
+              <.icon name="hero-bars-3" class="size-5" />
+            </span>
             {gettext("Ranking")}
           </.link>
           <.link
@@ -105,7 +110,9 @@ defmodule FixedGearWeb.Layouts do
             aria-current={@section == :skid_patch && "page"}
             class={nav_tab_class(@section == :skid_patch)}
           >
-            <.nav_wheel_icon />
+            <span class="nav-tab-icon inline-flex">
+              <.nav_wheel_icon />
+            </span>
             {gettext("Skid Patch")}
           </.link>
         </div>
@@ -118,11 +125,11 @@ defmodule FixedGearWeb.Layouts do
 
   defp nav_tab_class(true),
     do:
-      "mx-2 flex flex-1 flex-col items-center gap-0.5 rounded-2xl bg-base-200 py-2.5 text-xs font-semibold text-base-content transition"
+      "nav-tab relative z-[1] mx-2 flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-2.5 text-xs font-semibold text-base-content transition-colors duration-200"
 
   defp nav_tab_class(false),
     do:
-      "mx-2 flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-2.5 text-xs text-base-content/45 transition hover:text-base-content"
+      "nav-tab relative z-[1] mx-2 flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-2.5 text-xs text-base-content/45 transition-colors duration-200 hover:text-base-content"
 
   defp nav_wheel_icon(assigns) do
     ~H"""
