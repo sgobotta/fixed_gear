@@ -174,7 +174,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
     {:ok,
      socket
      |> allow_upload(:photo,
-       accept: ~w(image/* .jpg .jpeg .png .webp .heic .heif),
+       accept: ~w(.jpg .jpeg .png .webp image/jpeg image/png image/webp),
        max_entries: 1,
        max_file_size: 15_000_000,
        chunk_timeout: 30_000,

@@ -103,6 +103,38 @@ defmodule FixedGearWeb.Admin.BikeLive.FormTest do
     assert is_nil(FixedGear.Bikes.get_bike_photo(bike.id))
   end
 
+  test "rejects HEIC at upload so save does not consume it", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/admin/bikes/new")
+
+    photo =
+      file_input(view, "#bike-form", :photo, [
+        %{
+          last_modified: 1_594_171_879_000,
+          name: "image.heic",
+          content: "not a real heic",
+          type: "image/heic"
+        }
+      ])
+
+    render_upload(photo, "image.heic")
+    html = render(view)
+
+    assert html =~ gettext("Use JPEG, PNG, or WebP")
+    refute has_element?(view, "#save-bike[disabled]")
+
+    {:ok, _view, html} =
+      view
+      |> form("#bike-form",
+        bike: %{name: "No HEIC", owner: "Cam", weight_kg: "7.000"}
+      )
+      |> render_submit()
+      |> follow_redirect(conn, ~p"/admin/bikes")
+
+    assert html =~ gettext("Bike created")
+    bike = FixedGear.Bikes.list_bikes() |> hd()
+    assert is_nil(FixedGear.Bikes.get_bike_photo(bike.id))
+  end
+
   test "uploads a photo", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/bikes/new")
     {png, _type} = png_photo()

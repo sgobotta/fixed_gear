@@ -17,8 +17,8 @@ config :fixed_gear, FixedGear.Repo,
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
 config :fixed_gear, FixedGearWeb.Endpoint,
-  # Bind on all interfaces so phones on the LAN can reach the app.
-  http: [ip: {0, 0, 0, 0}],
+  # Loopback by default. Set APP_HOST=0.0.0.0 for phone camera access on the LAN.
+  http: [ip: {127, 0, 0, 1}],
   check_origin: false,
   code_reloader: true,
   debug_errors: true,

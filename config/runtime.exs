@@ -28,6 +28,16 @@ config :fixed_gear, FixedGearWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
 if config_env() == :dev do
+  ip =
+    case System.get_env("APP_HOST") do
+      "0.0.0.0" -> {0, 0, 0, 0}
+      _ -> {127, 0, 0, 1}
+    end
+
+  config :fixed_gear, FixedGearWeb.Endpoint, http: [ip: ip]
+end
+
+if config_env() == :dev do
   # Reload browser tabs when matching files change.
   config :fixed_gear, FixedGearWeb.Endpoint,
     live_reload: [
