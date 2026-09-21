@@ -20,8 +20,7 @@ defmodule FixedGearWeb.RankingComponents do
 
   attr :id, :string, required: true
   attr :expanded, :boolean, required: true
-  attr :toggle_event, :string, default: "toggle_expand"
-  attr :toggle_key, :any, required: true
+  attr :toggle_href, :string, required: true
   attr :content_class, :string, default: nil
 
   slot :leading
@@ -35,15 +34,12 @@ defmodule FixedGearWeb.RankingComponents do
     ~H"""
     <div id={@id} class="flex min-w-0 flex-col px-4 py-4 sm:px-5">
       <div class="flex w-full min-w-0 items-center gap-2">
-        <div
+        <.link
           id={"#{@id}-header"}
-          role="button"
-          tabindex="0"
-          phx-click={@toggle_event}
+          patch={@toggle_href}
           phx-keydown={JS.dispatch("click")}
           phx-key="Enter"
           onkeydown="if (event.key === ' ') { event.preventDefault(); event.currentTarget.click() }"
-          phx-value-key={@toggle_key}
           aria-expanded={@expanded}
           aria-controls={"#{@id}-expand"}
           class="flex min-w-0 flex-1 cursor-pointer items-center gap-4"
@@ -84,7 +80,7 @@ defmodule FixedGearWeb.RankingComponents do
           <span class="sr-only">
             {if @expanded, do: gettext("Collapse"), else: gettext("Expand")}
           </span>
-        </div>
+        </.link>
 
         <div :if={@actions != []} class="shrink-0">
           {render_slot(@actions)}
@@ -122,21 +118,27 @@ defmodule FixedGearWeb.RankingComponents do
     """
   end
 
-  @bike_photo_img_class "aspect-[3/2] h-full w-full object-contain"
+  @bike_photo_frame_class "aspect-[3/2] w-full self-start overflow-hidden rounded-xl bg-base-300"
+  @bike_photo_img_class "h-full w-full object-contain"
 
   attr :id, :string, default: nil
   attr :src, :string, required: true
   attr :alt, :string, required: true
 
   def bike_photo(assigns) do
-    assigns = assign(assigns, :img_class, @bike_photo_img_class)
+    assigns =
+      assigns
+      |> assign(:frame_class, @bike_photo_frame_class)
+      |> assign(:img_class, @bike_photo_img_class)
 
     ~H"""
-    <div class="overflow-hidden rounded-xl bg-base-300">
-      <img id={@id} src={@src} alt={@alt} class={@img_class} />
+    <div id={@id} class={@frame_class}>
+      <img src={@src} alt={@alt} class={@img_class} />
     </div>
     """
   end
+
+  def bike_photo_frame_class, do: @bike_photo_frame_class
 
   def bike_photo_img_class, do: @bike_photo_img_class
 
@@ -147,7 +149,7 @@ defmodule FixedGearWeb.RankingComponents do
     ~H"""
     <div
       id={@id}
-      class="flex aspect-[3/2] items-center justify-center rounded-xl border border-dashed border-base-300 text-xs text-base-content/45"
+      class="flex aspect-[3/2] w-full self-start items-center justify-center rounded-xl border border-dashed border-base-300 text-xs text-base-content/45"
     >
       {render_slot(@inner_block)}
     </div>

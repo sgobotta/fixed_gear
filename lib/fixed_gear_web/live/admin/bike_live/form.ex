@@ -106,7 +106,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
             id={"upload-#{entry.ref}"}
             class="space-y-2"
           >
-            <div class="overflow-hidden rounded-xl bg-base-300">
+            <div class={bike_photo_frame_class()}>
               <.live_img_preview
                 entry={entry}
                 class={bike_photo_img_class()}

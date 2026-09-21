@@ -3,7 +3,12 @@ defmodule FixedGearWeb.PageControllerTest do
 
   test "GET / redirects to the ranking", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert redirected_to(conn) == ~p"/ranking"
+    assert redirected_to(conn) == ~p"/ranking/weight"
+  end
+
+  test "GET /ranking redirects to the weight ranking", %{conn: conn} do
+    conn = get(conn, ~p"/ranking")
+    assert redirected_to(conn) == ~p"/ranking/weight"
   end
 
   test "serves the cog favicon", %{conn: conn} do

@@ -34,6 +34,28 @@ defmodule FixedGear.BikesFixtures do
     {data, "image/png"}
   end
 
+  def landscape_png_photo do
+    {rgb_png(6, 4), "image/png"}
+  end
+
+  defp rgb_png(width, height) do
+    row = [0 | List.duplicate(<<200, 80, 40>>, width)]
+    raw = IO.iodata_to_binary(List.duplicate(row, height))
+    ihdr = <<width::32, height::32, 8, 2, 0, 0, 0>>
+
+    png_signature() <>
+      png_chunk("IHDR", ihdr) <>
+      png_chunk("IDAT", :zlib.compress(raw)) <>
+      png_chunk("IEND", "")
+  end
+
+  defp png_signature, do: <<0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A>>
+
+  defp png_chunk(type, data) do
+    crc = :erlang.crc32(type <> data)
+    <<byte_size(data)::32, type::binary, data::binary, crc::32>>
+  end
+
   def webp_photo do
     {"RIFF" <> <<20::little-32>> <> "WEBPVP8L", "image/webp"}
   end

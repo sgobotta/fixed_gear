@@ -5,7 +5,7 @@ defmodule FixedGearWeb.RankingLive do
   alias FixedGear.Bikes.Bike
   alias FixedGear.Bikes.Calculations
   alias FixedGearWeb.CadenceColor
-  alias FixedGearWeb.ExpandableList
+  alias FixedGearWeb.TimeAgo
 
   @impl true
   def render(assigns) do
@@ -38,30 +38,28 @@ defmodule FixedGearWeb.RankingLive do
               aria-label={gettext("Ranking")}
               class="flex w-fit rounded-full border border-base-300 bg-base-200 p-1"
             >
-              <button
+              <.link
                 id="tab-weight"
-                type="button"
+                patch={ranking_href(:weight, @expanded_id)}
+                replace
                 role="tab"
                 aria-selected={to_string(@tab == :weight)}
                 aria-controls="ranking"
-                phx-click="set_tab"
-                phx-value-tab="weight"
                 class={tab_class(@tab == :weight)}
               >
                 {gettext("Weight")}
-              </button>
-              <button
+              </.link>
+              <.link
                 id="tab-cadence"
-                type="button"
+                patch={ranking_href(:cadence, @expanded_id)}
+                replace
                 role="tab"
                 aria-selected={to_string(@tab == :cadence)}
                 aria-controls="ranking"
-                phx-click="set_tab"
-                phx-value-tab="cadence"
                 class={tab_class(@tab == :cadence)}
               >
                 {gettext("Cadence")}
-              </button>
+              </.link>
             </div>
           </div>
 
@@ -94,8 +92,8 @@ defmodule FixedGearWeb.RankingLive do
           <.expandable_list_row
             :for={{bike, rank} <- @ranked_bikes}
             id={"bike-#{bike.id}"}
-            toggle_key={bike.id}
-            expanded={ExpandableList.expanded?(@expanded, to_string(bike.id))}
+            toggle_href={row_href(@tab, @expanded_id, bike.id)}
+            expanded={@expanded_id == bike.id}
           >
             <:leading>
               <span class={[
@@ -177,6 +175,14 @@ defmodule FixedGearWeb.RankingLive do
           <.stat :if={@bike.handlebar_material} label={gettext("Handlebar")}>
             {translate_material(@bike.handlebar_material)}
           </.stat>
+          <.stat label={gettext("Updated")}>
+            <time
+              id={"bike-#{@bike.id}-updated"}
+              datetime={DateTime.to_iso8601(@bike.updated_at)}
+            >
+              {TimeAgo.format(@bike.updated_at)}
+            </time>
+          </.stat>
         </dl>
 
         <.gear_readout
@@ -198,29 +204,51 @@ defmodule FixedGearWeb.RankingLive do
      |> assign(:page_title, gettext("Ranking"))
      |> assign(:tab, :weight)
      |> assign(:cadence, CadenceColor.default_rpm())
-     |> assign(:expanded, ExpandableList.new())
+     |> assign(:expanded_id, nil)
      |> assign(:bikes, Bikes.list_bikes())
-     |> assign_ranking()}
+     |> assign(:ranked_bikes, [])}
   end
 
   @impl true
-  def handle_event("toggle_expand", %{"key" => key}, socket) do
-    expanded = ExpandableList.toggle(socket.assigns.expanded, key)
-    {:noreply, assign(socket, :expanded, expanded)}
+  def handle_params(params, _uri, socket) do
+    case accepted_tab(params["tab"]) do
+      nil ->
+        {:noreply, push_navigate(socket, to: ~p"/ranking/weight")}
+
+      tab ->
+        case expanded_id_from_params(params, socket.assigns.bikes) do
+          {:ok, expanded_id} ->
+            {:noreply, apply_ranking_params(socket, tab, expanded_id)}
+
+          :error ->
+            {:noreply, push_navigate(socket, to: ranking_href(tab, nil))}
+        end
+    end
   end
 
-  def handle_event("set_tab", %{"tab" => tab}, socket) do
-    {:noreply,
-     socket
-     |> assign(:tab, tab_from_param(tab))
-     |> maybe_assign_ranking()}
-  end
-
+  @impl true
   def handle_event("set_cadence", %{"cadence" => cadence}, socket) do
     {:noreply,
      socket
      |> assign(:cadence, CadenceColor.parse(cadence))
      |> maybe_assign_ranking()}
+  end
+
+  defp apply_ranking_params(socket, tab, expanded_id) do
+    previous_tab = socket.assigns.tab
+
+    socket
+    |> assign(:tab, tab)
+    |> assign(:expanded_id, expanded_id)
+    |> maybe_assign_ranking_for_params(previous_tab)
+  end
+
+  defp maybe_assign_ranking_for_params(socket, previous_tab) do
+    if previous_tab == socket.assigns.tab and skip_zero_cadence_rerank?(socket) do
+      socket
+    else
+      assign_ranking(socket)
+    end
   end
 
   defp maybe_assign_ranking(
@@ -230,6 +258,14 @@ defmodule FixedGearWeb.RankingLive do
        do: socket
 
   defp maybe_assign_ranking(socket), do: assign_ranking(socket)
+
+  defp skip_zero_cadence_rerank?(%{
+         assigns: %{tab: :cadence, cadence: cadence, ranked_bikes: ranked}
+       })
+       when cadence < 1 and ranked != [],
+       do: true
+
+  defp skip_zero_cadence_rerank?(_socket), do: false
 
   defp assign_ranking(socket) do
     ranked =
@@ -262,8 +298,35 @@ defmodule FixedGearWeb.RankingLive do
     )
   end
 
-  defp tab_from_param("cadence"), do: :cadence
-  defp tab_from_param(_), do: :weight
+  defp accepted_tab("cadence"), do: :cadence
+  defp accepted_tab("weight"), do: :weight
+  defp accepted_tab(_tab), do: nil
+
+  defp expanded_id_from_params(%{"id" => id}, bikes) do
+    case Integer.parse(id) do
+      {int, ""} ->
+        if Enum.any?(bikes, &(&1.id == int)), do: {:ok, int}, else: :error
+
+      _ ->
+        :error
+    end
+  end
+
+  defp expanded_id_from_params(_params, _bikes), do: {:ok, nil}
+
+  defp row_href(tab, expanded_id, bike_id) do
+    if expanded_id == bike_id do
+      ranking_href(tab, nil)
+    else
+      ranking_href(tab, bike_id)
+    end
+  end
+
+  defp ranking_href(tab, nil), do: ~p"/ranking/#{tab_param(tab)}"
+  defp ranking_href(tab, id), do: ~p"/ranking/#{id}/#{tab_param(tab)}"
+
+  defp tab_param(:cadence), do: "cadence"
+  defp tab_param(_tab), do: "weight"
 
   defp page_kicker(:cadence), do: gettext("Cadence")
   defp page_kicker(_tab), do: gettext("Weigh-in")

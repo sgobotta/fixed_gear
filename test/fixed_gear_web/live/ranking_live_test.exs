@@ -6,7 +6,7 @@ defmodule FixedGearWeb.RankingLiveTest do
   import FixedGear.BikesFixtures
 
   test "renders empty ranking without a cadence slider", %{conn: conn} do
-    {:ok, view, _html} = live(conn, ~p"/ranking")
+    {:ok, view, _html} = live(conn, ~p"/ranking/weight")
 
     assert has_element?(view, "#ranking")
     assert has_element?(view, "#ranking-toolbar")
@@ -27,6 +27,11 @@ defmodule FixedGearWeb.RankingLiveTest do
     refute has_element?(view, ~s(a[href="/users/log-in"]))
   end
 
+  test "redirects /ranking to the weight ranking", %{conn: conn} do
+    conn = get(conn, ~p"/ranking")
+    assert redirected_to(conn) == ~p"/ranking/weight"
+  end
+
   test "lists bikes lightest first and expands details", %{conn: conn} do
     heavy =
       bike_fixture(%{
@@ -40,7 +45,7 @@ defmodule FixedGearWeb.RankingLiveTest do
 
     light = bike_fixture(%{name: "Feather", owner: "Bea", weight_kg: "6.001"})
 
-    {:ok, view, _html} = live(conn, ~p"/ranking")
+    {:ok, view, _html} = live(conn, ~p"/ranking/weight")
 
     assert has_element?(view, "#bike-#{light.id}", "Feather")
     assert has_element?(view, "#bike-#{heavy.id}", "Heavy")
@@ -51,6 +56,7 @@ defmodule FixedGearWeb.RankingLiveTest do
     |> element("#bike-#{heavy.id}-header")
     |> render_click()
 
+    assert_patch(view, ~p"/ranking/#{heavy.id}/weight")
     assert has_element?(view, "#bike-#{heavy.id}-expand-inner")
     assert has_element?(view, "#bike-#{heavy.id}-expand-inner", "48t / 16t")
     assert has_element?(view, "#ratio-motion-#{heavy.id}")
@@ -59,6 +65,7 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert has_element?(view, "#skid-wheel-#{heavy.id} .skid-patch-ambi")
     assert has_element?(view, "#skid-wheel-#{heavy.id}-count", "2")
     assert has_element?(view, "#skid-wheel-#{heavy.id}", gettext("both pedals"))
+    assert has_element?(view, "#bike-#{heavy.id}-updated", gettext("just now"))
 
     assert has_element?(
              view,
@@ -85,16 +92,54 @@ defmodule FixedGearWeb.RankingLiveTest do
            )
   end
 
-  test "shows bike photos in a landscape frame", %{conn: conn} do
-    bike = bike_fixture(%{name: "Shot"}, png_photo())
-    {:ok, view, _html} = live(conn, ~p"/ranking")
+  test "keeps a single expanded row and routes each bike", %{conn: conn} do
+    first = bike_fixture(%{name: "First", weight_kg: "6.000"})
+    second = bike_fixture(%{name: "Second", weight_kg: "7.000"})
+
+    {:ok, view, _html} = live(conn, ~p"/ranking/#{first.id}/weight")
+
+    assert has_element?(view, "#bike-#{first.id}-expand-inner")
+    refute has_element?(view, "#bike-#{second.id}-expand-inner")
 
     view
-    |> element("#bike-#{bike.id}-header")
+    |> element("#bike-#{second.id}-header")
     |> render_click()
+
+    assert_patch(view, ~p"/ranking/#{second.id}/weight")
+    refute has_element?(view, "#bike-#{first.id}-expand-inner")
+    assert has_element?(view, "#bike-#{second.id}-expand-inner")
+
+    view
+    |> element("#tab-cadence")
+    |> render_click()
+
+    assert_patch(view, ~p"/ranking/#{second.id}/cadence")
+    assert has_element?(view, "#bike-#{second.id}-expand-inner")
+    assert has_element?(view, "#cadence-form")
+
+    view
+    |> element("#bike-#{second.id}-header")
+    |> render_click()
+
+    assert_patch(view, ~p"/ranking/cadence")
+    refute has_element?(view, "#bike-#{second.id}-expand-inner")
+  end
+
+  test "shows bike photos in a landscape frame", %{conn: conn} do
+    {png, "image/png"} = landscape_png_photo()
+    assert png_size(png) == {6, 4}
+
+    bike = bike_fixture(%{name: "Shot"}, {png, "image/png"})
+    {:ok, view, _html} = live(conn, ~p"/ranking/#{bike.id}/weight")
 
     assert has_element?(view, "#bike-#{bike.id}-photo")
     assert has_element?(view, ~s(#bike-#{bike.id}-photo[class*="aspect-[3/2]"]))
+    assert has_element?(view, ~s(#bike-#{bike.id}-photo[class*="self-start"]))
+
+    assert has_element?(
+             view,
+             ~s(#bike-#{bike.id}-photo img[class*="object-contain"])
+           )
 
     refute has_element?(
              view,
@@ -122,7 +167,7 @@ defmodule FixedGearWeb.RankingLiveTest do
         tire_width: 25
       })
 
-    {:ok, view, _html} = live(conn, ~p"/ranking")
+    {:ok, view, _html} = live(conn, ~p"/ranking/weight")
 
     html = render(view)
     assert bike_index(html, slow.id) < bike_index(html, fast.id)
@@ -131,6 +176,7 @@ defmodule FixedGearWeb.RankingLiveTest do
     |> element("#tab-cadence")
     |> render_click()
 
+    assert_patch(view, ~p"/ranking/cadence")
     assert has_element?(view, ~s(#tab-cadence[aria-selected="true"]))
     assert has_element?(view, ~s(#tab-weight[aria-selected="false"]))
     assert has_element?(view, "#cadence-form")
@@ -146,6 +192,7 @@ defmodule FixedGearWeb.RankingLiveTest do
     |> element("#bike-#{fast.id}-header")
     |> render_click()
 
+    assert_patch(view, ~p"/ranking/#{fast.id}/cadence")
     assert has_element?(view, "#bike-#{fast.id}-expand-inner", "60 rpm")
     assert has_element?(view, ~s(#ratio-motion-#{fast.id}[data-cadence="60"]))
     assert has_element?(view, ~s(#ratio-motion-#{fast.id}[data-pedal-ms]))
@@ -178,11 +225,7 @@ defmodule FixedGearWeb.RankingLiveTest do
         tire_width: 25
       })
 
-    {:ok, view, _html} = live(conn, ~p"/ranking")
-
-    view
-    |> element("#tab-cadence")
-    |> render_click()
+    {:ok, view, _html} = live(conn, ~p"/ranking/cadence")
 
     html = render(view)
     assert bike_index(html, fast.id) < bike_index(html, slow.id)
@@ -194,13 +237,15 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert has_element?(view, "#cadence-value", "0 rpm")
     html = render(view)
     assert bike_index(html, fast.id) < bike_index(html, slow.id)
+    assert has_element?(view, "#bike-#{fast.id}", "0.0 km/h")
+    assert has_element?(view, "#bike-#{slow.id}", "0.0 km/h")
   end
 
   test "shows an edit pencil for signed-in admins", %{conn: conn} do
     bike = bike_fixture(%{name: "Track"})
     conn = log_in_user(conn, user_fixture())
 
-    {:ok, view, _html} = live(conn, ~p"/ranking")
+    {:ok, view, _html} = live(conn, ~p"/ranking/weight")
 
     assert has_element?(view, "#edit-bike-#{bike.id}")
     assert has_element?(view, ~s(a[href="/admin/bikes"]), gettext("Admin"))
@@ -217,5 +262,12 @@ defmodule FixedGearWeb.RankingLiveTest do
   defp bike_index(html, id) do
     {index, _} = :binary.match(html, "bike-#{id}")
     index
+  end
+
+  defp png_size(
+         <<_sig::binary-size(8), _len::32, "IHDR", width::32, height::32,
+           _rest::binary>>
+       ) do
+    {width, height}
   end
 end

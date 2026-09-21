@@ -58,7 +58,7 @@ defmodule FixedGearWeb.UserAuth do
     conn
     |> renew_session(nil)
     |> delete_resp_cookie(@remember_me_cookie, @remember_me_options)
-    |> redirect(to: ~p"/ranking")
+    |> redirect(to: ~p"/ranking/weight")
   end
 
   @doc """
@@ -287,7 +287,7 @@ defmodule FixedGearWeb.UserAuth do
     ~p"/users/settings"
   end
 
-  def signed_in_path(_), do: ~p"/ranking"
+  def signed_in_path(_), do: ~p"/ranking/weight"
 
   @doc """
   Plug for routes that require the user to be authenticated.

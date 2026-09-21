@@ -41,7 +41,7 @@ defmodule FixedGearWeb.Layouts do
     ~H"""
     <header class="border-b border-base-300/80 px-4 sm:px-6 lg:px-8">
       <div class="mx-auto flex max-w-4xl items-center justify-between gap-4 py-4">
-        <.link navigate={~p"/ranking"} class="group flex items-center gap-2">
+        <.link navigate={~p"/ranking/weight"} class="group flex items-center gap-2">
           <span class="text-sm font-semibold tracking-[0.2em] uppercase">
             Fixed Gear
           </span>
@@ -87,7 +87,7 @@ defmodule FixedGearWeb.Layouts do
       <div class="mx-auto flex max-w-4xl">
         <.link
           id="nav-ranking"
-          navigate={~p"/ranking"}
+          navigate={~p"/ranking/weight"}
           aria-current={@section == :ranking && "page"}
           class={nav_tab_class(@section == :ranking)}
         >
