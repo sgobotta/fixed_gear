@@ -35,11 +35,16 @@ defmodule FixedGearWeb.RankingLive do
 
             <div
               id="ranking-tabs"
+              role="tablist"
+              aria-label={gettext("Ranking")}
               class="flex w-fit rounded-full border border-base-300 bg-base-200 p-1"
             >
               <button
                 id="tab-weight"
                 type="button"
+                role="tab"
+                aria-selected={to_string(@tab == :weight)}
+                aria-controls="ranking"
                 phx-click="set_tab"
                 phx-value-tab="weight"
                 class={tab_class(@tab == :weight)}
@@ -49,6 +54,9 @@ defmodule FixedGearWeb.RankingLive do
               <button
                 id="tab-cadence"
                 type="button"
+                role="tab"
+                aria-selected={to_string(@tab == :cadence)}
+                aria-controls="ranking"
                 phx-click="set_tab"
                 phx-value-tab="cadence"
                 class={tab_class(@tab == :cadence)}
@@ -87,6 +95,10 @@ defmodule FixedGearWeb.RankingLive do
 
         <div
           id="ranking"
+          role="tabpanel"
+          aria-labelledby={
+            if(@tab == :weight, do: "tab-weight", else: "tab-cadence")
+          }
           phx-hook="RankingList"
           class="divide-y divide-base-300 overflow-hidden rounded-3xl border border-base-300 bg-base-100 shadow-sm"
         >

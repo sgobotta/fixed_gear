@@ -24,8 +24,9 @@ end
 
 config :fixed_gear, stage: System.fetch_env!("STAGE")
 
-config :fixed_gear, FixedGearWeb.Endpoint,
-  http: [port: String.to_integer(System.get_env("PORT", "4000"))]
+port = String.to_integer(System.get_env("PORT", "4000"))
+
+config :fixed_gear, FixedGearWeb.Endpoint, http: [port: port]
 
 if config_env() == :dev do
   ip =
@@ -34,7 +35,7 @@ if config_env() == :dev do
       _ -> {127, 0, 0, 1}
     end
 
-  config :fixed_gear, FixedGearWeb.Endpoint, http: [ip: ip]
+  config :fixed_gear, FixedGearWeb.Endpoint, http: [ip: ip, port: port]
 end
 
 if config_env() == :dev do

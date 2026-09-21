@@ -37,9 +37,15 @@ defmodule FixedGearWeb.UserSessionController do
 
   # email + password login
   defp create(conn, %{"user" => user_params}, info) do
-    %{"email" => email, "password" => password} = user_params
+    email = user_params["email"]
+    password = user_params["password"]
 
-    if user = Accounts.get_user_by_email_and_password(email, password) do
+    user =
+      if is_binary(email) and is_binary(password) do
+        Accounts.get_user_by_email_and_password(email, password)
+      end
+
+    if user do
       conn
       |> put_flash(:info, info)
       |> UserAuth.log_in_user(user, user_params)
@@ -47,9 +53,15 @@ defmodule FixedGearWeb.UserSessionController do
       # In order to prevent user enumeration attacks, don't disclose whether the email is registered.
       conn
       |> put_flash(:error, gettext("Invalid email or password"))
-      |> put_flash(:email, String.slice(email, 0, 160))
+      |> put_flash(:email, email_hint(email))
       |> redirect(to: ~p"/users/log-in")
     end
+  end
+
+  defp create(conn, _params, _info) do
+    conn
+    |> put_flash(:error, gettext("Invalid email or password"))
+    |> redirect(to: ~p"/users/log-in")
   end
 
   def update_password(conn, %{"user" => user_params} = params) do
@@ -85,4 +97,7 @@ defmodule FixedGearWeb.UserSessionController do
     |> put_flash(:info, gettext("Logged out successfully."))
     |> UserAuth.log_out_user()
   end
+
+  defp email_hint(email) when is_binary(email), do: String.slice(email, 0, 160)
+  defp email_hint(_email), do: ""
 end

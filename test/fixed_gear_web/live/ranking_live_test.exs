@@ -12,6 +12,13 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert has_element?(view, "#ranking-toolbar")
     assert has_element?(view, "#ranking-empty")
     assert has_element?(view, "#tab-weight")
+    assert has_element?(view, ~s(#tab-weight[role="tab"][aria-selected="true"]))
+
+    assert has_element?(
+             view,
+             ~s(#tab-cadence[role="tab"][aria-selected="false"])
+           )
+
     assert has_element?(view, "#ranking-kicker", gettext("Weigh-in"))
     refute has_element?(view, "#cadence-form")
   end
@@ -90,6 +97,8 @@ defmodule FixedGearWeb.RankingLiveTest do
     |> element("#tab-cadence")
     |> render_click()
 
+    assert has_element?(view, ~s(#tab-cadence[aria-selected="true"]))
+    assert has_element?(view, ~s(#tab-weight[aria-selected="false"]))
     assert has_element?(view, "#cadence-form")
     assert has_element?(view, "#ranking-kicker", gettext("Cadence"))
     refute has_element?(view, "#ranking-kicker", gettext("Weigh-in"))

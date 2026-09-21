@@ -80,6 +80,15 @@ defmodule FixedGearWeb.UserSessionControllerTest do
 
       assert redirected_to(conn) == ~p"/users/log-in"
     end
+
+    test "redirects when the login payload is malformed", %{conn: conn} do
+      conn = post(conn, ~p"/users/log-in", %{"user" => %{}})
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               gettext("Invalid email or password")
+
+      assert redirected_to(conn) == ~p"/users/log-in"
+    end
   end
 
   describe "POST /users/log-in - magic link" do
