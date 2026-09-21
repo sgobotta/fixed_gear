@@ -41,7 +41,7 @@ msgstr ""
 msgid "Already registered?"
 msgstr ""
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:325
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:326
 #: lib/fixed_gear_web/live/ranking_live.ex:354
 #, elixir-autogen, elixir-format
 msgid "Aluminum"
@@ -63,12 +63,12 @@ msgstr ""
 msgid "Back"
 msgstr ""
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:249
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:250
 #, elixir-autogen, elixir-format
 msgid "Bike created"
 msgstr ""
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:266
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:267
 #, elixir-autogen, elixir-format
 msgid "Bike updated"
 msgstr ""
@@ -86,7 +86,7 @@ msgstr ""
 msgid "Cadence"
 msgstr ""
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:327
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:328
 #: lib/fixed_gear_web/live/ranking_live.ex:356
 #, elixir-autogen, elixir-format
 msgid "Carbon fiber"
@@ -133,7 +133,7 @@ msgstr ""
 msgid "Confirming..."
 msgstr ""
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:321
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:322
 #, elixir-autogen, elixir-format
 msgid "Could not upload photo"
 msgstr ""
@@ -277,7 +277,7 @@ msgstr ""
 msgid "Log out"
 msgstr ""
 
-#: lib/fixed_gear_web/controllers/user_session_controller.ex:72
+#: lib/fixed_gear_web/controllers/user_session_controller.ex:85
 #, elixir-autogen, elixir-format
 msgid "Logged out successfully."
 msgstr ""
@@ -326,7 +326,7 @@ msgstr ""
 msgid "No photo"
 msgstr ""
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:318
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:319
 #, elixir-autogen, elixir-format
 msgid "Only one photo is allowed"
 msgstr ""
@@ -342,7 +342,7 @@ msgstr ""
 msgid "Password"
 msgstr ""
 
-#: lib/fixed_gear_web/controllers/user_session_controller.ex:67
+#: lib/fixed_gear_web/controllers/user_session_controller.ex:66
 #, elixir-autogen, elixir-format
 msgid "Password updated successfully!"
 msgstr ""
@@ -357,7 +357,7 @@ msgstr ""
 msgid "Photo"
 msgstr ""
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:315
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:316
 #, elixir-autogen, elixir-format
 msgid "Photo is too large"
 msgstr ""
@@ -434,7 +434,7 @@ msgstr ""
 msgid "Speed at %{cadence} rpm"
 msgstr ""
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:326
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:327
 #: lib/fixed_gear_web/live/ranking_live.ex:355
 #, elixir-autogen, elixir-format
 msgid "Steel"
@@ -461,7 +461,7 @@ msgstr ""
 msgid "To see sent emails, visit"
 msgstr ""
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:320
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:321
 #, elixir-autogen, elixir-format
 msgid "Use JPEG, PNG, or WebP"
 msgstr ""
@@ -528,6 +528,8 @@ msgstr ""
 msgid "You must log in to access this page."
 msgstr ""
 
+#: lib/fixed_gear_web/controllers/user_session_controller.ex:77
+#: lib/fixed_gear_web/live/user_live/settings.ex:193
 #: lib/fixed_gear_web/user_auth.ex:263
 #, elixir-autogen, elixir-format
 msgid "You must re-authenticate to access this page."
@@ -581,4 +583,9 @@ msgstr ""
 #: lib/fixed_gear_web/controllers/user_session_controller.ex:9
 #, elixir-autogen, elixir-format
 msgid "Registration is closed."
+msgstr ""
+
+#: lib/fixed_gear_web/controllers/user_session_controller.ex:70
+#, elixir-autogen, elixir-format
+msgid "Could not update password."
 msgstr ""

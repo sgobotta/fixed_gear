@@ -54,17 +54,30 @@ defmodule FixedGearWeb.UserSessionController do
 
   def update_password(conn, %{"user" => user_params} = params) do
     user = conn.assigns.current_scope.user
-    true = Accounts.sudo_mode?(user)
 
-    {:ok, {_user, expired_tokens}} =
-      Accounts.update_user_password(user, user_params)
+    if Accounts.sudo_mode?(user) do
+      case Accounts.update_user_password(user, user_params) do
+        {:ok, {_user, expired_tokens}} ->
+          # disconnect all existing LiveViews with old sessions
+          UserAuth.disconnect_sessions(expired_tokens)
 
-    # disconnect all existing LiveViews with old sessions
-    UserAuth.disconnect_sessions(expired_tokens)
+          conn
+          |> put_session(:user_return_to, ~p"/users/settings")
+          |> create(params, gettext("Password updated successfully!"))
 
-    conn
-    |> put_session(:user_return_to, ~p"/users/settings")
-    |> create(params, gettext("Password updated successfully!"))
+        {:error, _changeset} ->
+          conn
+          |> put_flash(:error, gettext("Could not update password."))
+          |> redirect(to: ~p"/users/settings")
+      end
+    else
+      conn
+      |> put_flash(
+        :error,
+        gettext("You must re-authenticate to access this page.")
+      )
+      |> redirect(to: ~p"/users/log-in")
+    end
   end
 
   def delete(conn, _params) do

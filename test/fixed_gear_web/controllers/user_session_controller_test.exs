@@ -153,6 +153,85 @@ defmodule FixedGearWeb.UserSessionControllerTest do
     end
   end
 
+  describe "POST /users/update-password" do
+    test "updates the password and logs the user in", %{conn: conn, user: user} do
+      user = set_password(user)
+      new_password = "new valid password"
+
+      conn =
+        conn
+        |> log_in_user(user)
+        |> post(~p"/users/update-password", %{
+          "user" => %{
+            "email" => user.email,
+            "password" => new_password,
+            "password_confirmation" => new_password
+          }
+        })
+
+      assert redirected_to(conn) == ~p"/users/settings"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :info) =~
+               gettext("Password updated successfully!")
+
+      assert Accounts.get_user_by_email_and_password(user.email, new_password)
+    end
+
+    test "redirects when sudo mode has expired", %{conn: conn, user: user} do
+      user = set_password(user)
+      new_password = "new valid password"
+
+      conn =
+        conn
+        |> log_in_user(user,
+          token_authenticated_at:
+            DateTime.add(DateTime.utc_now(:second), -11, :minute)
+        )
+        |> post(~p"/users/update-password", %{
+          "user" => %{
+            "email" => user.email,
+            "password" => new_password,
+            "password_confirmation" => new_password
+          }
+        })
+
+      assert redirected_to(conn) == ~p"/users/log-in"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               gettext("You must re-authenticate to access this page.")
+
+      refute Accounts.get_user_by_email_and_password(user.email, new_password)
+    end
+
+    test "redirects with an error when the password is invalid", %{
+      conn: conn,
+      user: user
+    } do
+      user = set_password(user)
+
+      conn =
+        conn
+        |> log_in_user(user)
+        |> post(~p"/users/update-password", %{
+          "user" => %{
+            "email" => user.email,
+            "password" => "too short",
+            "password_confirmation" => "too short"
+          }
+        })
+
+      assert redirected_to(conn) == ~p"/users/settings"
+
+      assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
+               gettext("Could not update password.")
+
+      assert Accounts.get_user_by_email_and_password(
+               user.email,
+               valid_user_password()
+             )
+    end
+  end
+
   describe "DELETE /users/log-out" do
     test "logs the user out", %{conn: conn, user: user} do
       conn = conn |> log_in_user(user) |> delete(~p"/users/log-out")

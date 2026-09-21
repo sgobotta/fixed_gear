@@ -86,9 +86,9 @@ defmodule FixedGear.Accounts do
   Checks whether the user is in sudo mode.
 
   The user is in sudo mode when the last authentication was done no further
-  than 20 minutes ago. The limit can be given as second argument in minutes.
+  than 10 minutes ago. The limit can be given as second argument in minutes.
   """
-  def sudo_mode?(user, minutes \\ -20)
+  def sudo_mode?(user, minutes \\ -10)
 
   def sudo_mode?(%User{authenticated_at: ts}, minutes)
       when is_struct(ts, DateTime) do

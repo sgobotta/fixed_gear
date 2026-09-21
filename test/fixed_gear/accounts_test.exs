@@ -103,14 +103,19 @@ defmodule FixedGear.AccountsTest do
       assert Accounts.sudo_mode?(%User{authenticated_at: DateTime.utc_now()})
 
       assert Accounts.sudo_mode?(%User{
-               authenticated_at: DateTime.add(now, -19, :minute)
+               authenticated_at: DateTime.add(now, -9, :minute)
              })
 
       refute Accounts.sudo_mode?(%User{
-               authenticated_at: DateTime.add(now, -21, :minute)
+               authenticated_at: DateTime.add(now, -11, :minute)
              })
 
       # minute override
+      assert Accounts.sudo_mode?(
+               %User{authenticated_at: DateTime.add(now, -11, :minute)},
+               -20
+             )
+
       refute Accounts.sudo_mode?(
                %User{authenticated_at: DateTime.add(now, -11, :minute)},
                -10
