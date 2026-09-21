@@ -195,7 +195,7 @@ const RatioMotion = {
 
   syncRate() {
     const rpm = parseInt(this.el.getAttribute("data-cadence"), 10)
-    const rate = !rpm || rpm < 1 ? 1 : rpm / 90
+    const rate = !rpm || rpm < 1 ? 0 : rpm / 90
     this.anims.forEach(function (anim) {
       if (anim) {
         anim.playbackRate = rate
@@ -540,11 +540,108 @@ const CompressPhoto = {
   }
 }
 
+// Keep stops in sync with FixedGearWeb.CadenceColor
+const CADENCE_STOPS = [
+  [0, 0.86, 0.07, 230],
+  [60, 0.78, 0.14, 230],
+  [80, 0.75, 0.18, 145],
+  [100, 0.85, 0.16, 95],
+  [120, 0.75, 0.18, 55],
+  [160, 0.65, 0.22, 25],
+  [180, 0.60, 0.24, 310]
+]
+
+function cadenceLerp(a, b, t) {
+  return a + (b - a) * t
+}
+
+function cadenceLerpHue(from, to, t) {
+  let delta = to - from
+  if (delta > 180) {
+    delta = delta - 360
+  } else if (delta < -180) {
+    delta = delta + 360
+  }
+  let hue = from + delta * t
+  hue = hue - 360 * Math.floor(hue / 360)
+  if (hue < 0) {
+    hue = hue + 360
+  }
+  return hue
+}
+
+function cadenceOklch(rpm) {
+  let value = rpm
+  if (value < 0) {
+    value = 0
+  } else if (value > 180) {
+    value = 180
+  }
+
+  let i = 0
+  while (i < CADENCE_STOPS.length - 1 && value > CADENCE_STOPS[i + 1][0]) {
+    i = i + 1
+  }
+
+  const from = CADENCE_STOPS[i]
+  const to = CADENCE_STOPS[Math.min(i + 1, CADENCE_STOPS.length - 1)]
+  if (from[0] === to[0]) {
+    return {l: from[1], c: from[2], h: from[3]}
+  }
+
+  const t = (value - from[0]) / (to[0] - from[0])
+  return {
+    l: cadenceLerp(from[1], to[1], t),
+    c: cadenceLerp(from[2], to[2], t),
+    h: cadenceLerpHue(from[3], to[3], t)
+  }
+}
+
+function cadenceCss(rpm) {
+  const color = cadenceOklch(rpm)
+  return "oklch(" + color.l.toFixed(4) + " " + color.c.toFixed(4) + " " + color.h.toFixed(4) + ")"
+}
+
+const CadenceSlider = {
+  mounted() {
+    this.input = this.el.querySelector("input[type='range']")
+    this.valueEl = this.el.querySelector("[data-cadence-value]")
+    this.onInput = this.syncFromInput.bind(this)
+    if (this.input) {
+      this.input.addEventListener("input", this.onInput)
+    }
+    this.syncFromInput()
+  },
+
+  updated() {
+    this.syncFromInput()
+  },
+
+  destroyed() {
+    if (this.input && this.onInput) {
+      this.input.removeEventListener("input", this.onInput)
+    }
+  },
+
+  syncFromInput() {
+    if (!this.input) {
+      return
+    }
+    const rpm = parseInt(this.input.value, 10) || 0
+    const color = cadenceCss(rpm)
+    this.el.style.setProperty("--cadence-color", color)
+    if (this.valueEl) {
+      this.valueEl.textContent = rpm + " rpm"
+      this.valueEl.style.color = color
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, ...colocatedHooks},
+  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, ...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits

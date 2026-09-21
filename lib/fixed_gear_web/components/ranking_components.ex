@@ -6,6 +6,8 @@ defmodule FixedGearWeb.RankingComponents do
 
   import FixedGearWeb.CoreComponents, only: [icon: 1]
 
+  alias FixedGear.Bikes.Calculations
+  alias FixedGearWeb.CadenceColor
   alias Phoenix.LiveView.JS
 
   @max_skid_ticks 24
@@ -243,6 +245,146 @@ defmodule FixedGearWeb.RankingComponents do
           {gettext("%{count} one foot", count: @patches)}
         </span>
       </p>
+    </div>
+    """
+  end
+
+  attr :id, :string, default: "cadence-slider"
+  attr :cadence, :integer, required: true
+  attr :name, :string, default: "cadence"
+  attr :input_id, :string, default: "cadence"
+
+  def cadence_slider(assigns) do
+    assigns = assign(assigns, :color, CadenceColor.css(assigns.cadence))
+
+    ~H"""
+    <div
+      id={@id}
+      class="cadence-slider w-full"
+      phx-hook="CadenceSlider"
+      style={"--cadence-color: #{@color}"}
+      data-cadence-color={@color}
+    >
+      <label
+        for={@input_id}
+        class="flex items-baseline justify-between text-sm"
+      >
+        <span class="text-base-content/60">{gettext("Cadence")}</span>
+        <span
+          id="cadence-value"
+          data-cadence-value
+          class="font-mono tabular-nums"
+          style={"color: #{@color}"}
+        >
+          {@cadence} rpm
+        </span>
+      </label>
+      <input
+        id={@input_id}
+        type="range"
+        name={@name}
+        min={CadenceColor.min_rpm()}
+        max={CadenceColor.max_rpm()}
+        value={@cadence}
+        class="cadence-slider-input mt-2 w-full"
+      />
+    </div>
+    """
+  end
+
+  attr :id_prefix, :string, required: true
+  attr :chain_ring, :integer, default: nil
+  attr :rear_sprocket, :integer, default: nil
+  attr :tire_width, :integer, default: nil
+  attr :cadence, :integer, required: true
+
+  def gear_readout(assigns) do
+    ratio = Calculations.gear_ratio(assigns.chain_ring, assigns.rear_sprocket)
+
+    patches =
+      Calculations.skid_patches(assigns.chain_ring, assigns.rear_sprocket)
+
+    speed =
+      Calculations.speed_kmh(
+        assigns.chain_ring,
+        assigns.rear_sprocket,
+        assigns.tire_width,
+        assigns.cadence
+      )
+
+    assigns =
+      assigns
+      |> assign(:ratio, ratio)
+      |> assign(:patches, patches)
+      |> assign(:speed, speed)
+
+    ~H"""
+    <div class="space-y-5">
+      <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+        <.stat
+          :if={@chain_ring && @rear_sprocket}
+          label={gettext("Gearing")}
+        >
+          {@chain_ring}t / {@rear_sprocket}t
+        </.stat>
+        <.stat :if={@tire_width} label={gettext("Tire")}>
+          {Calculations.tire_label(@tire_width)}
+        </.stat>
+        <.stat
+          :if={@speed}
+          label={gettext("Speed at %{cadence} rpm", cadence: @cadence)}
+        >
+          {Calculations.format_speed(@speed)} km/h
+        </.stat>
+      </dl>
+
+      <.stat :if={@ratio} label={gettext("Ratio")}>
+        <.ratio_motion
+          id={"ratio-motion-#{@id_prefix}"}
+          ratio={@ratio}
+          cadence={@cadence}
+          label={Calculations.format_ratio(@ratio)}
+        />
+      </.stat>
+
+      <.stat :if={@patches} label={gettext("Skid patches")}>
+        <.skid_wheel
+          id={"skid-wheel-#{@id_prefix}"}
+          patches={@patches.one_sided}
+          ambidextrous={@patches.ambidextrous}
+        />
+        <.skid_patch_credit />
+      </.stat>
+    </div>
+    """
+  end
+
+  def skid_patch_credit(assigns) do
+    ~H"""
+    <p class="skid-patch-credit mt-2 text-[10px] leading-snug text-base-content/40">
+      {gettext("Inspired by")}
+      <a
+        href="https://www.surplace.fr/ffgc/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="underline decoration-base-content/25 underline-offset-2 transition hover:text-base-content/70 hover:decoration-base-content/50"
+      >
+        surplace.fr/ffgc
+      </a>
+    </p>
+    """
+  end
+
+  attr :label, :string, required: true
+  slot :inner_block, required: true
+
+  def stat(assigns) do
+    ~H"""
+    <div>
+      <dt class="text-xs tracking-wide text-base-content/50 uppercase">
+        {@label}
+      </dt>
+      <dd class="mt-0.5 font-medium">{render_slot(@inner_block)}</dd>
     </div>
     """
   end

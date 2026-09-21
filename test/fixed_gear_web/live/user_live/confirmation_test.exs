@@ -76,7 +76,7 @@ defmodule FixedGearWeb.UserLive.ConfirmationTest do
       assert Accounts.get_user!(user.id).confirmed_at
       # we are logged in now
       assert get_session(conn, :user_token)
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/ranking"
 
       # log out, new conn
       conn = build_conn()

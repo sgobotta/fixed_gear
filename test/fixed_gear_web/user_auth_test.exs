@@ -34,7 +34,7 @@ defmodule FixedGearWeb.UserAuthTest do
       assert get_session(conn, :live_socket_id) ==
                "users_sessions:#{Base.url_encode64(token)}"
 
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/ranking"
       assert Accounts.get_user_by_session_token(token)
     end
 
@@ -179,7 +179,7 @@ defmodule FixedGearWeb.UserAuthTest do
       refute get_session(conn, :user_token)
       refute conn.cookies[@remember_me_cookie]
       assert %{max_age: 0} = conn.resp_cookies[@remember_me_cookie]
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/ranking"
       refute Accounts.get_user_by_session_token(user_token)
     end
 
@@ -201,7 +201,7 @@ defmodule FixedGearWeb.UserAuthTest do
       conn = conn |> fetch_cookies() |> UserAuth.log_out_user()
       refute get_session(conn, :user_token)
       assert %{max_age: 0} = conn.resp_cookies[@remember_me_cookie]
-      assert redirected_to(conn) == ~p"/"
+      assert redirected_to(conn) == ~p"/ranking"
     end
   end
 
