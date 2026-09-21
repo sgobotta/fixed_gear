@@ -32,7 +32,8 @@ defmodule FixedGearWeb.SkidPatchLive do
           </p>
         </header>
 
-        <form
+        <.form
+          for={@form}
           id="skid-patch-form"
           phx-change="update"
           class="space-y-5 rounded-3xl border border-base-300 bg-base-100 p-4 shadow-sm sm:p-5"
@@ -41,7 +42,7 @@ defmodule FixedGearWeb.SkidPatchLive do
             <.gear_slider
               id="chain-ring-slider"
               input_id="chain-ring"
-              name="chain_ring"
+              name={@form[:chain_ring].name}
               label={gettext("Chain ring")}
               value={@chain_ring}
               min={Calculations.chain_ring_min()}
@@ -50,24 +51,25 @@ defmodule FixedGearWeb.SkidPatchLive do
             <.gear_slider
               id="rear-sprocket-slider"
               input_id="rear-sprocket"
-              name="rear_sprocket"
+              name={@form[:rear_sprocket].name}
               label={gettext("Rear sprocket")}
               value={@rear_sprocket}
               min={Calculations.sprocket_min()}
               max={Calculations.sprocket_max()}
             />
             <.input
-              id="tire-width"
-              name="tire_width"
+              field={@form[:tire_width]}
               type="select"
               label={gettext("Tire")}
-              value={@tire_width}
               options={Bikes.tire_options()}
             />
           </div>
 
-          <.cadence_slider cadence={@cadence} />
-        </form>
+          <.cadence_slider
+            cadence={@cadence}
+            name={@form[:cadence].name}
+          />
+        </.form>
 
         <div
           id="skid-patch-readout"
@@ -91,29 +93,46 @@ defmodule FixedGearWeb.SkidPatchLive do
     {:ok,
      socket
      |> assign(:page_title, gettext("Skid Patch"))
-     |> assign(:chain_ring, @default_ring)
-     |> assign(:rear_sprocket, @default_cog)
-     |> assign(:tire_width, @default_tire)
-     |> assign(:cadence, CadenceColor.default_rpm())}
+     |> assign_playground(%{})}
   end
 
   @impl true
-  def handle_event("update", params, socket) do
-    {:noreply,
-     socket
-     |> assign(
-       :chain_ring,
-       parse_option(params["chain_ring"], ring_values(), @default_ring)
-     )
-     |> assign(
-       :rear_sprocket,
-       parse_option(params["rear_sprocket"], cog_values(), @default_cog)
-     )
-     |> assign(
-       :tire_width,
-       parse_option(params["tire_width"], tire_values(), @default_tire)
-     )
-     |> assign(:cadence, CadenceColor.parse(params["cadence"]))}
+  def handle_event("update", %{"skid_patch" => params}, socket) do
+    {:noreply, assign_playground(socket, params)}
+  end
+
+  defp assign_playground(socket, params) do
+    socket
+    |> assign(
+      :chain_ring,
+      parse_option(params["chain_ring"], ring_values(), @default_ring)
+    )
+    |> assign(
+      :rear_sprocket,
+      parse_option(params["rear_sprocket"], cog_values(), @default_cog)
+    )
+    |> assign(
+      :tire_width,
+      parse_option(params["tire_width"], tire_values(), @default_tire)
+    )
+    |> assign(:cadence, CadenceColor.parse(params["cadence"]))
+    |> assign_form()
+  end
+
+  defp assign_form(socket) do
+    assign(
+      socket,
+      :form,
+      to_form(
+        %{
+          "chain_ring" => socket.assigns.chain_ring,
+          "rear_sprocket" => socket.assigns.rear_sprocket,
+          "tire_width" => socket.assigns.tire_width,
+          "cadence" => socket.assigns.cadence
+        },
+        as: :skid_patch
+      )
+    )
   end
 
   defp parse_option(value, allowed, default) do
@@ -124,11 +143,9 @@ defmodule FixedGearWeb.SkidPatchLive do
   end
 
   defp ring_values,
-    do:
-      Enum.to_list(Calculations.chain_ring_min()..Calculations.chain_ring_max())
+    do: Calculations.chain_ring_min()..Calculations.chain_ring_max()
 
-  defp cog_values,
-    do: Enum.to_list(Calculations.sprocket_min()..Calculations.sprocket_max())
+  defp cog_values, do: Calculations.sprocket_min()..Calculations.sprocket_max()
 
   defp tire_values, do: Calculations.tire_widths()
 end

@@ -39,10 +39,12 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
 
     view
     |> form("#skid-patch-form", %{
-      chain_ring: "49",
-      rear_sprocket: "16",
-      tire_width: "28",
-      cadence: "90"
+      skid_patch: %{
+        chain_ring: "49",
+        rear_sprocket: "16",
+        tire_width: "28",
+        cadence: "90"
+      }
     })
     |> render_change()
 
@@ -64,7 +66,7 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
     {:ok, view, _html} = live(conn, ~p"/skid-patch")
 
     view
-    |> form("#skid-patch-form", %{cadence: "160"})
+    |> form("#skid-patch-form", %{skid_patch: %{cadence: "160"}})
     |> render_change()
 
     assert has_element?(view, "#cadence-value", "160 rpm")
