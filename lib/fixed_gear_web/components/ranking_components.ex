@@ -37,8 +37,6 @@ defmodule FixedGearWeb.RankingComponents do
         <.link
           id={"#{@id}-header"}
           patch={@toggle_href}
-          phx-keydown={JS.dispatch("click")}
-          phx-key="Enter"
           onkeydown="if (event.key === ' ') { event.preventDefault(); event.currentTarget.click() }"
           aria-expanded={@expanded}
           aria-controls={"#{@id}-expand"}

@@ -58,6 +58,8 @@ defmodule FixedGearWeb.RankingLiveTest do
     |> render_click()
 
     assert_patch(view, ~p"/ranking/#{heavy.id}/weight")
+    refute has_element?(view, ~s(#bike-#{heavy.id}-header[phx-key="Enter"]))
+    refute has_element?(view, "#bike-#{heavy.id}-header[phx-keydown]")
     assert has_element?(view, "#bike-#{heavy.id}-expand-inner")
     assert has_element?(view, "#bike-#{heavy.id}-expand-inner", "48t / 16t")
     assert has_element?(view, "#ratio-motion-#{heavy.id}")
