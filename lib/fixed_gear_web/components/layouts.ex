@@ -69,13 +69,6 @@ defmodule FixedGearWeb.Layouts do
           >
             {gettext("Log out")}
           </.link>
-          <.link
-            :if={is_nil(@current_scope) || is_nil(@current_scope.user)}
-            navigate={~p"/users/log-in"}
-            class="rounded-full px-3 py-1.5 transition hover:bg-base-200"
-          >
-            {gettext("Log in")}
-          </.link>
           <.theme_toggle />
         </nav>
       </div>

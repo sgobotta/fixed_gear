@@ -24,6 +24,7 @@ defmodule FixedGearWeb.RankingLiveTest do
 
     assert has_element?(view, "#ranking-kicker", gettext("Weigh-in"))
     refute has_element?(view, "#cadence-form")
+    refute has_element?(view, ~s(a[href="/users/log-in"]))
   end
 
   test "lists bikes lightest first and expands details", %{conn: conn} do
@@ -202,6 +203,8 @@ defmodule FixedGearWeb.RankingLiveTest do
     {:ok, view, _html} = live(conn, ~p"/ranking")
 
     assert has_element?(view, "#edit-bike-#{bike.id}")
+    assert has_element?(view, ~s(a[href="/admin/bikes"]), gettext("Admin"))
+    refute has_element?(view, ~s(a[href="/users/log-in"]))
     refute has_element?(view, "#bike-#{bike.id}-expand-inner")
 
     {:ok, _view, _html} =
