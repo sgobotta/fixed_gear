@@ -614,23 +614,41 @@ function cadenceCss(rpm) {
 
 const CadenceSlider = {
   mounted() {
-    this.input = this.el.querySelector("input[type='range']")
-    this.valueEl = this.el.querySelector("[data-cadence-value]")
+    this.input = null
+    this.valueEl = null
     this.onInput = this.syncFromInput.bind(this)
-    if (this.input) {
-      this.input.addEventListener("input", this.onInput)
-    }
+    this.bindInput()
     this.syncFromInput()
   },
 
   updated() {
+    this.bindInput()
     this.syncFromInput()
   },
 
   destroyed() {
+    this.unbindInput()
+  },
+
+  bindInput() {
+    const input = this.el.querySelector("input[type='range']")
+    const valueEl = this.el.querySelector("[data-cadence-value]")
+    if (input === this.input && valueEl === this.valueEl) {
+      return
+    }
+    this.unbindInput()
+    this.input = input
+    this.valueEl = valueEl
+    if (this.input) {
+      this.input.addEventListener("input", this.onInput)
+    }
+  },
+
+  unbindInput() {
     if (this.input && this.onInput) {
       this.input.removeEventListener("input", this.onInput)
     }
+    this.input = null
   },
 
   syncFromInput() {
@@ -654,24 +672,42 @@ const CadenceSlider = {
 
 const SliderValue = {
   mounted() {
-    this.input = this.el.querySelector("input[type='range']")
-    this.valueEl = this.el.querySelector("[data-slider-value]")
-    this.suffix = this.el.getAttribute("data-suffix") || ""
+    this.input = null
+    this.valueEl = null
     this.onInput = this.syncFromInput.bind(this)
-    if (this.input) {
-      this.input.addEventListener("input", this.onInput)
-    }
+    this.bindInput()
     this.syncFromInput()
   },
 
   updated() {
+    this.bindInput()
     this.syncFromInput()
   },
 
   destroyed() {
+    this.unbindInput()
+  },
+
+  bindInput() {
+    const input = this.el.querySelector("input[type='range']")
+    const valueEl = this.el.querySelector("[data-slider-value]")
+    this.suffix = this.el.getAttribute("data-suffix") || ""
+    if (input === this.input && valueEl === this.valueEl) {
+      return
+    }
+    this.unbindInput()
+    this.input = input
+    this.valueEl = valueEl
+    if (this.input) {
+      this.input.addEventListener("input", this.onInput)
+    }
+  },
+
+  unbindInput() {
     if (this.input && this.onInput) {
       this.input.removeEventListener("input", this.onInput)
     }
+    this.input = null
   },
 
   syncFromInput() {

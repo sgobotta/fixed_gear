@@ -187,6 +187,7 @@ defmodule FixedGearWeb.RankingComponents do
       <div class="flex items-center gap-4">
         <div
           id={"#{@id}-stage-#{@patches}-#{@displayed}"}
+          phx-update="ignore"
           class="relative size-16 shrink-0 sm:size-20"
         >
           <svg

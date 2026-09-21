@@ -22,6 +22,12 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
     assert has_element?(view, "#ratio-motion-playground")
     assert has_element?(view, "#skid-wheel-playground")
     assert has_element?(view, "#skid-wheel-playground-count", "2")
+
+    assert has_element?(
+             view,
+             ~s([id^="skid-wheel-playground-stage-"][phx-update="ignore"])
+           )
+
     assert skid_patch_mark_count(render(view)) == 2
     assert has_element?(view, "#nav-skid-patch[aria-current=page]")
     assert has_element?(view, "#nav-ranking")
