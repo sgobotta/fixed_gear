@@ -1178,11 +1178,38 @@ const BottomNav = {
   }
 }
 
+const AppHeader = {
+  mounted() {
+    const header = this
+    this.sync = function () {
+      header.measure()
+    }
+    this.measure()
+    this.observer = new ResizeObserver(this.sync)
+    this.observer.observe(this.el)
+  },
+
+  updated() {
+    this.measure()
+  },
+
+  destroyed() {
+    this.observer.disconnect()
+  },
+
+  measure() {
+    document.documentElement.style.setProperty(
+      "--app-header-height",
+      this.el.offsetHeight + "px"
+    )
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, SliderValue, BottomNav, ...colocatedHooks},
+  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, SliderValue, BottomNav, AppHeader, ...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits
