@@ -249,6 +249,7 @@ defmodule FixedGearWeb.RankingComponents do
       |> assign(:hub_petal_offset, @hub_petal_offset)
       |> assign(:tire_mid, (@tire_outer + @tire_inner) / 2)
       |> assign(:tire_width, @tire_outer - @tire_inner)
+      |> assign(:patch_outer, @patch_outer)
       |> assign(:chain_stroke, @chain_stroke)
       |> assign(:drive, drive)
 
@@ -274,6 +275,14 @@ defmodule FixedGearWeb.RankingComponents do
             aria-hidden="true"
           >
             <g class="skid-wheel-rotor">
+              <%!-- Keeps the fill-box centered on the axle when the skid patches are not symmetric. --%>
+              <circle
+                cx={@cx}
+                cy={@cy}
+                r={@patch_outer}
+                fill="none"
+                stroke="none"
+              />
               <defs>
                 <mask id={"#{@id}-hub-mask"}>
                   <circle cx={@cx} cy={@cy} r={@hub_r + 0.1} fill="white" />
@@ -350,6 +359,13 @@ defmodule FixedGearWeb.RankingComponents do
               </g>
             </g>
             <g class="skid-wheel-cog">
+              <circle
+                cx={@drive.cog_cx}
+                cy={@cy}
+                r={@drive.cog_tip}
+                fill="none"
+                stroke="none"
+              />
               <path
                 d={@drive.cog_d}
                 fill="currentColor"
@@ -358,6 +374,13 @@ defmodule FixedGearWeb.RankingComponents do
               />
             </g>
             <g class="skid-wheel-ring">
+              <circle
+                cx={@drive.ring_cx}
+                cy={@cy}
+                r={@drive.ring_tip}
+                fill="none"
+                stroke="none"
+              />
               <path
                 d={@drive.ring_d}
                 fill="currentColor"
@@ -874,7 +897,11 @@ defmodule FixedGearWeb.RankingComponents do
     %{
       cog_pitch: fmt(cog_pitch),
       ring_pitch: fmt(ring_pitch),
+      cog_cx: fmt(@cog_cx),
+      cog_tip: fmt(cog_tip),
       cog_d: sprocket_d(@cog_cx, @wheel_cy, rear, cog_tip, cog_root, @bore_r),
+      ring_cx: fmt(@ring_cx),
+      ring_tip: fmt(ring_tip),
       ring_d:
         sprocket_d(
           @ring_cx,
