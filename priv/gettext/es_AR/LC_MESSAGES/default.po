@@ -704,8 +704,13 @@ msgstr "Recorrido"
 
 #: lib/fixed_gear_web/components/ranking_components.ex:500
 #, elixir-autogen, elixir-format
-msgid "Over 2.7: high speed on flat roads (take care of your knees)"
-msgstr "Más de 2.7: alta velocidad en llano (cuidá las rodillas)"
+msgid "2.7 to 3.0: high speed on flat roads (take care of your knees)"
+msgstr "2.7 a 3.0: buena velocidad en llano"
+
+#: lib/fixed_gear_web/components/ranking_components.ex:504
+#, elixir-autogen, elixir-format
+msgid "Over 3.0: pisteritx 🔥"
+msgstr "Más de 3.0: pisteritx 🔥"
 
 #: lib/fixed_gear_web/live/skid_patch_live.ex:29
 #, elixir-autogen, elixir-format
@@ -725,7 +730,7 @@ msgstr "El ratio de dientes del plato al piñón: cuántas vueltas da la rueda t
 #: lib/fixed_gear_web/components/ranking_components.ex:496
 #, elixir-autogen, elixir-format
 msgid "Under 1.9: bike polo"
-msgstr "Menos de 1.9: bici polo"
+msgstr "Menos de 1.9: bici polo, truquitos"
 
 #: lib/fixed_gear_web/components/ranking_components.ex:521
 #, elixir-autogen, elixir-format

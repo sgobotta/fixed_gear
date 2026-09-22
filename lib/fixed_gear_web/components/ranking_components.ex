@@ -498,9 +498,10 @@ defmodule FixedGearWeb.RankingComponents do
             <li>{gettext("2.3 to 2.7: polyvalent ratio")}</li>
             <li>
               {gettext(
-                "Over 2.7: high speed on flat roads (take care of your knees)"
+                "2.7 to 3.0: high speed on flat roads (take care of your knees)"
               )}
             </li>
+            <li>{gettext("Over 3.0: pisteritx 🔥")}</li>
           </ul>
         </:hint>
         <.ratio_motion

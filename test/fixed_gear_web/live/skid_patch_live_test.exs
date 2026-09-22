@@ -66,6 +66,12 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
                "The distance that the bicycle moves with each revolution of the pedals."
              )
            )
+
+    assert has_element?(
+             view,
+             "#hint-ratio-playground",
+             gettext("Over 3.0: pisteritx 🔥")
+           )
   end
 
   test "updates patches and ratio when gearing changes", %{conn: conn} do

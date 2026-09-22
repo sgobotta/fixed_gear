@@ -704,7 +704,12 @@ msgstr ""
 
 #: lib/fixed_gear_web/components/ranking_components.ex:500
 #, elixir-autogen, elixir-format
-msgid "Over 2.7: high speed on flat roads (take care of your knees)"
+msgid "2.7 to 3.0: high speed on flat roads (take care of your knees)"
+msgstr ""
+
+#: lib/fixed_gear_web/components/ranking_components.ex:504
+#, elixir-autogen, elixir-format
+msgid "Over 3.0: pisteritx 🔥"
 msgstr ""
 
 #: lib/fixed_gear_web/live/skid_patch_live.ex:29
