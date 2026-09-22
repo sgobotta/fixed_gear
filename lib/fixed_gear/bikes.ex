@@ -78,14 +78,16 @@ defmodule FixedGear.Bikes do
   end
 
   def get_bike(id) do
-    with {:ok, id} <- Ecto.UUID.cast(id) do
-      Bike
-      |> from(as: :bike)
-      |> where([bike: b], b.id == ^id)
-      |> select_list_fields()
-      |> Repo.one()
-    else
-      :error -> nil
+    case Ecto.UUID.cast(id) do
+      {:ok, id} ->
+        Bike
+        |> from(as: :bike)
+        |> where([bike: b], b.id == ^id)
+        |> select_list_fields()
+        |> Repo.one()
+
+      :error ->
+        nil
     end
   end
 
@@ -97,14 +99,16 @@ defmodule FixedGear.Bikes do
   end
 
   def get_bike_photo(id) do
-    with {:ok, id} <- Ecto.UUID.cast(id) do
-      from(b in Bike,
-        where: b.id == ^id and not is_nil(b.photo),
-        select: {b.photo, b.photo_content_type}
-      )
-      |> Repo.one()
-    else
-      :error -> nil
+    case Ecto.UUID.cast(id) do
+      {:ok, id} ->
+        from(b in Bike,
+          where: b.id == ^id and not is_nil(b.photo),
+          select: {b.photo, b.photo_content_type}
+        )
+        |> Repo.one()
+
+      :error ->
+        nil
     end
   end
 
