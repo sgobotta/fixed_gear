@@ -3,6 +3,8 @@ defmodule FixedGear.Bikes do
   Weigh-in bikes and ranking queries.
   """
 
+  use Gettext, backend: FixedGearWeb.Gettext
+
   import Ecto.Query, warn: false
 
   alias FixedGear.Bikes.Bike
@@ -40,17 +42,22 @@ defmodule FixedGear.Bikes do
     end)
   end
 
+  # "t" is the English abbreviation for tooth. Spanish uses "d" (diente).
+  def tooth_suffix, do: gettext("t")
+
+  def tooth_label(count) when is_integer(count), do: "#{count}#{tooth_suffix()}"
+
   def chain_ring_options do
     Enum.map(
       Calculations.chain_ring_min()..Calculations.chain_ring_max(),
-      fn teeth -> {"#{teeth}t", teeth} end
+      fn teeth -> {tooth_label(teeth), teeth} end
     )
   end
 
   def sprocket_options do
     Enum.map(
       Calculations.sprocket_min()..Calculations.sprocket_max(),
-      fn teeth -> {"#{teeth}t", teeth} end
+      fn teeth -> {tooth_label(teeth), teeth} end
     )
   end
 

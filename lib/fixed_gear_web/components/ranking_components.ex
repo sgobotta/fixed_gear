@@ -6,6 +6,7 @@ defmodule FixedGearWeb.RankingComponents do
 
   import FixedGearWeb.CoreComponents, only: [icon: 1]
 
+  alias FixedGear.Bikes
   alias FixedGear.Bikes.Calculations
   alias FixedGearWeb.CadenceColor
   alias Phoenix.LiveView.JS
@@ -517,9 +518,11 @@ defmodule FixedGearWeb.RankingComponents do
   attr :value, :integer, required: true
   attr :min, :integer, required: true
   attr :max, :integer, required: true
-  attr :suffix, :string, default: "t"
+  attr :suffix, :string, default: nil
 
   def gear_slider(assigns) do
+    assigns = assign(assigns, :suffix, assigns.suffix || Bikes.tooth_suffix())
+
     ~H"""
     <div
       id={@id}
@@ -595,15 +598,23 @@ defmodule FixedGearWeb.RankingComponents do
           :if={@chain_ring && @rear_sprocket}
           label={gettext("Gearing")}
         >
-          {@chain_ring}t / {@rear_sprocket}t
+          {Bikes.tooth_label(@chain_ring)} / {Bikes.tooth_label(@rear_sprocket)}
         </.stat>
         <.stat :if={@tire_width} label={gettext("Tire")}>
           {Calculations.tire_label(@tire_width)}
         </.stat>
         <.stat
           :if={@speed}
+          hint_id={"hint-speed-#{@id_prefix}"}
           label={gettext("Speed at %{cadence} rpm", cadence: @cadence)}
         >
+          <:hint>
+            <p>
+              {gettext(
+                "rpm means revolutions per minute: how many full turns the pedals make in one minute."
+              )}
+            </p>
+          </:hint>
           {Calculations.format_speed(@speed)} km/h
         </.stat>
         <.stat
@@ -687,7 +698,7 @@ defmodule FixedGearWeb.RankingComponents do
 
   def gear_math_credit(assigns) do
     ~H"""
-    <p class="skid-patch-credit mt-2 text-[10px] leading-snug text-base-content/40">
+    <p class="skid-patch-credit mt-2 text-right text-[10px] leading-snug text-base-content/40 italic">
       {gettext("Inspired by")}
       <a
         href="https://www.surplace.fr/ffgc/"
@@ -724,7 +735,15 @@ defmodule FixedGearWeb.RankingComponents do
           :if={@hint != [] && @hint_id}
           type="button"
           id={"#{@hint_id}-toggle"}
-          class="inline-flex rounded-full p-0.5 text-base-content/40 transition hover:bg-base-200 hover:text-base-content/75"
+          class={[
+            "inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full",
+            "border border-base-content/25 bg-base-content/10 text-base-content/80",
+            "transition duration-200",
+            "hover:border-base-content/45 hover:bg-base-content/15 hover:text-base-content",
+            "active:scale-90",
+            "aria-expanded:border-base-content/50 aria-expanded:bg-base-content/20 aria-expanded:text-base-content",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content/50"
+          ]}
           phx-click={toggle_hint(@hint_id)}
           aria-controls={@hint_id}
           aria-expanded="false"

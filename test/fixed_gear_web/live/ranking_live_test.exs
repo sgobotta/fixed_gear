@@ -62,7 +62,13 @@ defmodule FixedGearWeb.RankingLiveTest do
     refute has_element?(view, ~s(#bike-#{heavy.id}-header[phx-key="Enter"]))
     refute has_element?(view, "#bike-#{heavy.id}-header[phx-keydown]")
     assert has_element?(view, "#bike-#{heavy.id}-expand-inner")
-    assert has_element?(view, "#bike-#{heavy.id}-expand-inner", "48t / 16t")
+
+    assert has_element?(
+             view,
+             "#bike-#{heavy.id}-expand-inner",
+             "#{FixedGear.Bikes.tooth_label(48)} / #{FixedGear.Bikes.tooth_label(16)}"
+           )
+
     assert has_element?(view, "#ratio-motion-#{heavy.id}")
     assert has_element?(view, "#development-#{heavy.id}")
     assert has_element?(view, "#hint-ratio-#{heavy.id}-toggle")

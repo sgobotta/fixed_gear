@@ -3,15 +3,22 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
 
   import Phoenix.LiveViewTest
 
+  alias FixedGear.Bikes
   alias FixedGear.Bikes.Calculations
 
   test "renders a playground with default gearing and cadence", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/skid-patch")
 
     assert has_element?(view, "#skid-patch-form")
-    assert has_element?(view, "#skid-patch-readout", "48t / 16t")
-    assert has_element?(view, "#chain-ring-value", "48t")
-    assert has_element?(view, "#rear-sprocket-value", "16t")
+
+    assert has_element?(
+             view,
+             "#skid-patch-readout",
+             "#{Bikes.tooth_label(48)} / #{Bikes.tooth_label(16)}"
+           )
+
+    assert has_element?(view, "#chain-ring-value", Bikes.tooth_label(48))
+    assert has_element?(view, "#rear-sprocket-value", Bikes.tooth_label(16))
     assert has_element?(view, ~s(#chain-ring[type="range"][min="28"][max="59"]))
 
     assert has_element?(
@@ -28,6 +35,7 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
 
     assert has_element?(view, "#development-playground", "#{development} m")
     assert has_element?(view, "#hint-development-playground-toggle")
+    assert has_element?(view, "#hint-speed-playground-toggle")
     assert has_element?(view, "#hint-ratio-playground-toggle")
     assert has_element?(view, "#hint-skid-patches-playground-toggle")
     assert has_element?(view, "#skid-wheel-playground")
@@ -105,7 +113,12 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
     })
     |> render_change()
 
-    assert has_element?(view, "#skid-patch-readout", "49t / 16t")
+    assert has_element?(
+             view,
+             "#skid-patch-readout",
+             "#{Bikes.tooth_label(49)} / #{Bikes.tooth_label(16)}"
+           )
+
     assert has_element?(view, "#skid-wheel-playground-count", "32")
     assert has_element?(view, ~s(#skid-wheel-playground[data-patches="16"]))
 
