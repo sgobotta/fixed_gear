@@ -214,6 +214,59 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
            )
 
     assert has_element?(view, "#cadence-slider[data-cadence-progress='88.89%']")
+    assert_patch(view, ~p"/skid-patch?#{[cadence: 160]}")
+
+    assert has_element?(
+             view,
+             ~s(#share-skid-patch[data-url="/skid-patch?cadence=160"])
+           )
+  end
+
+  test "restores a shared setup from the query string", %{conn: conn} do
+    {:ok, view, _html} =
+      live(
+        conn,
+        ~p"/skid-patch?#{[chain_ring: 49, rear_sprocket: 17, tire_width: 32, cadence: 90]}"
+      )
+
+    assert has_element?(view, "#chain-ring-value", Bikes.tooth_label(49))
+    assert has_element?(view, "#rear-sprocket-value", Bikes.tooth_label(17))
+    assert has_element?(view, "#skid-patch-readout", "700x32")
+    assert has_element?(view, "#cadence-value", "90 rpm")
+
+    patches = Calculations.skid_patches(49, 17)
+
+    assert has_element?(
+             view,
+             "#skid-wheel-playground-count",
+             to_string(patches.ambidextrous)
+           )
+
+    path =
+      ~p"/skid-patch?#{[chain_ring: 49, rear_sprocket: 17, tire_width: 32, cadence: 90]}"
+
+    assert has_element?(view, "#share-skid-patch[data-url='#{path}']")
+
+    assert has_element?(
+             view,
+             ~s(#share-skid-patch[data-title="#{gettext("Skid Patch")} · #{Bikes.tooth_label(49)} / #{Bikes.tooth_label(17)}"])
+           )
+
+    assert has_element?(
+             view,
+             "#share-skid-patch[aria-label='#{gettext("Share this setup")}']"
+           )
+  end
+
+  test "drops invalid query params back to the defaults", %{conn: conn} do
+    assert {:error, {:live_redirect, %{to: "/skid-patch"}}} =
+             live(conn, ~p"/skid-patch?chain_ring=999&cadence=nope")
+
+    {:ok, view, _html} = live(conn, ~p"/skid-patch")
+
+    assert has_element?(view, "#chain-ring-value", Bikes.tooth_label(48))
+    assert has_element?(view, "#cadence-value", "60 rpm")
+    assert has_element?(view, ~s(#share-skid-patch[data-url="/skid-patch"]))
   end
 
   defp skid_patch_mark_count(html) do

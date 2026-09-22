@@ -18,18 +18,46 @@ defmodule FixedGearWeb.SkidPatchLive do
       section={:skid_patch}
     >
       <section class="space-y-6 pb-36">
-        <header class="space-y-2">
-          <p class="text-xs font-semibold tracking-[0.25em] text-base-content/50 uppercase">
-            {gettext("Playground")}
-          </p>
-          <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
-            {gettext("Skid Patch")}
-          </h1>
-          <p class="max-w-md text-sm text-base-content/65">
-            {gettext(
-              "Play with chainring, sprocket, and tire to see development, ratio, speed, and skid patches."
-            )}
-          </p>
+        <header class="flex items-start justify-between gap-4">
+          <div class="min-w-0 space-y-2">
+            <p class="text-xs font-semibold tracking-[0.25em] text-base-content/50 uppercase">
+              {gettext("Playground")}
+            </p>
+            <h1 class="text-3xl font-semibold tracking-tight sm:text-4xl">
+              {gettext("Skid Patch")}
+            </h1>
+            <p class="max-w-md text-sm text-base-content/65">
+              {gettext(
+                "Play with chainring, sprocket, and tire to see development, ratio, speed, and skid patches."
+              )}
+            </p>
+          </div>
+          <div class="shrink-0 pt-6">
+            <button
+              id="share-skid-patch"
+              type="button"
+              phx-hook="ShareLink"
+              data-url={
+                playground_path(@chain_ring, @rear_sprocket, @tire_width, @cadence)
+              }
+              data-title={share_title(@chain_ring, @rear_sprocket)}
+              data-copied-label={gettext("Link copied")}
+              class="inline-flex rounded-full p-2 text-base-content/50 transition hover:bg-base-200 hover:text-base-content"
+              aria-label={gettext("Share this setup")}
+            >
+              <span data-share-icon class="inline-flex">
+                <.icon name="hero-arrow-up-on-square" class="size-5" />
+              </span>
+              <span data-copied-icon class="hidden">
+                <.icon name="hero-check" class="size-5" />
+              </span>
+            </button>
+            <span
+              id="share-skid-patch-status"
+              class="sr-only"
+              aria-live="polite"
+            ></span>
+          </div>
         </header>
 
         <div
@@ -110,8 +138,25 @@ defmodule FixedGearWeb.SkidPatchLive do
   end
 
   @impl true
+  def handle_params(params, _uri, socket) do
+    socket = assign_playground(socket, params)
+
+    socket =
+      if canonical_query?(params, socket) do
+        socket
+      else
+        push_patch(socket, to: current_playground_path(socket), replace: true)
+      end
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("update", %{"skid_patch" => params}, socket) do
-    {:noreply, assign_playground(socket, params)}
+    socket = assign_playground(socket, params)
+
+    {:noreply,
+     push_patch(socket, to: current_playground_path(socket), replace: true)}
   end
 
   defp assign_playground(socket, params) do
@@ -161,4 +206,59 @@ defmodule FixedGearWeb.SkidPatchLive do
   defp cog_values, do: Calculations.sprocket_min()..Calculations.sprocket_max()
 
   defp tire_values, do: Calculations.tire_widths()
+
+  defp current_playground_path(socket) do
+    playground_path(
+      socket.assigns.chain_ring,
+      socket.assigns.rear_sprocket,
+      socket.assigns.tire_width,
+      socket.assigns.cadence
+    )
+  end
+
+  defp playground_path(chain_ring, rear_sprocket, tire_width, cadence) do
+    query =
+      []
+      |> maybe_param(:chain_ring, chain_ring, @default_ring)
+      |> maybe_param(:rear_sprocket, rear_sprocket, @default_cog)
+      |> maybe_param(:tire_width, tire_width, @default_tire)
+      |> maybe_param(:cadence, cadence, CadenceColor.default_rpm())
+
+    case query do
+      [] -> ~p"/skid-patch"
+      query -> ~p"/skid-patch?#{query}"
+    end
+  end
+
+  defp maybe_param(query, _key, value, default) when value == default, do: query
+  defp maybe_param(query, key, value, _default), do: query ++ [{key, value}]
+
+  defp canonical_query?(params, socket) do
+    query_value(params, "chain_ring") ==
+      canonical_value(socket.assigns.chain_ring, @default_ring) and
+      query_value(params, "rear_sprocket") ==
+        canonical_value(socket.assigns.rear_sprocket, @default_cog) and
+      query_value(params, "tire_width") ==
+        canonical_value(socket.assigns.tire_width, @default_tire) and
+      query_value(params, "cadence") ==
+        canonical_value(socket.assigns.cadence, CadenceColor.default_rpm())
+  end
+
+  defp canonical_value(value, default) when value == default, do: nil
+  defp canonical_value(value, _default), do: to_string(value)
+
+  defp query_value(params, key) do
+    case params[key] do
+      value when value in [nil, ""] -> nil
+      value -> to_string(value)
+    end
+  end
+
+  defp share_title(chain_ring, rear_sprocket) do
+    gettext("Skid Patch") <>
+      " · " <>
+      Bikes.tooth_label(chain_ring) <>
+      " / " <>
+      Bikes.tooth_label(rear_sprocket)
+  end
 end
