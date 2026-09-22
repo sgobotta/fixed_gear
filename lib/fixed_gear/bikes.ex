@@ -78,11 +78,17 @@ defmodule FixedGear.Bikes do
   end
 
   def get_bike(id) do
-    Bike
-    |> from(as: :bike)
-    |> where([bike: b], b.id == ^id)
-    |> select_list_fields()
-    |> Repo.one()
+    case Ecto.UUID.cast(id) do
+      {:ok, id} ->
+        Bike
+        |> from(as: :bike)
+        |> where([bike: b], b.id == ^id)
+        |> select_list_fields()
+        |> Repo.one()
+
+      :error ->
+        nil
+    end
   end
 
   def get_bike!(id) do
@@ -92,19 +98,18 @@ defmodule FixedGear.Bikes do
     end
   end
 
-  def get_bike_photo(id) when is_binary(id) do
-    case Integer.parse(id) do
-      {int, ""} -> get_bike_photo(int)
-      _ -> nil
-    end
-  end
+  def get_bike_photo(id) do
+    case Ecto.UUID.cast(id) do
+      {:ok, id} ->
+        from(b in Bike,
+          where: b.id == ^id and not is_nil(b.photo),
+          select: {b.photo, b.photo_content_type}
+        )
+        |> Repo.one()
 
-  def get_bike_photo(id) when is_integer(id) do
-    from(b in Bike,
-      where: b.id == ^id and not is_nil(b.photo),
-      select: {b.photo, b.photo_content_type}
-    )
-    |> Repo.one()
+      :error ->
+        nil
+    end
   end
 
   def change_bike(%Bike{} = bike, attrs \\ %{}) do

@@ -311,11 +311,11 @@ defmodule FixedGearWeb.RankingLive do
   defp accepted_tab(_tab), do: nil
 
   defp expanded_id_from_params(%{"id" => id}, bikes) do
-    case Integer.parse(id) do
-      {int, ""} ->
-        if Enum.any?(bikes, &(&1.id == int)), do: {:ok, int}, else: :error
+    case Ecto.UUID.cast(id) do
+      {:ok, uuid} ->
+        if Enum.any?(bikes, &(&1.id == uuid)), do: {:ok, uuid}, else: :error
 
-      _ ->
+      :error ->
         :error
     end
   end
