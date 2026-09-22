@@ -2,6 +2,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Index do
   use FixedGearWeb, :live_view
 
   alias FixedGear.Bikes
+  alias FixedGear.Bikes.Bike
   alias FixedGear.Bikes.Calculations
 
   @impl true
@@ -31,6 +32,16 @@ defmodule FixedGearWeb.Admin.BikeLive.Index do
           >
             {gettext("Edit")}
           </.link>
+          <button
+            type="button"
+            id={"delete-bike-#{bike.id}"}
+            class="text-error"
+            phx-click="delete"
+            phx-value-id={bike.id}
+            data-confirm={gettext("Delete %{name}?", name: bike.name)}
+          >
+            {gettext("Delete")}
+          </button>
         </:action>
       </.table>
     </Layouts.app>
@@ -44,4 +55,34 @@ defmodule FixedGearWeb.Admin.BikeLive.Index do
      |> assign(:page_title, gettext("Bikes"))
      |> assign(:bikes, Bikes.list_bikes())}
   end
+
+  @impl true
+  def handle_event("delete", %{"id" => id}, socket) do
+    socket =
+      case bike_for_delete(id) do
+        %Bike{} = bike ->
+          case Bikes.delete_bike(bike) do
+            {:ok, _bike} ->
+              put_flash(socket, :info, gettext("Bike deleted"))
+
+            {:error, _reason} ->
+              put_flash(socket, :error, gettext("Bike no longer exists"))
+          end
+
+        nil ->
+          put_flash(socket, :error, gettext("Bike no longer exists"))
+      end
+
+    {:noreply, assign(socket, :bikes, Bikes.list_bikes())}
+  end
+
+  defp bike_for_delete(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int, ""} -> Bikes.get_bike(int)
+      _ -> nil
+    end
+  end
+
+  defp bike_for_delete(id) when is_integer(id), do: Bikes.get_bike(id)
+  defp bike_for_delete(_id), do: nil
 end

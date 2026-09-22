@@ -41,6 +41,18 @@ defmodule FixedGear.Bikes.CalculationsTest do
     end
   end
 
+  describe "development_m/3" do
+    test "is wheel circumference times gear ratio" do
+      development = Calculations.development_m(48, 16, 23)
+      assert_in_delta development, 6.30, 0.01
+    end
+
+    test "returns nil when tire or gearing is missing" do
+      assert Calculations.development_m(48, 16, nil) == nil
+      assert Calculations.development_m(nil, 16, 23) == nil
+    end
+  end
+
   describe "speed_kmh/4" do
     test "uses 700c circumference from tire width" do
       speed = Calculations.speed_kmh(48, 16, 23, 90)
@@ -57,6 +69,7 @@ defmodule FixedGear.Bikes.CalculationsTest do
     assert Calculations.format_weight(Decimal.new("7.1")) == "7.100"
     assert Calculations.format_ratio(3.0) == "3.00"
     assert Calculations.format_speed(33.93) == "33.9"
+    assert Calculations.format_development(6.296) == "6.30"
     assert Calculations.tire_label(25) == "700x25"
     assert Calculations.material_label(:carbon_fiber) == "Carbon fiber"
   end

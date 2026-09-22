@@ -6,6 +6,7 @@ defmodule FixedGearWeb.RankingComponents do
 
   import FixedGearWeb.CoreComponents, only: [icon: 1]
 
+  alias FixedGear.Bikes
   alias FixedGear.Bikes.Calculations
   alias FixedGearWeb.CadenceColor
   alias Phoenix.LiveView.JS
@@ -15,6 +16,51 @@ defmodule FixedGearWeb.RankingComponents do
   @spoke_angles Enum.map(0..(@spoke_count - 1), fn i ->
                   i * 360.0 / @spoke_count
                 end)
+  @hub_holes Enum.map(0..4, fn i -> i * 72.0 end)
+  @wheel_cx 40.0
+  @wheel_cy 40.0
+  @tire_outer 38.4
+  @tire_inner 34.5
+  # Marks sit on the tread. Radial height is patch_outer - patch_inner.
+  @patch_outer 38.0
+  @patch_inner 34.9
+  # Three concentric walls just inside the tire. Spokes end on the inner one.
+  @rim_outer 33.3
+  @rim_mid 30.6
+  @rim_inner 28.0
+  @rim_walls [@rim_outer, @rim_mid, @rim_inner]
+  @spoke_inner 3.7
+  @spoke_outer @rim_inner
+  @hub_r 3.05
+  @hub_axle_r 0.5
+  @hub_petal_r 0.55
+  @hub_petal_offset 1.05
+  @tire_gap 2.4
+  @vertical_pad 2.0
+  @view_pad 2.2
+  @bore_r 1.05
+  # 700×28 outer radius, (622 + 2×28) / 2, and a 1/2" chain.
+  # Pitch radius = teeth × chain pitch / (2π), in the drawn tire's units.
+  @wheel_radius_mm 339.0
+  @chain_pitch_mm 12.7
+  @pitch_unit @tire_outer * @chain_pitch_mm /
+                (2 * :math.pi() * @wheel_radius_mm)
+  @chain_pitch @pitch_unit * 2 * :math.pi()
+  @tooth_addendum @chain_pitch * 0.32
+  @tooth_dedendum @chain_pitch * 0.22
+  @chain_stroke @chain_pitch * 0.55
+  # Chain rides just outside the chainring teeth so the wrap reads on the
+  # dark background. The cog wrap sits on the pitch circle, centered on the hub.
+  @chain_clear @chain_pitch * 0.18
+  # Cog center is the hub. Both sprockets share @pitch_unit, so the ring
+  # stays put when the cog changes and the tooth ratio stays exact.
+  @cog_cx @wheel_cx
+  # Tallest ring that fits the wheel's viewBox. Its center is the 59t ring,
+  # so a smaller ring does not slide and the largest ring stays clear of the tire.
+  @max_chain_ring Calculations.chain_ring_max()
+  @max_ring_pitch @wheel_cy - @vertical_pad - @tooth_addendum
+  @ring_cx @wheel_cx + @tire_outer + @tire_gap + @max_chain_ring * @pitch_unit +
+             @tooth_addendum
   @reference_rpm 90
   @seconds_per_minute 60
 
@@ -157,6 +203,8 @@ defmodule FixedGearWeb.RankingComponents do
   attr :id, :string, required: true
   attr :patches, :integer, required: true
   attr :ambidextrous, :integer, default: nil
+  attr :chain_ring, :integer, required: true
+  attr :rear_sprocket, :integer, required: true
 
   def skid_wheel(assigns) do
     count =
@@ -168,30 +216,16 @@ defmodule FixedGearWeb.RankingComponents do
 
     step = if count > 0, do: 360 / count, else: 0
     show_ambi? = ambi_extra?(assigns.ambidextrous, count)
-    blob_n = if show_ambi?, do: count * 2, else: count
-    blob_rx = skid_blob_rx(blob_n)
-    blob_ry = blob_rx * 0.78
+    mark_n = if show_ambi?, do: count * 2, else: count
+    patch_d = tire_patch_path(skid_patch_span(mark_n))
 
     marks =
       if count > 0 do
         Enum.flat_map(0..(count - 1), fn i ->
-          one = %{
-            ambi: false,
-            angle: -i * step,
-            rx: blob_rx,
-            ry: blob_ry
-          }
+          one = %{ambi: false, angle: -i * step}
 
           if show_ambi? do
-            [
-              one,
-              %{
-                ambi: true,
-                angle: -i * step - step / 2,
-                rx: blob_rx,
-                ry: blob_ry
-              }
-            ]
+            [one, %{ambi: true, angle: -i * step - step / 2}]
           else
             [one]
           end
@@ -201,13 +235,30 @@ defmodule FixedGearWeb.RankingComponents do
       end
 
     displayed = if show_ambi?, do: assigns.ambidextrous, else: assigns.patches
+    drive = drive_layout(assigns.chain_ring, assigns.rear_sprocket)
 
     assigns =
       assigns
       |> assign(:marks, marks)
+      |> assign(:patch_d, patch_d)
       |> assign(:show_ambi, show_ambi?)
       |> assign(:displayed, displayed)
       |> assign(:spokes, @spoke_angles)
+      |> assign(:hub_holes, @hub_holes)
+      |> assign(:cx, @wheel_cx)
+      |> assign(:cy, @wheel_cy)
+      |> assign(:rim_walls, @rim_walls)
+      |> assign(:spoke_inner, @spoke_inner)
+      |> assign(:spoke_outer, @spoke_outer)
+      |> assign(:hub_r, @hub_r)
+      |> assign(:hub_axle_r, @hub_axle_r)
+      |> assign(:hub_petal_r, @hub_petal_r)
+      |> assign(:hub_petal_offset, @hub_petal_offset)
+      |> assign(:tire_mid, (@tire_outer + @tire_inner) / 2)
+      |> assign(:tire_width, @tire_outer - @tire_inner)
+      |> assign(:patch_outer, @patch_outer)
+      |> assign(:chain_stroke, @chain_stroke)
+      |> assign(:drive, drive)
 
     ~H"""
     <div
@@ -215,53 +266,146 @@ defmodule FixedGearWeb.RankingComponents do
       phx-hook="SkidWheel"
       data-patches={@patches}
       data-ambidextrous={@ambidextrous}
+      data-chain-ring={@chain_ring}
+      data-rear-sprocket={@rear_sprocket}
+      data-cog-pitch={@drive.cog_pitch}
     >
       <div class="flex items-center gap-4">
         <div
-          id={"#{@id}-stage-#{@patches}-#{@displayed}"}
+          id={"#{@id}-stage-#{@patches}-#{@displayed}-#{@chain_ring}-#{@rear_sprocket}"}
           phx-update="ignore"
-          class="relative size-16 shrink-0 sm:size-20"
+          class="skid-wheel-stage relative h-22 w-max shrink-0 [--skid-wheel-h:5.5rem] sm:h-26 sm:[--skid-wheel-h:6.5rem]"
         >
           <svg
-            viewBox="0 0 80 80"
-            class="skid-wheel-rotor size-full text-base-content"
+            viewBox={"0 0 #{@drive.vb_w} 80"}
+            class="block h-full w-auto text-base-content"
             aria-hidden="true"
           >
-            <circle
-              cx="40"
-              cy="40"
-              r="28"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="8"
-              class="opacity-35"
-            />
-            <g :for={angle <- @spokes} transform={"rotate(#{angle} 40 40)"}>
-              <line
-                x1="40"
-                y1="33.2"
-                x2="40"
-                y2="16.5"
+            <g class="skid-wheel-rotor">
+              <%!-- Keeps the fill-box centered on the axle when the skid patches are not symmetric. --%>
+              <circle
+                cx={@cx}
+                cy={@cy}
+                r={@patch_outer}
+                fill="none"
+                stroke="none"
+              />
+              <defs>
+                <mask id={"#{@id}-hub-mask"}>
+                  <circle cx={@cx} cy={@cy} r={@hub_r + 0.1} fill="white" />
+                  <circle cx={@cx} cy={@cy} r={@hub_axle_r} fill="black" />
+                  <g
+                    :for={angle <- @hub_holes}
+                    transform={"rotate(#{angle} #{@cx} #{@cy})"}
+                  >
+                    <circle
+                      cx={@cx}
+                      cy={@cy - @hub_petal_offset}
+                      r={@hub_petal_r}
+                      fill="black"
+                    />
+                  </g>
+                </mask>
+              </defs>
+              <circle
+                cx={@cx}
+                cy={@cy}
+                r={@tire_mid}
+                fill="none"
+                stroke="currentColor"
+                stroke-width={@tire_width}
+                class="opacity-70"
+              />
+              <circle
+                :for={r <- @rim_walls}
+                cx={@cx}
+                cy={@cy}
+                r={r}
+                fill="none"
+                stroke="currentColor"
+                stroke-width="0.75"
+                class="opacity-80"
+              />
+              <g
+                :for={angle <- @spokes}
+                transform={"rotate(#{angle} #{@cx} #{@cy})"}
+              >
+                <line
+                  x1={@cx}
+                  y1={@cy - @spoke_outer}
+                  x2={@cx}
+                  y2={@cy - @spoke_inner}
+                  stroke="currentColor"
+                  stroke-width="0.45"
+                  class="opacity-40"
+                />
+              </g>
+              <circle
+                cx={@cx}
+                cy={@cy}
+                r={@hub_r}
+                fill="currentColor"
+                mask={"url(##{@id}-hub-mask)"}
+                class="opacity-90"
+              />
+              <circle
+                cx={@cx}
+                cy={@cy}
+                r={@hub_r + 0.05}
+                fill="none"
                 stroke="currentColor"
                 stroke-width="0.7"
-                class="opacity-35"
+                class="opacity-70"
+              />
+              <g
+                :for={{mark, index} <- Enum.with_index(@marks)}
+                id={"#{@id}-mark-#{index}"}
+                class={["skid-patch", mark.ambi && "skid-patch-ambi"]}
+                transform={"rotate(#{mark.angle} #{@cx} #{@cy})"}
+              >
+                <path d={@patch_d} />
+              </g>
+            </g>
+            <g class="skid-wheel-cog">
+              <circle
+                cx={@drive.cog_cx}
+                cy={@cy}
+                r={@drive.cog_tip}
+                fill="none"
+                stroke="none"
+              />
+              <path
+                d={@drive.cog_d}
+                fill="currentColor"
+                fill-rule="evenodd"
+                class="opacity-95"
               />
             </g>
-            <circle cx="40" cy="40" r="5.5" fill="currentColor" class="opacity-40" />
-            <g
-              :for={{mark, index} <- Enum.with_index(@marks)}
-              id={"#{@id}-mark-#{index}"}
-              class={["skid-patch", mark.ambi && "skid-patch-ambi"]}
-              transform={"rotate(#{mark.angle} 40 40)"}
-            >
-              <ellipse cx="40" cy="12" rx={mark.rx} ry={mark.ry} />
-              <ellipse
-                cx="41.8"
-                cy="10.8"
-                rx={mark.rx * 0.62}
-                ry={mark.ry * 0.58}
+            <g class="skid-wheel-ring">
+              <circle
+                cx={@drive.ring_cx}
+                cy={@cy}
+                r={@drive.ring_tip}
+                fill="none"
+                stroke="none"
+              />
+              <path
+                d={@drive.ring_d}
+                fill="currentColor"
+                fill-rule="evenodd"
+                class="opacity-95"
               />
             </g>
+            <path
+              class="skid-wheel-chain"
+              d={@drive.chain_d}
+              fill="none"
+              stroke="currentColor"
+              stroke-width={@chain_stroke}
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-dasharray={"#{@drive.chain_dash} #{@drive.chain_gap}"}
+            />
           </svg>
           <span class="skid-wheel-ground" aria-hidden="true"></span>
           <span class="skid-sparks" aria-hidden="true"></span>
@@ -374,9 +518,11 @@ defmodule FixedGearWeb.RankingComponents do
   attr :value, :integer, required: true
   attr :min, :integer, required: true
   attr :max, :integer, required: true
-  attr :suffix, :string, default: "t"
+  attr :suffix, :string, default: nil
 
   def gear_slider(assigns) do
+    assigns = assign(assigns, :suffix, assigns.suffix || Bikes.tooth_suffix())
+
     ~H"""
     <div
       id={@id}
@@ -431,11 +577,19 @@ defmodule FixedGearWeb.RankingComponents do
         assigns.cadence
       )
 
+    development =
+      Calculations.development_m(
+        assigns.chain_ring,
+        assigns.rear_sprocket,
+        assigns.tire_width
+      )
+
     assigns =
       assigns
       |> assign(:ratio, ratio)
       |> assign(:patches, patches)
       |> assign(:speed, speed)
+      |> assign(:development, development)
 
     ~H"""
     <div class="space-y-5">
@@ -444,20 +598,66 @@ defmodule FixedGearWeb.RankingComponents do
           :if={@chain_ring && @rear_sprocket}
           label={gettext("Gearing")}
         >
-          {@chain_ring}t / {@rear_sprocket}t
+          {Bikes.tooth_label(@chain_ring)} / {Bikes.tooth_label(@rear_sprocket)}
         </.stat>
         <.stat :if={@tire_width} label={gettext("Tire")}>
           {Calculations.tire_label(@tire_width)}
         </.stat>
         <.stat
           :if={@speed}
+          hint_id={"hint-speed-#{@id_prefix}"}
           label={gettext("Speed at %{cadence} rpm", cadence: @cadence)}
         >
+          <:hint>
+            <p>
+              {gettext(
+                "rpm means revolutions per minute: how many full turns the pedals make in one minute."
+              )}
+            </p>
+          </:hint>
           {Calculations.format_speed(@speed)} km/h
+        </.stat>
+        <.stat
+          :if={@development}
+          hint_id={"hint-development-#{@id_prefix}"}
+          label={gettext("Development")}
+        >
+          <:hint>
+            <p>
+              {gettext(
+                "The distance that the bicycle moves with each revolution of the pedals."
+              )}
+            </p>
+          </:hint>
+          <span id={"development-#{@id_prefix}"}>
+            {Calculations.format_development(@development)} m
+          </span>
         </.stat>
       </dl>
 
-      <.stat :if={@ratio} label={gettext("Ratio")}>
+      <.stat
+        :if={@ratio}
+        hint_id={"hint-ratio-#{@id_prefix}"}
+        label={gettext("Ratio")}
+      >
+        <:hint>
+          <p>
+            {gettext(
+              "The ratio of chainring teeth to rear sprocket teeth, in other words, how many times your rear wheel turns with each revolution of the pedals."
+            )}
+          </p>
+          <ul class="mt-1.5 list-disc space-y-0.5 pl-4">
+            <li>{gettext("Under 1.9: bike polo")}</li>
+            <li>{gettext("1.9 to 2.3: lots of steep slopes")}</li>
+            <li>{gettext("2.3 to 2.7: polyvalent ratio")}</li>
+            <li>
+              {gettext(
+                "2.7 to 3.0: high speed on flat roads (take care of your knees)"
+              )}
+            </li>
+            <li>{gettext("Over 3.0: pisteritx 🔥")}</li>
+          </ul>
+        </:hint>
         <.ratio_motion
           id={"ratio-motion-#{@id_prefix}"}
           ratio={@ratio}
@@ -466,21 +666,39 @@ defmodule FixedGearWeb.RankingComponents do
         />
       </.stat>
 
-      <.stat :if={@patches} label={gettext("Skid patches")}>
+      <.stat
+        :if={@patches}
+        hint_id={"hint-skid-patches-#{@id_prefix}"}
+        label={gettext("Skid patches")}
+      >
+        <:hint>
+          <p>
+            {gettext(
+              "While skidding, you always brake with your feet — and the crank — in the same position."
+            )}
+          </p>
+          <p class="mt-1.5">
+            {gettext(
+              "You can predict how many spots will wear on your rear tire. These spots are called skid patches."
+            )}
+          </p>
+        </:hint>
         <.skid_wheel
           id={"skid-wheel-#{@id_prefix}"}
           patches={@patches.one_sided}
           ambidextrous={@patches.ambidextrous}
+          chain_ring={@chain_ring}
+          rear_sprocket={@rear_sprocket}
         />
-        <.skid_patch_credit />
+        <.gear_math_credit />
       </.stat>
     </div>
     """
   end
 
-  def skid_patch_credit(assigns) do
+  def gear_math_credit(assigns) do
     ~H"""
-    <p class="skid-patch-credit mt-2 text-[10px] leading-snug text-base-content/40">
+    <p class="skid-patch-credit mt-2 text-right text-[10px] leading-snug text-base-content/40 italic">
       {gettext("Inspired by")}
       <a
         href="https://www.surplace.fr/ffgc/"
@@ -490,19 +708,64 @@ defmodule FixedGearWeb.RankingComponents do
       >
         surplace.fr/ffgc
       </a>
+      {gettext("and")}
+      <a
+        href="https://www.sheldonbrown.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="underline decoration-base-content/25 underline-offset-2 transition hover:text-base-content/70 hover:decoration-base-content/50"
+      >
+        Sheldon Brown
+      </a>
     </p>
     """
   end
 
   attr :label, :string, required: true
+  attr :hint_id, :string, default: nil
+  slot :hint
   slot :inner_block, required: true
 
   def stat(assigns) do
     ~H"""
     <div>
-      <dt class="text-xs tracking-wide text-base-content/50 uppercase">
-        {@label}
+      <dt class="flex items-center gap-1 text-xs tracking-wide text-base-content/50 uppercase">
+        <span>{@label}</span>
+        <button
+          :if={@hint != [] && @hint_id}
+          type="button"
+          id={"#{@hint_id}-toggle"}
+          class={[
+            "inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full",
+            "border border-base-content/25 bg-base-content/10 text-base-content/80",
+            "transition duration-200",
+            "hover:border-base-content/45 hover:bg-base-content/15 hover:text-base-content",
+            "active:scale-90",
+            "aria-expanded:border-base-content/50 aria-expanded:bg-base-content/20 aria-expanded:text-base-content",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-base-content/50"
+          ]}
+          phx-click={toggle_hint(@hint_id)}
+          aria-controls={@hint_id}
+          aria-expanded="false"
+        >
+          <.icon name="hero-information-circle" class="size-3.5" />
+          <span class="sr-only">
+            {gettext("About %{label}", label: @label)}
+          </span>
+        </button>
       </dt>
+      <div
+        :if={@hint != [] && @hint_id}
+        id={@hint_id}
+        aria-hidden="true"
+        class="grid grid-rows-[0fr] overflow-hidden opacity-0 transition-all duration-300 ease-in-out motion-reduce:transition-none"
+      >
+        <div class="min-h-0 overflow-hidden">
+          <div class="mt-1 text-[11px] leading-snug font-normal tracking-normal text-base-content/65 normal-case">
+            {render_slot(@hint)}
+          </div>
+        </div>
+      </div>
       <dd class="mt-0.5 font-medium">{render_slot(@inner_block)}</dd>
     </div>
     """
@@ -610,9 +873,135 @@ defmodule FixedGearWeb.RankingComponents do
     """
   end
 
-  defp skid_blob_rx(n) when n > 12, do: 3.8
-  defp skid_blob_rx(n) when n > 6, do: 4.7
-  defp skid_blob_rx(_n), do: 5.6
+  defp skid_patch_span(n) when n > 16, do: 7.0
+  defp skid_patch_span(n) when n > 10, do: 10.0
+  defp skid_patch_span(n) when n > 6, do: 13.0
+  defp skid_patch_span(_n), do: 18.0
+
+  defp tire_patch_path(span) do
+    half = span / 2
+    {x1, y1} = polar(@wheel_cx, @wheel_cy, @patch_outer, -half)
+    {x2, y2} = polar(@wheel_cx, @wheel_cy, @patch_outer, half)
+    {x3, y3} = polar(@wheel_cx, @wheel_cy, @patch_inner, half)
+    {x4, y4} = polar(@wheel_cx, @wheel_cy, @patch_inner, -half)
+
+    "M #{fmt(x1)} #{fmt(y1)} A #{fmt(@patch_outer)} #{fmt(@patch_outer)} 0 0 1 #{fmt(x2)} #{fmt(y2)} L #{fmt(x3)} #{fmt(y3)} A #{fmt(@patch_inner)} #{fmt(@patch_inner)} 0 0 0 #{fmt(x4)} #{fmt(y4)} Z"
+  end
+
+  defp drive_layout(chain_ring, rear)
+       when is_integer(chain_ring) and is_integer(rear) and chain_ring > 0 and
+              rear > 0 do
+    cog0 = rear * @pitch_unit
+    ring0 = chain_ring * @pitch_unit
+    # Shrink only when this chainring would not fit. The cog is not part of
+    # that decision, so changing the cog leaves the ring the same size.
+    scale = min(1.0, @max_ring_pitch / ring0)
+
+    cog_pitch = cog0 * scale
+    ring_pitch = ring0 * scale
+    cog_tip = cog_pitch + @tooth_addendum
+    cog_root = cog_pitch - @tooth_dedendum
+    ring_tip = ring_pitch + @tooth_addendum
+    ring_root = ring_pitch - @tooth_dedendum
+    circular = 2 * :math.pi() * @pitch_unit * scale
+    vb_w = @ring_cx + ring_tip + @view_pad
+
+    %{
+      cog_pitch: fmt(cog_pitch),
+      ring_pitch: fmt(ring_pitch),
+      cog_cx: fmt(@cog_cx),
+      cog_tip: fmt(cog_tip),
+      cog_d: sprocket_d(@cog_cx, @wheel_cy, rear, cog_tip, cog_root, @bore_r),
+      ring_cx: fmt(@ring_cx),
+      ring_tip: fmt(ring_tip),
+      ring_d:
+        sprocket_d(
+          @ring_cx,
+          @wheel_cy,
+          chain_ring,
+          ring_tip,
+          ring_root,
+          @bore_r
+        ),
+      chain_d:
+        chain_d(
+          @cog_cx,
+          @ring_cx,
+          @wheel_cy,
+          cog_pitch,
+          ring_tip + @chain_clear
+        ),
+      chain_dash: fmt(circular * 0.58),
+      chain_gap: fmt(circular * 0.42),
+      vb_w: fmt(vb_w)
+    }
+  end
+
+  defp sprocket_d(cx, cy, teeth, r_tip, r_root, bore) do
+    step = 2 * :math.pi() / teeth
+
+    [first | rest] =
+      Enum.flat_map(0..(teeth - 1), fn i ->
+        a = i * step - :math.pi() / 2
+
+        [
+          svg_pt(cx, cy, r_root, a - step * 0.18),
+          svg_pt(cx, cy, r_tip, a - step * 0.06),
+          svg_pt(cx, cy, r_tip, a + step * 0.06),
+          svg_pt(cx, cy, r_root, a + step * 0.18)
+        ]
+      end)
+
+    outline = "M #{first} " <> Enum.map_join(rest, " ", &"L #{&1}") <> " Z"
+    outline <> " " <> circle_d(cx, cy, min(bore, r_root * 0.42))
+  end
+
+  # Upper and lower runs are the external tangents. The chainring arc is the
+  # outer one (around the right side). The cog arc is the outer one too,
+  # toward the hub, so both sprockets turn the same way.
+  defp chain_d(cog_cx, ring_cx, cy, r1, r2) do
+    dist = ring_cx - cog_cx
+    beta = :math.acos(clamp_unit((r1 - r2) / dist))
+    cog_up = svg_pt(cog_cx, cy, r1, -beta)
+    cog_lo = svg_pt(cog_cx, cy, r1, beta)
+    ring_up = svg_pt(ring_cx, cy, r2, -beta)
+    ring_lo = svg_pt(ring_cx, cy, r2, beta)
+    cog_large = if beta > :math.pi() / 2, do: 0, else: 1
+    ring_large = if beta < :math.pi() / 2, do: 0, else: 1
+
+    [
+      "M #{cog_up} L #{ring_up}",
+      "A #{fmt(r2)} #{fmt(r2)} 0 #{ring_large} 1 #{ring_lo}",
+      "L #{cog_lo}",
+      "A #{fmt(r1)} #{fmt(r1)} 0 #{cog_large} 0 #{cog_up}"
+    ]
+    |> Enum.join(" ")
+  end
+
+  defp circle_d(cx, cy, r) do
+    left = fmt(cx - r)
+    right = fmt(cx + r)
+    y = fmt(cy)
+    radius = fmt(r)
+
+    "M #{left} #{y} A #{radius} #{radius} 0 1 0 #{right} #{y} " <>
+      "A #{radius} #{radius} 0 1 0 #{left} #{y}"
+  end
+
+  defp clamp_unit(n), do: n |> max(-1.0) |> min(1.0)
+
+  defp polar(cx, cy, r, deg) do
+    rad = deg * :math.pi() / 180.0
+    {cx + r * :math.sin(rad), cy - r * :math.cos(rad)}
+  end
+
+  defp svg_pt(cx, cy, r, angle) do
+    "#{fmt(cx + r * :math.cos(angle))} #{fmt(cy + r * :math.sin(angle))}"
+  end
+
+  defp fmt(n) when is_number(n) do
+    :erlang.float_to_binary(n * 1.0, decimals: 2)
+  end
 
   defp ambi_extra?(ambi, one_sided)
        when is_integer(ambi) and is_integer(one_sided) and ambi > one_sided,
@@ -625,6 +1014,13 @@ defmodule FixedGearWeb.RankingComponents do
   end
 
   defp visual_pedal_seconds(_rpm), do: @seconds_per_minute / @reference_rpm
+
+  defp toggle_hint(id) do
+    JS.toggle_class("grid-rows-[1fr] opacity-100", to: "##{id}")
+    |> JS.toggle_class("grid-rows-[0fr] opacity-0", to: "##{id}")
+    |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+    |> JS.toggle_attribute({"aria-hidden", "true", "false"}, to: "##{id}")
+  end
 
   defp keep_panel_during_collapse do
     JS.hide(

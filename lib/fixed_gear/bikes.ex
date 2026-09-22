@@ -3,6 +3,8 @@ defmodule FixedGear.Bikes do
   Weigh-in bikes and ranking queries.
   """
 
+  use Gettext, backend: FixedGearWeb.Gettext
+
   import Ecto.Query, warn: false
 
   alias FixedGear.Bikes.Bike
@@ -40,17 +42,22 @@ defmodule FixedGear.Bikes do
     end)
   end
 
+  # "t" is the English abbreviation for tooth. Spanish uses "d" (diente).
+  def tooth_suffix, do: gettext("t")
+
+  def tooth_label(count) when is_integer(count), do: "#{count}#{tooth_suffix()}"
+
   def chain_ring_options do
     Enum.map(
       Calculations.chain_ring_min()..Calculations.chain_ring_max(),
-      fn teeth -> {"#{teeth}t", teeth} end
+      fn teeth -> {tooth_label(teeth), teeth} end
     )
   end
 
   def sprocket_options do
     Enum.map(
       Calculations.sprocket_min()..Calculations.sprocket_max(),
-      fn teeth -> {"#{teeth}t", teeth} end
+      fn teeth -> {tooth_label(teeth), teeth} end
     )
   end
 
@@ -70,12 +77,19 @@ defmodule FixedGear.Bikes do
     |> Repo.all()
   end
 
-  def get_bike!(id) do
+  def get_bike(id) do
     Bike
     |> from(as: :bike)
     |> where([bike: b], b.id == ^id)
     |> select_list_fields()
-    |> Repo.one!()
+    |> Repo.one()
+  end
+
+  def get_bike!(id) do
+    case get_bike(id) do
+      nil -> raise Ecto.NoResultsError, queryable: Bike
+      bike -> bike
+    end
   end
 
   def get_bike_photo(id) when is_binary(id) do
@@ -111,8 +125,12 @@ defmodule FixedGear.Bikes do
     |> Repo.update()
   end
 
+  def delete_bike(%Bike{id: nil}), do: {:error, :missing}
+
   def delete_bike(%Bike{} = bike) do
     Repo.delete(bike)
+  rescue
+    Ecto.StaleEntryError -> {:error, :stale}
   end
 
   defp select_list_fields(query) do

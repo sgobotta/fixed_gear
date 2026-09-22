@@ -27,7 +27,7 @@ defmodule FixedGearWeb.SkidPatchLive do
           </h1>
           <p class="max-w-md text-sm text-base-content/65">
             {gettext(
-              "Play with chainring, sprocket, and tire to see ratio, speed, and skid patches."
+              "Play with chainring, sprocket, and tire to see development, ratio, speed, and skid patches."
             )}
           </p>
         </header>

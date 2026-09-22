@@ -27,6 +27,14 @@ defmodule FixedGear.AccountsFixtures do
     user
   end
 
+  def admin_user_fixture(attrs \\ %{}) do
+    user = user_fixture(attrs)
+
+    user
+    |> Ecto.Changeset.change(admin: true)
+    |> FixedGear.Repo.update!()
+  end
+
   def user_fixture(attrs \\ %{}) do
     user = unconfirmed_user_fixture(attrs)
 

@@ -62,8 +62,16 @@ defmodule FixedGearWeb.RankingLiveTest do
     refute has_element?(view, ~s(#bike-#{heavy.id}-header[phx-key="Enter"]))
     refute has_element?(view, "#bike-#{heavy.id}-header[phx-keydown]")
     assert has_element?(view, "#bike-#{heavy.id}-expand-inner")
-    assert has_element?(view, "#bike-#{heavy.id}-expand-inner", "48t / 16t")
+
+    assert has_element?(
+             view,
+             "#bike-#{heavy.id}-expand-inner",
+             "#{FixedGear.Bikes.tooth_label(48)} / #{FixedGear.Bikes.tooth_label(16)}"
+           )
+
     assert has_element?(view, "#ratio-motion-#{heavy.id}")
+    assert has_element?(view, "#development-#{heavy.id}")
+    assert has_element?(view, "#hint-ratio-#{heavy.id}-toggle")
     assert has_element?(view, "#skid-wheel-#{heavy.id}")
     assert has_element?(view, "#skid-wheel-#{heavy.id} .skid-patch")
     assert has_element?(view, "#skid-wheel-#{heavy.id} .skid-patch-ambi")
@@ -75,6 +83,12 @@ defmodule FixedGearWeb.RankingLiveTest do
              view,
              "a[href='https://www.surplace.fr/ffgc/']",
              "surplace.fr/ffgc"
+           )
+
+    assert has_element?(
+             view,
+             "a[href='https://www.sheldonbrown.com/']",
+             "Sheldon Brown"
            )
 
     assert has_element?(
@@ -248,7 +262,7 @@ defmodule FixedGearWeb.RankingLiveTest do
 
   test "shows an edit pencil for signed-in admins", %{conn: conn} do
     bike = bike_fixture(%{name: "Track"})
-    conn = log_in_user(conn, user_fixture())
+    conn = log_in_user(conn, admin_user_fixture())
 
     {:ok, view, _html} = live(conn, ~p"/ranking/weight")
 
@@ -262,6 +276,18 @@ defmodule FixedGearWeb.RankingLiveTest do
       |> element("#edit-bike-#{bike.id}")
       |> render_click()
       |> follow_redirect(conn, ~p"/admin/bikes/#{bike}/edit")
+  end
+
+  test "hides admin controls from signed-in users who are not admins", %{
+    conn: conn
+  } do
+    bike = bike_fixture(%{name: "Track"})
+    conn = log_in_user(conn, user_fixture())
+
+    {:ok, view, _html} = live(conn, ~p"/ranking/weight")
+
+    refute has_element?(view, "#edit-bike-#{bike.id}")
+    refute has_element?(view, ~s(a[href="/admin/bikes"]), gettext("Admin"))
   end
 
   defp bike_index(html, id) do

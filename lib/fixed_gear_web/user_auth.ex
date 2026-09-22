@@ -210,6 +210,9 @@ defmodule FixedGearWeb.UserAuth do
       on user_token.
       Redirects to login page if there's no logged user.
 
+    * `:require_admin` - Continues only when the current user is an admin.
+      Redirects everyone else away from admin pages.
+
   ## Examples
 
   Use the `on_mount` lifecycle macro in LiveViews to mount or authenticate
@@ -245,6 +248,24 @@ defmodule FixedGearWeb.UserAuth do
           gettext("You must log in to access this page.")
         )
         |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
+
+      {:halt, socket}
+    end
+  end
+
+  def on_mount(:require_admin, _params, session, socket) do
+    socket = mount_current_scope(socket, session)
+
+    if admin_scope?(socket.assigns) do
+      {:cont, socket}
+    else
+      socket =
+        socket
+        |> Phoenix.LiveView.put_flash(
+          :error,
+          gettext("You are not allowed to access this page.")
+        )
+        |> Phoenix.LiveView.redirect(to: ~p"/ranking/weight")
 
       {:halt, socket}
     end
@@ -288,6 +309,25 @@ defmodule FixedGearWeb.UserAuth do
   end
 
   def signed_in_path(_), do: ~p"/ranking/weight"
+
+  @doc """
+  Plug for routes that require the current user to be an admin.
+  """
+  def require_admin_user(conn, _opts) do
+    if admin_scope?(conn.assigns) do
+      conn
+    else
+      conn
+      |> put_flash(:error, gettext("You are not allowed to access this page."))
+      |> redirect(to: ~p"/ranking/weight")
+      |> halt()
+    end
+  end
+
+  defp admin_scope?(%{current_scope: %Scope{user: %Accounts.User{admin: true}}}),
+    do: true
+
+  defp admin_scope?(_assigns), do: false
 
   @doc """
   Plug for routes that require the user to be authenticated.

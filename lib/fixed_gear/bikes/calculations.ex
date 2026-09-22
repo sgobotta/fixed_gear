@@ -55,17 +55,36 @@ defmodule FixedGear.Bikes.Calculations do
   def skid_patches(_ring, _cog), do: nil
 
   @doc """
+  Metres of development: distance travelled per pedal revolution.
+
+  Wheel circumference times gear ratio, using a 700c (ISO BSD 622mm)
+  tire of the given width. Same model as Sheldon Brown's gear charts.
+  """
+  def development_m(ring, cog, tire_width)
+      when is_integer(ring) and is_integer(cog) and cog > 0 and
+             is_integer(tire_width) do
+    gear_ratio(ring, cog) * circumference_m(tire_width)
+  end
+
+  def development_m(_ring, _cog, _tire_width), do: nil
+
+  @doc """
   Speed in km/h at `rpm` for a 700c tire of the given width.
   """
   def speed_kmh(ring, cog, tire_width, rpm)
       when is_integer(ring) and is_integer(cog) and cog > 0 and
              is_integer(tire_width) and is_number(rpm) do
-    ratio = gear_ratio(ring, cog)
-    circumference_m = :math.pi() * (@bsd_mm + 2 * tire_width) / 1000
-    ratio * circumference_m * rpm * 60 / 1000
+    case development_m(ring, cog, tire_width) do
+      nil -> nil
+      metres -> metres * rpm * 60 / 1000
+    end
   end
 
   def speed_kmh(_ring, _cog, _tire_width, _rpm), do: nil
+
+  defp circumference_m(tire_width) do
+    :math.pi() * (@bsd_mm + 2 * tire_width) / 1000
+  end
 
   def tire_label(width) when is_integer(width), do: "700x#{width}"
   def tire_label(_width), do: nil
@@ -88,5 +107,9 @@ defmodule FixedGear.Bikes.Calculations do
 
   def format_speed(speed) when is_float(speed) do
     :erlang.float_to_binary(speed, decimals: 1)
+  end
+
+  def format_development(metres) when is_float(metres) do
+    :erlang.float_to_binary(metres, decimals: 2)
   end
 end

@@ -46,6 +46,13 @@ defmodule FixedGearWeb.ConnCase do
   It stores an updated connection and a registered user in the
   test context.
   """
+  def register_and_log_in_admin(%{conn: conn}) do
+    user = FixedGear.AccountsFixtures.admin_user_fixture()
+    scope = FixedGear.Accounts.Scope.for_user(user)
+
+    %{conn: log_in_user(conn, user), user: user, scope: scope}
+  end
+
   def register_and_log_in_user(%{conn: conn} = context) do
     user = FixedGear.AccountsFixtures.user_fixture()
     scope = FixedGear.Accounts.Scope.for_user(user)

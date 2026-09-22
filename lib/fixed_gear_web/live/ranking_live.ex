@@ -101,7 +101,10 @@ defmodule FixedGearWeb.RankingLive do
             </:meta>
             <:actions>
               <.link
-                :if={@current_scope && @current_scope.user}
+                :if={
+                  @current_scope && @current_scope.user &&
+                    @current_scope.user.admin
+                }
                 id={"edit-bike-#{bike.id}"}
                 navigate={~p"/admin/bikes/#{bike}/edit"}
                 class="inline-flex rounded-full p-2 text-base-content/50 transition hover:bg-base-200 hover:text-base-content"

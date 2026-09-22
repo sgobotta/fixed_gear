@@ -46,13 +46,27 @@ defmodule FixedGearWeb.Router do
       live "/users/settings/confirm-email/:token",
            UserLive.Settings,
            :confirm_email
+    end
 
+    post "/users/update-password", UserSessionController, :update_password
+  end
+
+  scope "/", FixedGearWeb do
+    pipe_through [:browser, :require_authenticated_user, :require_admin_user]
+
+    # Admin bikes stay in their own session so settings can remain
+    # available to any logged-in user. :require_admin runs after
+    # :require_authenticated, so anonymous visitors still go to login
+    # and a signed-in non-admin is turned away.
+    live_session :require_admin,
+      on_mount: [
+        {FixedGearWeb.UserAuth, :require_authenticated},
+        {FixedGearWeb.UserAuth, :require_admin}
+      ] do
       live "/admin/bikes", Admin.BikeLive.Index, :index
       live "/admin/bikes/new", Admin.BikeLive.Form, :new
       live "/admin/bikes/:id/edit", Admin.BikeLive.Form, :edit
     end
-
-    post "/users/update-password", UserSessionController, :update_password
   end
 
   scope "/", FixedGearWeb do
