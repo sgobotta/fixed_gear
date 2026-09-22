@@ -9,6 +9,23 @@ defmodule FixedGearWeb.UserSessionControllerTest do
   end
 
   describe "POST /users/log-in - email and password" do
+    test "logs in a user created with a password", %{conn: conn} do
+      email = unique_user_email()
+      password = valid_user_password()
+      {:ok, user} = Accounts.register_user(%{email: email, password: password})
+
+      conn =
+        post(conn, ~p"/users/log-in", %{
+          "user" => %{
+            "email" => user.email,
+            "password" => password
+          }
+        })
+
+      assert get_session(conn, :user_token)
+      assert redirected_to(conn) == ~p"/ranking/weight"
+    end
+
     test "logs the user in", %{conn: conn, user: user} do
       user = set_password(user)
 

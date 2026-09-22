@@ -82,9 +82,7 @@ defmodule FixedGearWeb.UserLive.LoginTest do
           user: %{email: "test@email.com", password: "123456"}
         )
 
-      render_submit(form, %{user: %{remember_me: true}})
-
-      conn = follow_trigger_action(form, conn)
+      conn = submit_form(form, conn)
 
       assert Phoenix.Flash.get(conn.assigns.flash, :error) ==
                gettext("Invalid email or password")

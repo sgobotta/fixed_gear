@@ -29,6 +29,44 @@ defmodule FixedGear.Accounts.User do
     |> validate_email(opts)
   end
 
+  @doc """
+  A user changeset for registration.
+
+  Email is always required. Password is optional so magic-link users can
+  still be created. When a password is present it is validated, hashed,
+  and the account is confirmed so password login works immediately.
+  """
+  def registration_changeset(user, attrs, opts \\ []) do
+    user
+    |> email_changeset(attrs, opts)
+    |> maybe_put_password(attrs, opts)
+  end
+
+  defp maybe_put_password(changeset, attrs, opts) do
+    if password_present?(attrs) do
+      changeset
+      |> cast(attrs, [:password])
+      |> validate_confirmation(:password, message: "does not match password")
+      |> validate_password(opts)
+      |> maybe_confirm_with_password()
+    else
+      changeset
+    end
+  end
+
+  defp password_present?(attrs) do
+    password = Map.get(attrs, :password) || Map.get(attrs, "password")
+    is_binary(password) and password != ""
+  end
+
+  defp maybe_confirm_with_password(changeset) do
+    if changeset.valid? and get_change(changeset, :hashed_password) do
+      change(changeset, confirmed_at: DateTime.utc_now(:second))
+    else
+      changeset
+    end
+  end
+
   defp validate_email(changeset, opts) do
     changeset =
       changeset

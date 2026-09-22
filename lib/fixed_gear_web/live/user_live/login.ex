@@ -64,8 +64,7 @@ defmodule FixedGearWeb.UserLive.Login do
           for={@form}
           id="login_form_password"
           action={~p"/users/log-in"}
-          phx-submit="submit_password"
-          phx-trigger-action={@trigger_submit}
+          method="post"
         >
           <.input
             readonly={!!@current_scope}
@@ -115,16 +114,11 @@ defmodule FixedGearWeb.UserLive.Login do
     {:ok,
      assign(socket,
        page_title: gettext("Log in"),
-       form: form,
-       trigger_submit: false
+       form: form
      )}
   end
 
   @impl true
-  def handle_event("submit_password", _params, socket) do
-    {:noreply, assign(socket, :trigger_submit, true)}
-  end
-
   def handle_event("submit_magic", %{"user" => %{"email" => email}}, socket) do
     if user = Accounts.get_user_by_email(email) do
       Accounts.deliver_login_instructions(

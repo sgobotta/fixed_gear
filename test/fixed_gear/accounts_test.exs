@@ -94,6 +94,34 @@ defmodule FixedGear.AccountsTest do
       assert is_nil(user.confirmed_at)
       assert is_nil(user.password)
     end
+
+    test "registers users with a password and confirms them" do
+      email = unique_user_email()
+      password = valid_user_password()
+
+      {:ok, user} =
+        Accounts.register_user(%{email: email, password: password})
+
+      assert user.email == email
+      assert is_binary(user.hashed_password)
+      assert user.confirmed_at
+      assert is_nil(user.password)
+
+      assert %User{id: id} =
+               Accounts.get_user_by_email_and_password(email, password)
+
+      assert id == user.id
+    end
+
+    test "validates password when provided" do
+      {:error, changeset} =
+        Accounts.register_user(%{
+          email: unique_user_email(),
+          password: "short"
+        })
+
+      assert "should be at least 12 character(s)" in errors_on(changeset).password
+    end
   end
 
   describe "sudo_mode?/2" do

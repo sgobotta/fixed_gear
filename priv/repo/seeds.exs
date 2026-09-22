@@ -26,18 +26,20 @@ password =
   end
 
 case Accounts.get_user_by_email(email) do
-  %User{} ->
-    IO.puts("Admin #{email} already exists")
-
-  nil ->
-    {:ok, user} = Accounts.register_user(%{email: email})
-
-    {:ok, {user, _tokens}} =
+  %User{hashed_password: nil} = user ->
+    {:ok, {_user, _tokens}} =
       Accounts.update_user_password(user, %{password: password})
 
     user
     |> User.confirm_changeset()
     |> Repo.update!()
 
+    IO.puts("Set password for existing admin #{email}")
+
+  %User{} ->
+    IO.puts("Admin #{email} already exists")
+
+  nil ->
+    {:ok, _user} = Accounts.register_user(%{email: email, password: password})
     IO.puts("Created admin #{email}")
 end
