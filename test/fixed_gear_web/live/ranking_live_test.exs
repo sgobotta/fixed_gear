@@ -34,6 +34,16 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert redirected_to(conn) == ~p"/ranking/weight"
   end
 
+  test "sends a numeric ranking url to the weight list", %{conn: conn} do
+    assert {:error, {:live_redirect, %{to: to}}} =
+             result = live(conn, ~p"/ranking/1/weight")
+
+    assert to == ~p"/ranking/weight"
+
+    {:ok, view, _html} = follow_redirect(result, conn)
+    assert has_element?(view, "#ranking")
+  end
+
   test "lists bikes lightest first and expands details", %{conn: conn} do
     heavy =
       bike_fixture(%{

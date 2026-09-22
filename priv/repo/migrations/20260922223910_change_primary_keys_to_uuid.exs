@@ -2,6 +2,10 @@ defmodule FixedGear.Repo.Migrations.ChangePrimaryKeysToUuid do
   use Ecto.Migration
 
   def up do
+    # Postgres 13+ ships gen_random_uuid() in core. Older versions only
+    # provide it through pgcrypto.
+    execute "CREATE EXTENSION IF NOT EXISTS pgcrypto"
+
     execute "ALTER TABLE users ADD COLUMN id_uuid uuid"
     execute "UPDATE users SET id_uuid = gen_random_uuid()"
     execute "ALTER TABLE users ALTER COLUMN id_uuid SET NOT NULL"
