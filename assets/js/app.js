@@ -216,20 +216,40 @@ const SkidWheel = {
   mounted() {
     this.running = true
     this.rotation = 0
-    this.anim = null
+    this.anims = []
+    this.inflight = null
+    this.seekMs = 0
+    this.playGen = 0
+    this.markState = {}
+    this.sampleFrame = null
     this.timer = null
-    this.signature = this.patchSignature()
+    this.patchesKey = this.el.getAttribute("data-patches") || ""
+    this.gearsKey = this.gearKey()
+    this.ambiKey = this.el.getAttribute("data-ambidextrous") || ""
     this.startCycle()
   },
 
   updated() {
-    const next = this.patchSignature()
-    if (next !== this.signature) {
-      this.signature = next
+    const patches = this.el.getAttribute("data-patches") || ""
+    const gears = this.gearKey()
+    const ambi = this.el.getAttribute("data-ambidextrous") || ""
+
+    if (patches !== this.patchesKey) {
+      this.patchesKey = patches
+      this.gearsKey = gears
+      this.ambiKey = ambi
       this.stopCycle()
       this.running = true
       this.rotation = 0
+      this.markState = {}
       this.startCycle()
+      return
+    }
+
+    if (gears !== this.gearsKey || ambi !== this.ambiKey) {
+      this.gearsKey = gears
+      this.ambiKey = ambi
+      this.syncDrive()
     }
   },
 
@@ -238,7 +258,7 @@ const SkidWheel = {
   },
 
   startCycle() {
-    this.rotor = this.el.querySelector(".skid-wheel-rotor")
+    this.queryParts()
     this.n = this.patchCount()
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
@@ -253,32 +273,104 @@ const SkidWheel = {
 
     this.clearMarks()
     this.rotation = 0
-    this.rotor.style.transform = "rotate(0deg)"
+    this.seekMs = 0
+    this.pinPose(0)
     this.runCycle(0)
   },
 
   stopCycle() {
     this.running = false
-    if (this.anim) {
-      this.anim.cancel()
-      this.anim = null
-    }
+    this.inflight = null
+    this.playGen = this.playGen + 1
+    this.cancelAnims()
     if (this.timer) {
       window.clearTimeout(this.timer)
       this.timer = null
     }
   },
 
+  syncDrive() {
+    const seek = this.seekMs || 0
+    const inflight = this.inflight
+    this.playGen = this.playGen + 1
+    this.cancelAnims()
+    this.queryParts()
+    this.n = this.patchCount()
+    this.trimMarks()
+    this.restoreMarks()
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      this.pinPose(0)
+      this.markAll("is-marked")
+      return
+    }
+
+    if (!this.running || !inflight || !this.rotor) {
+      this.pinPose(this.rotation)
+      return
+    }
+
+    if (seek >= inflight.ms - 20) {
+      this.rotation = inflight.endDeg
+      this.seekMs = 0
+      this.pinPose(inflight.endDeg)
+      const done = inflight.done
+      this.inflight = null
+      done()
+      return
+    }
+
+    this.play(inflight.frames, inflight.ms, inflight.endDeg, inflight.done, seek)
+  },
+
+  queryParts() {
+    this.rotor = this.el.querySelector(".skid-wheel-rotor")
+    this.cog = this.el.querySelector(".skid-wheel-cog")
+    this.ring = this.el.querySelector(".skid-wheel-ring")
+    this.chain = this.el.querySelector(".skid-wheel-chain")
+    this.svg = this.el.querySelector("svg")
+  },
+
   patchCount() {
     return this.el.querySelectorAll(".skid-patch").length
   },
 
-  patchSignature() {
+  gearKey() {
     return (
-      (this.el.getAttribute("data-patches") || "") +
+      (this.el.getAttribute("data-chain-ring") || "") +
       ":" +
-      (this.el.getAttribute("data-ambidextrous") || "")
+      (this.el.getAttribute("data-rear-sprocket") || "")
     )
+  },
+
+  ratio() {
+    const ring = parseFloat(this.el.getAttribute("data-chain-ring"))
+    const cog = parseFloat(this.el.getAttribute("data-rear-sprocket"))
+    if (!ring || !cog) {
+      return 0
+    }
+    return cog / ring
+  },
+
+  cogPitch() {
+    const n = parseFloat(this.el.getAttribute("data-cog-pitch"))
+    if (!n) {
+      return 0
+    }
+    return n
+  },
+
+  pxPerUnit() {
+    const svg = this.svg
+    if (!svg || !svg.viewBox || !svg.viewBox.baseVal) {
+      return 1
+    }
+    const h = svg.viewBox.baseVal.height
+    const rect = svg.getBoundingClientRect()
+    if (!h || !rect.height) {
+      return 1
+    }
+    return rect.height / h
   },
 
   patches() {
@@ -294,21 +386,16 @@ const SkidWheel = {
     const target = 540 + stepIndex * (360 + step)
     const delta = target - this.rotation
     const hook = this
+    const markIndex = stepIndex % this.n
 
     if (stepIndex > 0 && stepIndex % this.n === 0) {
       this.clearMarks()
     }
 
     this.rollTo(target, this.spinMs(delta), function () {
-      const patch = hook.patchAt(stepIndex % hook.n)
-      if (patch) {
-        patch.classList.add("is-skidding")
-      }
+      hook.setSkidding(markIndex)
       hook.skidFight(target, function () {
-        if (patch) {
-          patch.classList.remove("is-skidding")
-          patch.classList.add("is-marked")
-        }
+        hook.setMarked(markIndex)
         hook.runCycle(stepIndex + 1)
       })
     })
@@ -317,15 +404,17 @@ const SkidWheel = {
   rollTo(deg, ms, done) {
     const from = this.rotation
     const slam = from + (deg - from) * 0.96
+    this.seekMs = 0
     this.play(
       [
-        { transform: "rotate(" + from + "deg)", easing: "cubic-bezier(0.42, 0, 1, 1)" },
-        { transform: "rotate(" + slam + "deg)", offset: 0.9, easing: "cubic-bezier(0.15, 0, 0, 1)" },
-        { transform: "rotate(" + deg + "deg)" }
+        { deg: from, offset: 0, easing: "cubic-bezier(0.42, 0, 1, 1)" },
+        { deg: slam, offset: 0.9, easing: "cubic-bezier(0.15, 0, 0, 1)" },
+        { deg: deg, offset: 1 }
       ],
       ms,
       deg,
-      done
+      done,
+      0
     )
   },
 
@@ -340,44 +429,174 @@ const SkidWheel = {
       hook.burstSparks()
     }, 160)
 
+    this.seekMs = 0
     this.play(
       [
-        { transform: "rotate(" + contact + "deg)", easing: "cubic-bezier(0.2, 0.85, 0.3, 1)" },
-        { transform: "rotate(" + reverse + "deg)", offset: 0.18, easing: "cubic-bezier(0.45, 0.05, 0.6, 1)" },
-        { transform: "rotate(" + stuck + "deg)", offset: 0.48, easing: "cubic-bezier(0.4, 0.1, 0.7, 1)" },
-        { transform: "rotate(" + creep + "deg)", offset: 0.78, easing: "cubic-bezier(0.55, 0, 0.7, 1)" },
-        { transform: "rotate(" + contact + "deg)" }
+        { deg: contact, offset: 0, easing: "cubic-bezier(0.2, 0.85, 0.3, 1)" },
+        { deg: reverse, offset: 0.18, easing: "cubic-bezier(0.45, 0.05, 0.6, 1)" },
+        { deg: stuck, offset: 0.48, easing: "cubic-bezier(0.4, 0.1, 0.7, 1)" },
+        { deg: creep, offset: 0.78, easing: "cubic-bezier(0.55, 0, 0.7, 1)" },
+        { deg: contact, offset: 1 }
       ],
       560,
       contact,
-      done
+      done,
+      0
     )
   },
 
-  play(keyframes, ms, endDeg, done) {
-    const rotor = this.rotor
+  play(frames, ms, endDeg, done, seekMs) {
     const hook = this
+    const seek = seekMs || 0
+    this.playGen = this.playGen + 1
+    const gen = this.playGen
+    this.cancelAnims()
 
-    if (this.anim) {
-      this.anim.cancel()
-    }
+    const ratio = this.ratio()
+    const pitch = this.cogPitch()
+    const scale = this.pxPerUnit()
+    this.paintChainDash(pitch, scale)
 
-    this.anim = rotor.animate(keyframes, {
-      duration: ms,
-      fill: "forwards"
+    const rotorFrames = frames.map(function (frame) {
+      return hook.rotateFrame(frame, frame.deg)
+    })
+    const ringFrames = frames.map(function (frame) {
+      return hook.rotateFrame(frame, frame.deg * ratio)
+    })
+    const chainFrames = frames.map(function (frame) {
+      const travel = pitch * frame.deg * Math.PI / 180 * scale
+      const next = { strokeDashoffset: (-travel) + "px" }
+      if (frame.easing) {
+        next.easing = frame.easing
+      }
+      if (frame.offset != null) {
+        next.offset = frame.offset
+      }
+      return next
     })
 
-    this.anim.onfinish = function () {
-      if (!hook.running) {
+    const opts = { duration: ms, fill: "forwards" }
+    const anims = []
+    if (this.rotor) {
+      anims.push(this.rotor.animate(rotorFrames, opts))
+    }
+    if (this.cog) {
+      anims.push(this.cog.animate(rotorFrames, opts))
+    }
+    if (this.ring) {
+      anims.push(this.ring.animate(ringFrames, opts))
+    }
+    if (this.chain) {
+      anims.push(this.chain.animate(chainFrames, opts))
+    }
+    this.anims = anims
+
+    let i
+    for (i = 0; i < anims.length; i++) {
+      if (seek > 0) {
+        anims[i].currentTime = seek
+      }
+    }
+    if (anims.length > 1 && anims[0].startTime != null) {
+      for (i = 1; i < anims.length; i++) {
+        anims[i].startTime = anims[0].startTime
+      }
+    }
+
+    this.inflight = { frames: frames, ms: ms, endDeg: endDeg, done: done }
+    this.watchClock(gen)
+
+    if (!anims.length) {
+      return
+    }
+
+    anims[0].onfinish = function () {
+      if (gen !== hook.playGen || !hook.running) {
         return
       }
       hook.rotation = endDeg
-      rotor.style.transform = "rotate(" + endDeg + "deg)"
-      if (hook.anim) {
-        hook.anim.cancel()
-        hook.anim = null
-      }
+      hook.seekMs = 0
+      hook.pinPose(endDeg)
+      hook.inflight = null
+      hook.cancelAnims()
       done()
+    }
+  },
+
+  rotateFrame(frame, deg) {
+    const next = { transform: "rotate(" + deg + "deg)" }
+    if (frame.easing) {
+      next.easing = frame.easing
+    }
+    if (frame.offset != null) {
+      next.offset = frame.offset
+    }
+    return next
+  },
+
+  paintChainDash(pitch, scale) {
+    if (!this.chain || !pitch || !scale) {
+      return
+    }
+    const teeth = parseFloat(this.el.getAttribute("data-rear-sprocket"))
+    if (!teeth) {
+      return
+    }
+    const link = 2 * Math.PI * pitch / teeth * scale
+    this.chain.style.strokeDasharray = (link * 0.58) + "px " + (link * 0.42) + "px"
+  },
+
+  pinPose(deg) {
+    const ratio = this.ratio()
+    const pitch = this.cogPitch()
+    const scale = this.pxPerUnit()
+    if (this.rotor) {
+      this.rotor.style.transform = "rotate(" + deg + "deg)"
+    }
+    if (this.cog) {
+      this.cog.style.transform = "rotate(" + deg + "deg)"
+    }
+    if (this.ring) {
+      this.ring.style.transform = "rotate(" + (deg * ratio) + "deg)"
+    }
+    if (this.chain) {
+      this.paintChainDash(pitch, scale)
+      const travel = pitch * deg * Math.PI / 180 * scale
+      this.chain.style.strokeDashoffset = (-travel) + "px"
+    }
+  },
+
+  watchClock(gen) {
+    const hook = this
+    function tick() {
+      hook.sampleFrame = null
+      if (gen !== hook.playGen) {
+        return
+      }
+      if (!hook.anims || !hook.anims[0]) {
+        return
+      }
+      const current = hook.anims[0].currentTime
+      if (current != null) {
+        hook.seekMs = current
+      }
+      if (hook.anims[0].playState === "running") {
+        hook.sampleFrame = window.requestAnimationFrame(tick)
+      }
+    }
+    this.sampleFrame = window.requestAnimationFrame(tick)
+  },
+
+  cancelAnims() {
+    const anims = this.anims || []
+    this.anims = []
+    anims.forEach(function (anim) {
+      anim.onfinish = null
+      anim.cancel()
+    })
+    if (this.sampleFrame) {
+      window.cancelAnimationFrame(this.sampleFrame)
+      this.sampleFrame = null
     }
   },
 
@@ -421,13 +640,79 @@ const SkidWheel = {
     return nodes[index] || null
   },
 
+  markStateAt(index) {
+    if (!this.markState[index]) {
+      this.markState[index] = { skidding: false, marked: false }
+    }
+    return this.markState[index]
+  },
+
+  setSkidding(index) {
+    const hook = this
+    Object.keys(this.markState).forEach(function (key) {
+      hook.markState[key].skidding = false
+    })
+    this.markStateAt(index).skidding = true
+    this.patches().forEach(function (patch, i) {
+      if (i === index) {
+        patch.classList.add("is-skidding")
+      } else {
+        patch.classList.remove("is-skidding")
+      }
+    })
+  },
+
+  setMarked(index) {
+    const state = this.markStateAt(index)
+    state.skidding = false
+    state.marked = true
+    const patch = this.patchAt(index)
+    if (patch) {
+      patch.classList.remove("is-skidding")
+      patch.classList.add("is-marked")
+    }
+  },
+
+  trimMarks() {
+    const n = this.patches().length
+    const next = {}
+    let i
+    for (i = 0; i < n; i++) {
+      if (this.markState[i]) {
+        next[i] = this.markState[i]
+      }
+    }
+    this.markState = next
+  },
+
+  restoreMarks() {
+    const hook = this
+    this.patches().forEach(function (patch, index) {
+      const state = hook.markState[index]
+      if (!state) {
+        return
+      }
+      if (state.skidding) {
+        patch.classList.add("is-skidding")
+      }
+      if (state.marked) {
+        patch.classList.add("is-marked")
+      }
+    })
+  },
+
   markAll(className) {
-    this.patches().forEach(function (patch) {
+    const hook = this
+    this.patches().forEach(function (patch, index) {
       patch.classList.add(className)
+      if (className === "is-marked") {
+        hook.markStateAt(index).marked = true
+      }
     })
   },
 
   clearMarks() {
+    this.markState = {}
     this.patches().forEach(function (patch) {
       patch.classList.remove("is-skidding")
       patch.classList.remove("is-marked")

@@ -109,9 +109,15 @@
   border-radius: 1rem;
 }
 
-.skid-wheel-rotor {
+.skid-wheel-rotor,
+.skid-wheel-cog,
+.skid-wheel-ring {
   transform-origin: center;
-  transform-box: view-box;
+  transform-box: fill-box;
+}
+
+.skid-wheel-chain {
+  opacity: 0.8;
 }
 
 .ratio-spin {
@@ -121,9 +127,9 @@
 
 .skid-wheel-ground {
   position: absolute;
-  left: 34.5%;
+  left: calc(var(--skid-wheel-h, 4rem) / 2);
   bottom: 4%;
-  width: 30%;
+  width: calc(var(--skid-wheel-h, 4rem) * 0.44);
   height: 2px;
   border-radius: 999px;
   background: currentColor;
@@ -134,7 +140,7 @@
 
 .skid-sparks {
   position: absolute;
-  left: 34.5%;
+  left: calc(var(--skid-wheel-h, 4rem) / 2);
   bottom: 6%;
   width: 0;
   height: 0;

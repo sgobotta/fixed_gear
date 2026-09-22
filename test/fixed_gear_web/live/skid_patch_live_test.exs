@@ -35,6 +35,17 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
 
     assert has_element?(
              view,
+             ~s(#skid-wheel-playground[data-chain-ring="48"][data-rear-sprocket="16"])
+           )
+
+    assert has_element?(view, "#skid-wheel-playground-stage-1-2-48-16")
+    assert has_element?(view, "#skid-wheel-playground .skid-wheel-cog")
+    assert has_element?(view, "#skid-wheel-playground .skid-wheel-ring")
+    assert has_element?(view, "#skid-wheel-playground .skid-wheel-chain")
+    refute has_element?(view, "#skid-wheel-playground .skid-wheel-drive")
+
+    assert has_element?(
+             view,
              ~s([id^="skid-wheel-playground-stage-"][phx-update="ignore"])
            )
 
@@ -97,9 +108,44 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
              ~s(#skid-wheel-playground[data-ambidextrous="32"])
            )
 
-    assert has_element?(view, "#skid-wheel-playground-stage-16-32")
+    assert has_element?(view, "#skid-wheel-playground-stage-16-32-49-16")
     assert skid_patch_mark_count(render(view)) == 32
     assert has_element?(view, ~s(#ratio-motion-playground[data-cadence="90"]))
+  end
+
+  test "redraws sprockets when the patch count stays the same", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/skid-patch")
+
+    assert has_element?(view, "#skid-wheel-playground-stage-1-2-48-16")
+    assert has_element?(view, ~s(#skid-wheel-playground[data-patches="1"]))
+
+    view
+    |> form("#skid-patch-form", %{
+      skid_patch: %{chain_ring: "36", rear_sprocket: "12"}
+    })
+    |> render_change()
+
+    assert has_element?(view, ~s(#skid-wheel-playground[data-patches="1"]))
+    assert has_element?(view, ~s(#skid-wheel-playground[data-ambidextrous="2"]))
+    assert has_element?(view, ~s(#skid-wheel-playground[data-chain-ring="36"]))
+
+    assert has_element?(
+             view,
+             ~s(#skid-wheel-playground[data-rear-sprocket="12"])
+           )
+
+    assert has_element?(view, "#skid-wheel-playground-stage-1-2-36-12")
+    assert has_element?(view, "#skid-wheel-playground-count", "2")
+
+    view
+    |> form("#skid-patch-form", %{
+      skid_patch: %{chain_ring: "32", rear_sprocket: "16"}
+    })
+    |> render_change()
+
+    assert has_element?(view, ~s(#skid-wheel-playground[data-patches="1"]))
+    assert has_element?(view, "#skid-wheel-playground-stage-1-1-32-16")
+    assert has_element?(view, "#skid-wheel-playground-count", "1")
   end
 
   test "updates speed readout when cadence changes", %{conn: conn} do

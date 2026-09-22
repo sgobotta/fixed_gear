@@ -29,13 +29,31 @@ defmodule FixedGearWeb.RankingComponents do
   @hub_axle_r 1.2
   @hub_petal_r 1.45
   @hub_petal_offset 2.7
-  @drive_width 116
-  @cog_cx 101.5
-  @cog_cy 40.0
-  @cog_face_r 6.15
-  @cog_axle_r 1.0
-  @cog_petal_r 1.2
-  @cog_petal_offset 2.2
+  # Pitch radius = teeth * @pitch_unit, so both sprockets share one chain pitch.
+  @tooth_addendum 2.2
+  @tooth_dedendum 1.45
+  @min_cog_pitch 5.4
+  @tire_gap 2.2
+  @pair_gap 3.4
+  @vertical_pad 2.0
+  @view_pad 2.2
+  @bore_r 1.05
+  @chain_stroke 1.45
+  # Chain rides just outside the chainring teeth so the wrap reads on the
+  # dark background. The cog wrap sits on the pitch circle, centered on the hub.
+  @chain_clear 0.9
+  # Cog center is the hub center, so the cog and chain cover the hub.
+  # A 16t disc is the full size; larger cogs stay on this center and are
+  # capped so the body does not grow past it.
+  @cog_body_r 5.6
+  @max_cog_pitch @cog_body_r + @tooth_dedendum
+  @cog_cx @wheel_cx
+  @pitch_unit @max_cog_pitch / 16
+  # Tallest ring that fits the wheel's viewBox. Its center stays put so a
+  # smaller ring does not slide, and the largest ring stays clear of the tire.
+  @max_ring_pitch @wheel_cy - @vertical_pad - @tooth_addendum
+  @ring_cx @wheel_cx + @tire_outer + @tire_gap + @max_ring_pitch +
+             @tooth_addendum
   @reference_rpm 90
   @seconds_per_minute 60
 
@@ -178,6 +196,8 @@ defmodule FixedGearWeb.RankingComponents do
   attr :id, :string, required: true
   attr :patches, :integer, required: true
   attr :ambidextrous, :integer, default: nil
+  attr :chain_ring, :integer, required: true
+  attr :rear_sprocket, :integer, required: true
 
   def skid_wheel(assigns) do
     count =
@@ -208,6 +228,7 @@ defmodule FixedGearWeb.RankingComponents do
       end
 
     displayed = if show_ambi?, do: assigns.ambidextrous, else: assigns.patches
+    drive = drive_layout(assigns.chain_ring, assigns.rear_sprocket)
 
     assigns =
       assigns
@@ -226,16 +247,10 @@ defmodule FixedGearWeb.RankingComponents do
       |> assign(:hub_axle_r, @hub_axle_r)
       |> assign(:hub_petal_r, @hub_petal_r)
       |> assign(:hub_petal_offset, @hub_petal_offset)
-      |> assign(:cog_face_r, @cog_face_r)
-      |> assign(:cog_axle_r, @cog_axle_r)
-      |> assign(:cog_petal_r, @cog_petal_r)
-      |> assign(:cog_petal_offset, @cog_petal_offset)
       |> assign(:tire_mid, (@tire_outer + @tire_inner) / 2)
       |> assign(:tire_width, @tire_outer - @tire_inner)
-      |> assign(:cog_cx, @cog_cx)
-      |> assign(:cog_cy, @cog_cy)
-      |> assign(:drive_width, @drive_width)
-      |> assign(:sprocket_d, sprocket_d(@cog_cx, @cog_cy, 16, 11.4, 9.35))
+      |> assign(:chain_stroke, @chain_stroke)
+      |> assign(:drive, drive)
 
     ~H"""
     <div
@@ -243,135 +258,122 @@ defmodule FixedGearWeb.RankingComponents do
       phx-hook="SkidWheel"
       data-patches={@patches}
       data-ambidextrous={@ambidextrous}
+      data-chain-ring={@chain_ring}
+      data-rear-sprocket={@rear_sprocket}
+      data-cog-pitch={@drive.cog_pitch}
     >
       <div class="flex items-center gap-4">
         <div
-          id={"#{@id}-stage-#{@patches}-#{@displayed}"}
+          id={"#{@id}-stage-#{@patches}-#{@displayed}-#{@chain_ring}-#{@rear_sprocket}"}
           phx-update="ignore"
-          class="skid-wheel-stage relative h-16 w-[5.75rem] shrink-0 sm:h-20 sm:w-[7.25rem]"
+          class="skid-wheel-stage relative h-16 w-max shrink-0 [--skid-wheel-h:4rem] sm:h-20 sm:[--skid-wheel-h:5rem]"
         >
           <svg
-            viewBox="0 0 80 80"
-            class="skid-wheel-rotor absolute top-0 left-0 h-full w-auto text-base-content"
+            viewBox={"0 0 #{@drive.vb_w} 80"}
+            class="block h-full w-auto text-base-content"
             aria-hidden="true"
           >
-            <defs>
-              <mask id={"#{@id}-hub-mask"}>
-                <circle cx={@cx} cy={@cy} r={@hub_r + 0.1} fill="white" />
-                <circle cx={@cx} cy={@cy} r={@hub_axle_r} fill="black" />
-                <g
-                  :for={angle <- @hub_holes}
-                  transform={"rotate(#{angle} #{@cx} #{@cy})"}
-                >
-                  <circle
-                    cx={@cx}
-                    cy={@cy - @hub_petal_offset}
-                    r={@hub_petal_r}
-                    fill="black"
-                  />
-                </g>
-              </mask>
-            </defs>
-            <circle
-              cx={@cx}
-              cy={@cy}
-              r={@tire_mid}
-              fill="none"
-              stroke="currentColor"
-              stroke-width={@tire_width}
-              class="opacity-70"
-            />
-            <circle
-              cx={@cx}
-              cy={@cy}
-              r={@rim_r}
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.15"
-              class="opacity-40"
-            />
-            <g :for={angle <- @spokes} transform={"rotate(#{angle} #{@cx} #{@cy})"}>
-              <line
-                x1={@cx}
-                y1={@cy - @spoke_outer}
-                x2={@cx}
-                y2={@cy - @spoke_inner}
+            <g class="skid-wheel-rotor">
+              <defs>
+                <mask id={"#{@id}-hub-mask"}>
+                  <circle cx={@cx} cy={@cy} r={@hub_r + 0.1} fill="white" />
+                  <circle cx={@cx} cy={@cy} r={@hub_axle_r} fill="black" />
+                  <g
+                    :for={angle <- @hub_holes}
+                    transform={"rotate(#{angle} #{@cx} #{@cy})"}
+                  >
+                    <circle
+                      cx={@cx}
+                      cy={@cy - @hub_petal_offset}
+                      r={@hub_petal_r}
+                      fill="black"
+                    />
+                  </g>
+                </mask>
+              </defs>
+              <circle
+                cx={@cx}
+                cy={@cy}
+                r={@tire_mid}
+                fill="none"
                 stroke="currentColor"
-                stroke-width="0.45"
+                stroke-width={@tire_width}
+                class="opacity-70"
+              />
+              <circle
+                cx={@cx}
+                cy={@cy}
+                r={@rim_r}
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.15"
                 class="opacity-40"
               />
+              <g
+                :for={angle <- @spokes}
+                transform={"rotate(#{angle} #{@cx} #{@cy})"}
+              >
+                <line
+                  x1={@cx}
+                  y1={@cy - @spoke_outer}
+                  x2={@cx}
+                  y2={@cy - @spoke_inner}
+                  stroke="currentColor"
+                  stroke-width="0.45"
+                  class="opacity-40"
+                />
+              </g>
+              <circle
+                cx={@cx}
+                cy={@cy}
+                r={@hub_r}
+                fill="currentColor"
+                mask={"url(##{@id}-hub-mask)"}
+                class="opacity-90"
+              />
+              <circle
+                cx={@cx}
+                cy={@cy}
+                r={@hub_r + 0.05}
+                fill="none"
+                stroke="currentColor"
+                stroke-width="0.7"
+                class="opacity-70"
+              />
+              <g
+                :for={{mark, index} <- Enum.with_index(@marks)}
+                id={"#{@id}-mark-#{index}"}
+                class={["skid-patch", mark.ambi && "skid-patch-ambi"]}
+                transform={"rotate(#{mark.angle} #{@cx} #{@cy})"}
+              >
+                <path d={@patch_d} />
+              </g>
             </g>
-            <circle
-              cx={@cx}
-              cy={@cy}
-              r={@hub_r}
-              fill="currentColor"
-              mask={"url(##{@id}-hub-mask)"}
-              class="opacity-90"
-            />
-            <circle
-              cx={@cx}
-              cy={@cy}
-              r={@hub_r + 0.05}
-              fill="none"
-              stroke="currentColor"
-              stroke-width="0.7"
-              class="opacity-70"
-            />
-            <g
-              :for={{mark, index} <- Enum.with_index(@marks)}
-              id={"#{@id}-mark-#{index}"}
-              class={["skid-patch", mark.ambi && "skid-patch-ambi"]}
-              transform={"rotate(#{mark.angle} #{@cx} #{@cy})"}
-            >
-              <path d={@patch_d} />
+            <g class="skid-wheel-cog">
+              <path
+                d={@drive.cog_d}
+                fill="currentColor"
+                fill-rule="evenodd"
+                class="opacity-95"
+              />
             </g>
-          </svg>
-          <svg
-            viewBox={"0 0 #{@drive_width} 80"}
-            class="skid-wheel-drive pointer-events-none absolute inset-0 size-full text-base-content"
-            aria-hidden="true"
-          >
-            <defs>
-              <mask id={"#{@id}-cog-mask"}>
-                <circle cx={@cog_cx} cy={@cog_cy} r={@cog_face_r} fill="white" />
-                <circle cx={@cog_cx} cy={@cog_cy} r={@cog_axle_r} fill="black" />
-                <g
-                  :for={angle <- @hub_holes}
-                  transform={"rotate(#{angle} #{@cog_cx} #{@cog_cy})"}
-                >
-                  <circle
-                    cx={@cog_cx}
-                    cy={@cog_cy - @cog_petal_offset}
-                    r={@cog_petal_r}
-                    fill="black"
-                  />
-                </g>
-              </mask>
-            </defs>
+            <g class="skid-wheel-ring">
+              <path
+                d={@drive.ring_d}
+                fill="currentColor"
+                fill-rule="evenodd"
+                class="opacity-95"
+              />
+            </g>
             <path
-              d={"M#{@hub_r + @cx + 0.9} #{@cy - 1.45} L#{@cog_cx - 11.3} #{@cog_cy - 2.85}"}
+              class="skid-wheel-chain"
+              d={@drive.chain_d}
               fill="none"
               stroke="currentColor"
-              stroke-width="1.05"
+              stroke-width={@chain_stroke}
               stroke-linecap="round"
-              class="opacity-80"
-            />
-            <path
-              d={"M#{@hub_r + @cx + 0.9} #{@cy + 1.45} L#{@cog_cx - 11.3} #{@cog_cy + 2.85}"}
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.05"
-              stroke-linecap="round"
-              class="opacity-80"
-            />
-            <path d={@sprocket_d} fill="currentColor" class="opacity-95" />
-            <circle
-              cx={@cog_cx}
-              cy={@cog_cy}
-              r={@cog_face_r}
-              fill="currentColor"
-              mask={"url(##{@id}-cog-mask)"}
+              stroke-linejoin="round"
+              stroke-dasharray={"#{@drive.chain_dash} #{@drive.chain_gap}"}
             />
           </svg>
           <span class="skid-wheel-ground" aria-hidden="true"></span>
@@ -644,6 +646,8 @@ defmodule FixedGearWeb.RankingComponents do
           id={"skid-wheel-#{@id_prefix}"}
           patches={@patches.one_sided}
           ambidextrous={@patches.ambidextrous}
+          chain_ring={@chain_ring}
+          rear_sprocket={@rear_sprocket}
         />
         <.gear_math_credit />
       </.stat>
@@ -834,7 +838,67 @@ defmodule FixedGearWeb.RankingComponents do
     "M #{fmt(x1)} #{fmt(y1)} A #{fmt(@patch_outer)} #{fmt(@patch_outer)} 0 0 1 #{fmt(x2)} #{fmt(y2)} L #{fmt(x3)} #{fmt(y3)} A #{fmt(@patch_inner)} #{fmt(@patch_inner)} 0 0 0 #{fmt(x4)} #{fmt(y4)} Z"
   end
 
-  defp sprocket_d(cx, cy, teeth, r_tip, r_root) do
+  defp drive_layout(chain_ring, rear)
+       when is_integer(chain_ring) and is_integer(rear) and chain_ring > 0 and
+              rear > 0 do
+    cog0 = rear * @pitch_unit
+    ring0 = chain_ring * @pitch_unit
+    sep = @ring_cx - @cog_cx - @pair_gap
+
+    s_max =
+      Enum.min([
+        @max_cog_pitch / cog0,
+        @max_ring_pitch / ring0,
+        sep / (cog0 + ring0)
+      ])
+
+    s_min = @min_cog_pitch / cog0
+
+    scale =
+      cond do
+        s_min > s_max -> s_max
+        s_max < 1.0 -> s_max
+        s_min > 1.0 -> s_min
+        true -> 1.0
+      end
+
+    cog_pitch = cog0 * scale
+    ring_pitch = ring0 * scale
+    cog_tip = cog_pitch + @tooth_addendum
+    cog_root = cog_pitch - @tooth_dedendum
+    ring_tip = ring_pitch + @tooth_addendum
+    ring_root = ring_pitch - @tooth_dedendum
+    circular = 2 * :math.pi() * @pitch_unit * scale
+    vb_w = @ring_cx + ring_tip + @view_pad
+
+    %{
+      cog_pitch: fmt(cog_pitch),
+      ring_pitch: fmt(ring_pitch),
+      cog_d: sprocket_d(@cog_cx, @wheel_cy, rear, cog_tip, cog_root, @bore_r),
+      ring_d:
+        sprocket_d(
+          @ring_cx,
+          @wheel_cy,
+          chain_ring,
+          ring_tip,
+          ring_root,
+          @bore_r
+        ),
+      chain_d:
+        chain_d(
+          @cog_cx,
+          @ring_cx,
+          @wheel_cy,
+          cog_pitch,
+          ring_tip + @chain_clear
+        ),
+      chain_dash: fmt(circular * 0.58),
+      chain_gap: fmt(circular * 0.42),
+      vb_w: fmt(vb_w)
+    }
+  end
+
+  defp sprocket_d(cx, cy, teeth, r_tip, r_root, bore) do
     step = 2 * :math.pi() / teeth
 
     [first | rest] =
@@ -842,15 +906,52 @@ defmodule FixedGearWeb.RankingComponents do
         a = i * step - :math.pi() / 2
 
         [
-          svg_pt(cx, cy, r_root, a - step * 0.30),
-          svg_pt(cx, cy, r_tip, a - step * 0.10),
-          svg_pt(cx, cy, r_tip, a + step * 0.10),
-          svg_pt(cx, cy, r_root, a + step * 0.30)
+          svg_pt(cx, cy, r_root, a - step * 0.18),
+          svg_pt(cx, cy, r_tip, a - step * 0.06),
+          svg_pt(cx, cy, r_tip, a + step * 0.06),
+          svg_pt(cx, cy, r_root, a + step * 0.18)
         ]
       end)
 
-    "M #{first} " <> Enum.map_join(rest, " ", &"L #{&1}") <> " Z"
+    outline = "M #{first} " <> Enum.map_join(rest, " ", &"L #{&1}") <> " Z"
+    outline <> " " <> circle_d(cx, cy, min(bore, r_root * 0.42))
   end
+
+  # Upper and lower runs are the external tangents. The chainring arc is the
+  # outer one (around the right side). The cog arc is the outer one too,
+  # toward the hub, so both sprockets turn the same way.
+  defp chain_d(cog_cx, ring_cx, cy, r1, r2) do
+    dist = ring_cx - cog_cx
+    beta = :math.acos(clamp_unit((r1 - r2) / dist))
+    cog_up = svg_pt(cog_cx, cy, r1, -beta)
+    cog_lo = svg_pt(cog_cx, cy, r1, beta)
+    ring_up = svg_pt(ring_cx, cy, r2, -beta)
+    ring_lo = svg_pt(ring_cx, cy, r2, beta)
+    cog_large = if beta > :math.pi() / 2, do: 0, else: 1
+    ring_large = if beta < :math.pi() / 2, do: 0, else: 1
+
+    [
+      "M #{cog_up} L #{ring_up}",
+      "A #{fmt(r2)} #{fmt(r2)} 0 #{ring_large} 1 #{ring_lo}",
+      "L #{cog_lo}",
+      "A #{fmt(r1)} #{fmt(r1)} 0 #{cog_large} 0 #{cog_up}"
+    ]
+    |> Enum.join(" ")
+  end
+
+  defp circle_d(cx, cy, r) do
+    left = fmt(cx - r)
+    right = fmt(cx + r)
+    y = fmt(cy)
+    radius = fmt(r)
+
+    "M #{left} #{y} A #{radius} #{radius} 0 1 0 #{right} #{y} " <>
+      "A #{radius} #{radius} 0 1 0 #{left} #{y}"
+  end
+
+  defp clamp_unit(n) when n > 1.0, do: 1.0
+  defp clamp_unit(n) when n < -1.0, do: -1.0
+  defp clamp_unit(n), do: n
 
   defp polar(cx, cy, r, deg) do
     rad = deg * :math.pi() / 180.0
