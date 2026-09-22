@@ -20,18 +20,20 @@ defmodule FixedGearWeb.RankingComponents do
   @wheel_cy 40.0
   @tire_outer 36.6
   @tire_inner 32.9
-  @patch_outer 38.1
-  @patch_inner 31.5
+  # Marks sit on the tread. Radial height is patch_outer - patch_inner.
+  @patch_outer 36.2
+  @patch_inner 33.3
   @rim_r 31.8
-  @spoke_inner 8.2
+  @spoke_inner 5.9
   @spoke_outer 31.3
-  @hub_r 7.5
-  @hub_axle_r 1.2
-  @hub_petal_r 1.45
-  @hub_petal_offset 2.7
+  @hub_r 5.2
+  @hub_axle_r 0.85
+  @hub_petal_r 1.0
+  @hub_petal_offset 1.85
   # Pitch radius = teeth * @pitch_unit, so both sprockets share one chain pitch.
-  @tooth_addendum 2.2
-  @tooth_dedendum 1.45
+  # Tooth height is separate, so shorter teeth do not resize the sprockets.
+  @tooth_addendum 1.0
+  @tooth_dedendum 0.7
   @tire_gap 2.2
   @vertical_pad 2.0
   @view_pad 2.2
@@ -40,13 +42,12 @@ defmodule FixedGearWeb.RankingComponents do
   # Chain rides just outside the chainring teeth so the wrap reads on the
   # dark background. The cog wrap sits on the pitch circle, centered on the hub.
   @chain_clear 0.9
-  # Cog center is the hub center. 16t is the reference size; other cogs
+  # Cog center is the hub center. 16t is the reference pitch; other cogs
   # keep the same chain pitch, so a smaller cog is smaller and a larger
   # cog is larger. The chainring is not rescaled when the cog changes.
-  @cog_body_r 5.6
-  @max_cog_pitch @cog_body_r + @tooth_dedendum
+  @pitch_16 7.05
   @cog_cx @wheel_cx
-  @pitch_unit @max_cog_pitch / 16
+  @pitch_unit @pitch_16 / 16
   # Tallest ring that fits the wheel's viewBox. Its center stays put so a
   # smaller ring does not slide, and the largest ring stays clear of the tire.
   @max_ring_pitch @wheel_cy - @vertical_pad - @tooth_addendum
