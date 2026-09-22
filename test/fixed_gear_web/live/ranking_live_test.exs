@@ -270,12 +270,38 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert has_element?(view, "#bike-#{slow.id}", "0.0 km/h")
   end
 
+  test "offers a share button for every bike", %{conn: conn} do
+    bike = bike_fixture(%{name: "Feather"})
+
+    {:ok, view, _html} = live(conn, ~p"/ranking/weight")
+
+    assert has_element?(
+             view,
+             ~s(#share-bike-#{bike.id}[data-url="/ranking/#{bike.id}/weight"])
+           )
+
+    assert has_element?(
+             view,
+             ~s(#share-bike-#{bike.id}[aria-label="#{gettext("Share %{name}", name: "Feather")}"])
+           )
+
+    view
+    |> element("#tab-cadence")
+    |> render_click()
+
+    assert has_element?(
+             view,
+             ~s(#share-bike-#{bike.id}[data-url="/ranking/#{bike.id}/cadence"])
+           )
+  end
+
   test "shows an edit pencil for signed-in admins", %{conn: conn} do
     bike = bike_fixture(%{name: "Track"})
     conn = log_in_user(conn, admin_user_fixture())
 
     {:ok, view, _html} = live(conn, ~p"/ranking/weight")
 
+    assert has_element?(view, "#share-bike-#{bike.id}")
     assert has_element?(view, "#edit-bike-#{bike.id}")
     assert has_element?(view, ~s(a[href="/admin/bikes"]), gettext("Admin"))
     refute has_element?(view, ~s(a[href="/users/log-in"]))
@@ -296,6 +322,7 @@ defmodule FixedGearWeb.RankingLiveTest do
 
     {:ok, view, _html} = live(conn, ~p"/ranking/weight")
 
+    assert has_element?(view, "#share-bike-#{bike.id}")
     refute has_element?(view, "#edit-bike-#{bike.id}")
     refute has_element?(view, ~s(a[href="/admin/bikes"]), gettext("Admin"))
   end

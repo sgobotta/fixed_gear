@@ -100,18 +100,42 @@ defmodule FixedGearWeb.RankingLive do
               <.row_meta tab={@tab} bike={bike} cadence={@cadence} />
             </:meta>
             <:actions>
-              <.link
-                :if={
-                  @current_scope && @current_scope.user &&
-                    @current_scope.user.admin
-                }
-                id={"edit-bike-#{bike.id}"}
-                navigate={~p"/admin/bikes/#{bike}/edit"}
-                class="inline-flex rounded-full p-2 text-base-content/50 transition hover:bg-base-200 hover:text-base-content"
-                aria-label={gettext("Edit %{name}", name: bike.name)}
-              >
-                <.icon name="hero-pencil-square" class="size-5" />
-              </.link>
+              <div class="flex items-center">
+                <button
+                  id={"share-bike-#{bike.id}"}
+                  type="button"
+                  phx-hook="ShareLink"
+                  data-url={ranking_href(@tab, bike.id)}
+                  data-title={bike.name}
+                  data-copied-label={gettext("Link copied")}
+                  class="inline-flex rounded-full p-2 text-base-content/50 transition hover:bg-base-200 hover:text-base-content"
+                  aria-label={gettext("Share %{name}", name: bike.name)}
+                >
+                  <span data-share-icon class="inline-flex">
+                    <.icon name="hero-arrow-up-on-square" class="size-5" />
+                  </span>
+                  <span data-copied-icon class="hidden">
+                    <.icon name="hero-check" class="size-5" />
+                  </span>
+                </button>
+                <span
+                  id={"share-bike-#{bike.id}-status"}
+                  class="sr-only"
+                  aria-live="polite"
+                ></span>
+                <.link
+                  :if={
+                    @current_scope && @current_scope.user &&
+                      @current_scope.user.admin
+                  }
+                  id={"edit-bike-#{bike.id}"}
+                  navigate={~p"/admin/bikes/#{bike}/edit"}
+                  class="inline-flex rounded-full p-2 text-base-content/50 transition hover:bg-base-200 hover:text-base-content"
+                  aria-label={gettext("Edit %{name}", name: bike.name)}
+                >
+                  <.icon name="hero-pencil-square" class="size-5" />
+                </.link>
+              </div>
             </:actions>
             <:content>
               <.bike_details bike={bike} cadence={@cadence} />

@@ -1222,11 +1222,126 @@ const AppHeader = {
   }
 }
 
+const ShareLink = {
+  mounted() {
+    const hook = this
+    this.onClick = function (event) {
+      event.preventDefault()
+      const path = hook.el.getAttribute("data-url")
+      const title = hook.el.getAttribute("data-title")
+      const copiedLabel = hook.el.getAttribute("data-copied-label")
+      const url = new URL(path, window.location.href).href
+
+      shareOrCopy(url, title).then(function (result) {
+        if (result === "copied") {
+          hook.showCopied(copiedLabel)
+        }
+      })
+    }
+    this.el.addEventListener("click", this.onClick)
+  },
+
+  showCopied(label) {
+    const shareIcon = this.el.querySelector("[data-share-icon]")
+    const copiedIcon = this.el.querySelector("[data-copied-icon]")
+    const status = document.getElementById(this.el.id + "-status")
+
+    if (shareIcon) {
+      shareIcon.style.display = "none"
+    }
+    if (copiedIcon) {
+      copiedIcon.style.display = "inline-flex"
+    }
+    if (status) {
+      status.textContent = label
+    }
+
+    if (this.copiedTimer) {
+      window.clearTimeout(this.copiedTimer)
+    }
+
+    const hook = this
+    this.copiedTimer = window.setTimeout(function () {
+      if (shareIcon) {
+        shareIcon.style.display = ""
+      }
+      if (copiedIcon) {
+        copiedIcon.style.display = ""
+      }
+      if (status) {
+        status.textContent = ""
+      }
+    }, 2000)
+  },
+
+  destroyed() {
+    this.el.removeEventListener("click", this.onClick)
+    if (this.copiedTimer) {
+      window.clearTimeout(this.copiedTimer)
+    }
+  }
+}
+
+function shareOrCopy(url, title) {
+  if (typeof navigator.share === "function") {
+    return navigator.share({title: title, url: url}).then(
+      function () {
+        return "shared"
+      },
+      function (error) {
+        if (error && error.name === "AbortError") {
+          return "aborted"
+        }
+        return copyText(url)
+      }
+    )
+  }
+  return copyText(url)
+}
+
+function copyText(url) {
+  if (
+    navigator.clipboard &&
+    typeof navigator.clipboard.writeText === "function"
+  ) {
+    return navigator.clipboard.writeText(url).then(
+      function () {
+        return "copied"
+      },
+      function () {
+        return copyWithInput(url)
+      }
+    )
+  }
+  return Promise.resolve(copyWithInput(url))
+}
+
+function copyWithInput(url) {
+  const input = document.createElement("input")
+  input.value = url
+  input.setAttribute("readonly", "readonly")
+  input.style.position = "fixed"
+  input.style.left = "-9999px"
+  document.body.appendChild(input)
+  input.select()
+  let copied = false
+  try {
+    copied = document.execCommand("copy")
+  } catch (_error) {
+    copied = false
+  }
+  document.body.removeChild(input)
+  if (copied) {
+    return "copied"
+  }
+  return "failed"
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, SliderValue, BottomNav, AppHeader, ...colocatedHooks},
+  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, SliderValue, BottomNav, AppHeader, ShareLink, ...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits
