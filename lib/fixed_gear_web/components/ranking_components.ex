@@ -32,9 +32,7 @@ defmodule FixedGearWeb.RankingComponents do
   # Pitch radius = teeth * @pitch_unit, so both sprockets share one chain pitch.
   @tooth_addendum 2.2
   @tooth_dedendum 1.45
-  @min_cog_pitch 5.4
   @tire_gap 2.2
-  @pair_gap 3.4
   @vertical_pad 2.0
   @view_pad 2.2
   @bore_r 1.05
@@ -42,9 +40,9 @@ defmodule FixedGearWeb.RankingComponents do
   # Chain rides just outside the chainring teeth so the wrap reads on the
   # dark background. The cog wrap sits on the pitch circle, centered on the hub.
   @chain_clear 0.9
-  # Cog center is the hub center, so the cog and chain cover the hub.
-  # A 16t disc is the full size; larger cogs stay on this center and are
-  # capped so the body does not grow past it.
+  # Cog center is the hub center. 16t is the reference size; other cogs
+  # keep the same chain pitch, so a smaller cog is smaller and a larger
+  # cog is larger. The chainring is not rescaled when the cog changes.
   @cog_body_r 5.6
   @max_cog_pitch @cog_body_r + @tooth_dedendum
   @cog_cx @wheel_cx
@@ -866,24 +864,9 @@ defmodule FixedGearWeb.RankingComponents do
               rear > 0 do
     cog0 = rear * @pitch_unit
     ring0 = chain_ring * @pitch_unit
-    sep = @ring_cx - @cog_cx - @pair_gap
-
-    s_max =
-      Enum.min([
-        @max_cog_pitch / cog0,
-        @max_ring_pitch / ring0,
-        sep / (cog0 + ring0)
-      ])
-
-    s_min = @min_cog_pitch / cog0
-
-    scale =
-      cond do
-        s_min > s_max -> s_max
-        s_max < 1.0 -> s_max
-        s_min > 1.0 -> s_min
-        true -> 1.0
-      end
+    # Shrink only when this chainring would not fit. The cog is not part of
+    # that decision, so changing the cog leaves the ring the same size.
+    scale = min(1.0, @max_ring_pitch / ring0)
 
     cog_pitch = cog0 * scale
     ring_pitch = ring0 * scale
