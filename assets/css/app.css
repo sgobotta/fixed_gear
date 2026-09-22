@@ -128,7 +128,7 @@
 .skid-wheel-ground {
   position: absolute;
   left: calc(var(--skid-wheel-h, 4rem) / 2);
-  bottom: 4%;
+  bottom: 2%;
   width: calc(var(--skid-wheel-h, 4rem) * 0.44);
   height: 2px;
   border-radius: 999px;
@@ -141,7 +141,7 @@
 .skid-sparks {
   position: absolute;
   left: calc(var(--skid-wheel-h, 4rem) / 2);
-  bottom: 6%;
+  bottom: 4%;
   width: 0;
   height: 0;
   pointer-events: none;

@@ -18,40 +18,47 @@ defmodule FixedGearWeb.RankingComponents do
   @hub_holes Enum.map(0..4, fn i -> i * 72.0 end)
   @wheel_cx 40.0
   @wheel_cy 40.0
-  @tire_outer 36.6
-  @tire_inner 32.9
+  @tire_outer 38.4
+  @tire_inner 34.5
   # Marks sit on the tread. Radial height is patch_outer - patch_inner.
-  @patch_outer 36.2
-  @patch_inner 33.3
-  @rim_r 31.8
-  @spoke_inner 5.9
-  @spoke_outer 31.3
-  @hub_r 5.2
-  @hub_axle_r 0.85
-  @hub_petal_r 1.0
-  @hub_petal_offset 1.85
-  # Pitch radius = teeth * @pitch_unit, so both sprockets share one chain pitch.
-  # Tooth height is separate, so shorter teeth do not resize the sprockets.
-  @tooth_addendum 1.0
-  @tooth_dedendum 0.7
-  @tire_gap 2.2
+  @patch_outer 38.0
+  @patch_inner 34.9
+  # Three concentric walls just inside the tire. Spokes end on the inner one.
+  @rim_outer 33.3
+  @rim_mid 30.6
+  @rim_inner 28.0
+  @rim_walls [@rim_outer, @rim_mid, @rim_inner]
+  @spoke_inner 3.7
+  @spoke_outer @rim_inner
+  @hub_r 3.05
+  @hub_axle_r 0.5
+  @hub_petal_r 0.55
+  @hub_petal_offset 1.05
+  @tire_gap 2.4
   @vertical_pad 2.0
   @view_pad 2.2
   @bore_r 1.05
-  @chain_stroke 1.45
+  # 700×28 outer radius, (622 + 2×28) / 2, and a 1/2" chain.
+  # Pitch radius = teeth × chain pitch / (2π), in the drawn tire's units.
+  @wheel_radius_mm 339.0
+  @chain_pitch_mm 12.7
+  @pitch_unit @tire_outer * @chain_pitch_mm /
+                (2 * :math.pi() * @wheel_radius_mm)
+  @chain_pitch @pitch_unit * 2 * :math.pi()
+  @tooth_addendum @chain_pitch * 0.32
+  @tooth_dedendum @chain_pitch * 0.22
+  @chain_stroke @chain_pitch * 0.55
   # Chain rides just outside the chainring teeth so the wrap reads on the
   # dark background. The cog wrap sits on the pitch circle, centered on the hub.
-  @chain_clear 0.9
-  # Cog center is the hub center. 16t is the reference pitch; other cogs
-  # keep the same chain pitch, so a smaller cog is smaller and a larger
-  # cog is larger. The chainring is not rescaled when the cog changes.
-  @pitch_16 7.05
+  @chain_clear @chain_pitch * 0.18
+  # Cog center is the hub. Both sprockets share @pitch_unit, so the ring
+  # stays put when the cog changes and the tooth ratio stays exact.
   @cog_cx @wheel_cx
-  @pitch_unit @pitch_16 / 16
-  # Tallest ring that fits the wheel's viewBox. Its center stays put so a
-  # smaller ring does not slide, and the largest ring stays clear of the tire.
+  # Tallest ring that fits the wheel's viewBox. Its center is the 59t ring,
+  # so a smaller ring does not slide and the largest ring stays clear of the tire.
+  @max_chain_ring Calculations.chain_ring_max()
   @max_ring_pitch @wheel_cy - @vertical_pad - @tooth_addendum
-  @ring_cx @wheel_cx + @tire_outer + @tire_gap + @max_ring_pitch +
+  @ring_cx @wheel_cx + @tire_outer + @tire_gap + @max_chain_ring * @pitch_unit +
              @tooth_addendum
   @reference_rpm 90
   @seconds_per_minute 60
@@ -239,7 +246,7 @@ defmodule FixedGearWeb.RankingComponents do
       |> assign(:hub_holes, @hub_holes)
       |> assign(:cx, @wheel_cx)
       |> assign(:cy, @wheel_cy)
-      |> assign(:rim_r, @rim_r)
+      |> assign(:rim_walls, @rim_walls)
       |> assign(:spoke_inner, @spoke_inner)
       |> assign(:spoke_outer, @spoke_outer)
       |> assign(:hub_r, @hub_r)
@@ -266,7 +273,7 @@ defmodule FixedGearWeb.RankingComponents do
         <div
           id={"#{@id}-stage-#{@patches}-#{@displayed}-#{@chain_ring}-#{@rear_sprocket}"}
           phx-update="ignore"
-          class="skid-wheel-stage relative h-16 w-max shrink-0 [--skid-wheel-h:4rem] sm:h-20 sm:[--skid-wheel-h:5rem]"
+          class="skid-wheel-stage relative h-18 w-max shrink-0 [--skid-wheel-h:4.5rem] sm:h-22 sm:[--skid-wheel-h:5.5rem]"
         >
           <svg
             viewBox={"0 0 #{@drive.vb_w} 80"}
@@ -309,13 +316,14 @@ defmodule FixedGearWeb.RankingComponents do
                 class="opacity-70"
               />
               <circle
+                :for={r <- @rim_walls}
                 cx={@cx}
                 cy={@cy}
-                r={@rim_r}
+                r={r}
                 fill="none"
                 stroke="currentColor"
-                stroke-width="1.15"
-                class="opacity-40"
+                stroke-width="0.75"
+                class="opacity-80"
               />
               <g
                 :for={angle <- @spokes}
