@@ -571,8 +571,18 @@ msgstr "vueltas de rueda por pedaleada"
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:113
 #, elixir-autogen, elixir-format
-msgid "Optional. On a phone this opens the camera."
-msgstr "Opcional. En el celu abre la cámara."
+msgid "Optional."
+msgstr "Opcional."
+
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex
+#, elixir-autogen, elixir-format
+msgid "Take photo"
+msgstr "Sacar foto"
+
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex
+#, elixir-autogen, elixir-format
+msgid "Choose from gallery"
+msgstr "Elegir de la galería"
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:137
 #, elixir-autogen, elixir-format

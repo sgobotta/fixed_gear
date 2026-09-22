@@ -59,6 +59,44 @@ defmodule FixedGearWeb.Admin.BikeLive.FormTest do
     assert html =~ "New Name"
   end
 
+  test "offers a camera and a gallery when editing a bike", %{conn: conn} do
+    bike = bike_fixture()
+    {:ok, view, _html} = live(conn, ~p"/admin/bikes/#{bike}/edit")
+
+    assert has_element?(view, "#take-photo", gettext("Take photo"))
+    assert has_element?(view, "#take-photo input[capture=environment]")
+    assert has_element?(view, "#pick-photo", gettext("Choose from gallery"))
+    refute has_element?(view, "#pick-photo input[capture]")
+  end
+
+  test "uploads a photo taken with the camera", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/admin/bikes/new")
+    {png, _type} = png_photo()
+
+    photo =
+      file_input(view, "#bike-form", :camera, [
+        %{
+          last_modified: 1_594_171_879_000,
+          name: "camera.jpg",
+          content: png,
+          type: "image/jpeg"
+        }
+      ])
+
+    assert render_upload(photo, "camera.jpg")
+
+    {:ok, _view, _html} =
+      view
+      |> form("#bike-form",
+        bike: %{name: "Camera Bike", owner: "Cam", weight_kg: "7.000"}
+      )
+      |> render_submit()
+      |> follow_redirect(conn, ~p"/admin/bikes")
+
+    bike = FixedGear.Bikes.list_bikes() |> hd()
+    assert {^png, "image/png"} = FixedGear.Bikes.get_bike_photo(bike.id)
+  end
+
   test "uploads a camera photo without a file extension", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/bikes/new")
     {png, _type} = png_photo()

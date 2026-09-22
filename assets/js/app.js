@@ -725,36 +725,52 @@ const CompressPhoto = {
   mounted() {
     this.passthrough = false
     this.busy = false
-    this.input = null
+    this.inputs = []
     this._onChange = (event) => this.handleChange(event)
-    this.bindInput()
+    this.bindInputs()
   },
 
   updated() {
-    this.bindInput()
+    this.bindInputs()
   },
 
   destroyed() {
-    this.unbindInput()
+    this.unbindInputs()
   },
 
-  bindInput() {
-    const input = this.el.querySelector("input[type=\"file\"]")
-    if (input === this.input) {
+  bindInputs() {
+    const inputs = Array.prototype.slice.call(
+      this.el.querySelectorAll("input[type=\"file\"]")
+    )
+    if (this.sameInputs(inputs)) {
       return
     }
-    this.unbindInput()
-    this.input = input
-    if (this.input) {
-      this.input.addEventListener("change", this._onChange, true)
-    }
+    this.unbindInputs()
+    this.inputs = inputs
+    const onChange = this._onChange
+    this.inputs.forEach(function (input) {
+      input.addEventListener("change", onChange, true)
+    })
   },
 
-  unbindInput() {
-    if (this.input) {
-      this.input.removeEventListener("change", this._onChange, true)
+  sameInputs(inputs) {
+    if (this.inputs.length !== inputs.length) {
+      return false
     }
-    this.input = null
+    for (let i = 0; i < inputs.length; i++) {
+      if (this.inputs[i] !== inputs[i]) {
+        return false
+      }
+    }
+    return true
+  },
+
+  unbindInputs() {
+    const onChange = this._onChange
+    this.inputs.forEach(function (input) {
+      input.removeEventListener("change", onChange, true)
+    })
+    this.inputs = []
   },
 
   handleChange(event) {
