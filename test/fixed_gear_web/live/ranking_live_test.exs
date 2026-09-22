@@ -64,6 +64,8 @@ defmodule FixedGearWeb.RankingLiveTest do
     assert has_element?(view, "#bike-#{heavy.id}-expand-inner")
     assert has_element?(view, "#bike-#{heavy.id}-expand-inner", "48t / 16t")
     assert has_element?(view, "#ratio-motion-#{heavy.id}")
+    assert has_element?(view, "#development-#{heavy.id}")
+    assert has_element?(view, "#hint-ratio-#{heavy.id}-toggle")
     assert has_element?(view, "#skid-wheel-#{heavy.id}")
     assert has_element?(view, "#skid-wheel-#{heavy.id} .skid-patch")
     assert has_element?(view, "#skid-wheel-#{heavy.id} .skid-patch-ambi")
@@ -75,6 +77,12 @@ defmodule FixedGearWeb.RankingLiveTest do
              view,
              "a[href='https://www.surplace.fr/ffgc/']",
              "surplace.fr/ffgc"
+           )
+
+    assert has_element?(
+             view,
+             "a[href='https://www.sheldonbrown.com/']",
+             "Sheldon Brown"
            )
 
     assert has_element?(

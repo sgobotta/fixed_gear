@@ -431,11 +431,19 @@ defmodule FixedGearWeb.RankingComponents do
         assigns.cadence
       )
 
+    development =
+      Calculations.development_m(
+        assigns.chain_ring,
+        assigns.rear_sprocket,
+        assigns.tire_width
+      )
+
     assigns =
       assigns
       |> assign(:ratio, ratio)
       |> assign(:patches, patches)
       |> assign(:speed, speed)
+      |> assign(:development, development)
 
     ~H"""
     <div class="space-y-5">
@@ -455,9 +463,46 @@ defmodule FixedGearWeb.RankingComponents do
         >
           {Calculations.format_speed(@speed)} km/h
         </.stat>
+        <.stat
+          :if={@development}
+          hint_id={"hint-development-#{@id_prefix}"}
+          label={gettext("Development")}
+        >
+          <:hint>
+            <p>
+              {gettext(
+                "The distance that the bicycle moves with each revolution of the pedals."
+              )}
+            </p>
+          </:hint>
+          <span id={"development-#{@id_prefix}"}>
+            {Calculations.format_development(@development)} m
+          </span>
+        </.stat>
       </dl>
 
-      <.stat :if={@ratio} label={gettext("Ratio")}>
+      <.stat
+        :if={@ratio}
+        hint_id={"hint-ratio-#{@id_prefix}"}
+        label={gettext("Ratio")}
+      >
+        <:hint>
+          <p>
+            {gettext(
+              "The ratio of chainring teeth to rear sprocket teeth, in other words, how many times your rear wheel turns with each revolution of the pedals."
+            )}
+          </p>
+          <ul class="mt-1.5 list-disc space-y-0.5 pl-4">
+            <li>{gettext("Under 1.9: bike polo")}</li>
+            <li>{gettext("1.9 to 2.3: lots of steep slopes")}</li>
+            <li>{gettext("2.3 to 2.7: polyvalent ratio")}</li>
+            <li>
+              {gettext(
+                "Over 2.7: high speed on flat roads (take care of your knees)"
+              )}
+            </li>
+          </ul>
+        </:hint>
         <.ratio_motion
           id={"ratio-motion-#{@id_prefix}"}
           ratio={@ratio}
@@ -466,19 +511,35 @@ defmodule FixedGearWeb.RankingComponents do
         />
       </.stat>
 
-      <.stat :if={@patches} label={gettext("Skid patches")}>
+      <.stat
+        :if={@patches}
+        hint_id={"hint-skid-patches-#{@id_prefix}"}
+        label={gettext("Skid patches")}
+      >
+        <:hint>
+          <p>
+            {gettext(
+              "While skidding, you always brake with your feet — and the crank — in the same position."
+            )}
+          </p>
+          <p class="mt-1.5">
+            {gettext(
+              "You can predict how many spots will wear on your rear tire. These spots are called skid patches."
+            )}
+          </p>
+        </:hint>
         <.skid_wheel
           id={"skid-wheel-#{@id_prefix}"}
           patches={@patches.one_sided}
           ambidextrous={@patches.ambidextrous}
         />
-        <.skid_patch_credit />
+        <.gear_math_credit />
       </.stat>
     </div>
     """
   end
 
-  def skid_patch_credit(assigns) do
+  def gear_math_credit(assigns) do
     ~H"""
     <p class="skid-patch-credit mt-2 text-[10px] leading-snug text-base-content/40">
       {gettext("Inspired by")}
@@ -490,19 +551,55 @@ defmodule FixedGearWeb.RankingComponents do
       >
         surplace.fr/ffgc
       </a>
+      {gettext("and")}
+      <a
+        href="https://www.sheldonbrown.com/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="underline decoration-base-content/25 underline-offset-2 transition hover:text-base-content/70 hover:decoration-base-content/50"
+      >
+        Sheldon Brown
+      </a>
     </p>
     """
   end
 
   attr :label, :string, required: true
+  attr :hint_id, :string, default: nil
+  slot :hint
   slot :inner_block, required: true
 
   def stat(assigns) do
     ~H"""
     <div>
-      <dt class="text-xs tracking-wide text-base-content/50 uppercase">
-        {@label}
+      <dt class="flex items-center gap-1 text-xs tracking-wide text-base-content/50 uppercase">
+        <span>{@label}</span>
+        <button
+          :if={@hint != [] && @hint_id}
+          type="button"
+          id={"#{@hint_id}-toggle"}
+          class="inline-flex rounded-full p-0.5 text-base-content/40 transition hover:bg-base-200 hover:text-base-content/75"
+          phx-click={toggle_hint(@hint_id)}
+          aria-controls={@hint_id}
+          aria-expanded="false"
+        >
+          <.icon name="hero-information-circle" class="size-3.5" />
+          <span class="sr-only">
+            {gettext("About %{label}", label: @label)}
+          </span>
+        </button>
       </dt>
+      <div
+        :if={@hint != [] && @hint_id}
+        id={@hint_id}
+        class="grid grid-rows-[0fr] overflow-hidden opacity-0 transition-all duration-300 ease-in-out motion-reduce:transition-none"
+      >
+        <div class="min-h-0 overflow-hidden">
+          <div class="mt-1 text-[11px] leading-snug font-normal tracking-normal text-base-content/65 normal-case">
+            {render_slot(@hint)}
+          </div>
+        </div>
+      </div>
       <dd class="mt-0.5 font-medium">{render_slot(@inner_block)}</dd>
     </div>
     """
@@ -625,6 +722,12 @@ defmodule FixedGearWeb.RankingComponents do
   end
 
   defp visual_pedal_seconds(_rpm), do: @seconds_per_minute / @reference_rpm
+
+  defp toggle_hint(id) do
+    JS.toggle_class("grid-rows-[1fr] opacity-100", to: "##{id}")
+    |> JS.toggle_class("grid-rows-[0fr] opacity-0", to: "##{id}")
+    |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+  end
 
   defp keep_panel_during_collapse do
     JS.hide(

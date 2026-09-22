@@ -213,7 +213,7 @@ msgstr "Cuadro"
 msgid "Frame name"
 msgstr "Nombre del cuadro"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:445
+#: lib/fixed_gear_web/components/ranking_components.ex:453
 #, elixir-autogen, elixir-format
 msgid "Gearing"
 msgstr "Relación de transmisión"
@@ -348,7 +348,7 @@ msgstr "Contraseña"
 msgid "Password updated successfully!"
 msgstr "¡Contraseña actualizada!"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:597
+#: lib/fixed_gear_web/components/ranking_components.ex:689
 #, elixir-autogen, elixir-format
 msgid "Pedal"
 msgstr "Pedal"
@@ -380,7 +380,7 @@ msgstr "Ordenadas por peso. Abrí una bici para ver la relación de transmisión
 msgid "Ranking"
 msgstr "Ranking"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:460
+#: lib/fixed_gear_web/components/ranking_components.ex:487
 #, elixir-autogen, elixir-format
 msgid "Ratio"
 msgstr "Ratio"
@@ -422,7 +422,7 @@ msgstr "Guardando..."
 msgid "Sign in to add and edit bikes."
 msgstr "Entrá para cargar y editar bicis."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:469
+#: lib/fixed_gear_web/components/ranking_components.ex:517
 #, elixir-autogen, elixir-format
 msgid "Skid patches"
 msgstr "Skid patches"
@@ -432,7 +432,7 @@ msgstr "Skid patches"
 msgid "Something went wrong!"
 msgstr "Algo salió mal"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:454
+#: lib/fixed_gear_web/components/ranking_components.ex:462
 #, elixir-autogen, elixir-format
 msgid "Speed at %{cadence} rpm"
 msgstr "Velocidad a %{cadence} rpm"
@@ -453,7 +453,7 @@ msgstr "El link es inválido o venció."
 msgid "Tip: If you prefer passwords, you can enable them in the user settings."
 msgstr "Tip: si preferís contraseña, la podés activar en la configuración."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:449
+#: lib/fixed_gear_web/components/ranking_components.ex:457
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:88
 #: lib/fixed_gear_web/live/skid_patch_live.ex:63
 #, elixir-autogen, elixir-format
@@ -511,7 +511,7 @@ msgstr "Hola %{email}"
 msgid "Welcome back!"
 msgstr "¡Bienvenido de nuevo!"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:564
+#: lib/fixed_gear_web/components/ranking_components.ex:656
 #, elixir-autogen, elixir-format
 msgid "Wheel"
 msgstr "Rueda"
@@ -564,7 +564,7 @@ msgstr "la bandeja de mail"
 msgid "to your account now."
 msgstr "a tu cuenta."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:606
+#: lib/fixed_gear_web/components/ranking_components.ex:698
 #, elixir-autogen, elixir-format
 msgid "wheel turns per pedal stroke"
 msgstr "vueltas de rueda por pedaleada"
@@ -589,15 +589,10 @@ msgstr "El registro está cerrado."
 msgid "Could not update password."
 msgstr "No se pudo actualizar la contraseña."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:484
+#: lib/fixed_gear_web/components/ranking_components.ex:545
 #, elixir-autogen, elixir-format
 msgid "Inspired by"
 msgstr "Inspirado en"
-
-#: lib/fixed_gear_web/live/skid_patch_live.ex:29
-#, elixir-autogen, elixir-format
-msgid "Play with chainring, sprocket, and tire to see ratio, speed, and skid patches."
-msgstr "Probá plato, piñón y cubierta para ver ratio, velocidad y skid patches."
 
 #: lib/fixed_gear_web/live/skid_patch_live.ex:23
 #, elixir-autogen, elixir-format
@@ -686,3 +681,63 @@ msgstr "¿Eliminar %{name}? Esta acción no se puede deshacer."
 #, elixir-autogen, elixir-format
 msgid "Delete bike"
 msgstr "Eliminar bici"
+
+#: lib/fixed_gear_web/components/ranking_components.ex:497
+#, elixir-autogen, elixir-format
+msgid "1.9 to 2.3: lots of steep slopes"
+msgstr "1.9 a 2.3: pendientes pronunciadas"
+
+#: lib/fixed_gear_web/components/ranking_components.ex:498
+#, elixir-autogen, elixir-format
+msgid "2.3 to 2.7: polyvalent ratio"
+msgstr "2.3 a 2.7: ratio polivalente, se adapta bien a diferentes tipos de terreno"
+
+#: lib/fixed_gear_web/components/ranking_components.ex:587
+#, elixir-autogen, elixir-format
+msgid "About %{label}"
+msgstr "Sobre %{label}"
+
+#: lib/fixed_gear_web/components/ranking_components.ex:469
+#, elixir-autogen, elixir-format
+msgid "Development"
+msgstr "Recorrido"
+
+#: lib/fixed_gear_web/components/ranking_components.ex:500
+#, elixir-autogen, elixir-format
+msgid "Over 2.7: high speed on flat roads (take care of your knees)"
+msgstr "Más de 2.7: alta velocidad en llano (cuidá las rodillas)"
+
+#: lib/fixed_gear_web/live/skid_patch_live.ex:29
+#, elixir-autogen, elixir-format
+msgid "Play with chainring, sprocket, and tire to see development, ratio, speed, and skid patches."
+msgstr "Probá plato, piñón y cubierta para ver recorrido, ratio, velocidad y skid patches."
+
+#: lib/fixed_gear_web/components/ranking_components.ex:473
+#, elixir-autogen, elixir-format
+msgid "The distance that the bicycle moves with each revolution of the pedals."
+msgstr "La distancia que recorre la bici con cada vuelta de los pedales."
+
+#: lib/fixed_gear_web/components/ranking_components.ex:491
+#, elixir-autogen, elixir-format
+msgid "The ratio of chainring teeth to rear sprocket teeth, in other words, how many times your rear wheel turns with each revolution of the pedals."
+msgstr "El ratio de dientes del plato al piñón: cuántas vueltas da la rueda trasera con cada vuelta de los pedales."
+
+#: lib/fixed_gear_web/components/ranking_components.ex:496
+#, elixir-autogen, elixir-format
+msgid "Under 1.9: bike polo"
+msgstr "Menos de 1.9: bici polo"
+
+#: lib/fixed_gear_web/components/ranking_components.ex:521
+#, elixir-autogen, elixir-format
+msgid "While skidding, you always brake with your feet — and the crank — in the same position."
+msgstr "Al skiddear, siempre frenás con los pies y la palanca en la misma posición."
+
+#: lib/fixed_gear_web/components/ranking_components.ex:526
+#, elixir-autogen, elixir-format
+msgid "You can predict how many spots will wear on your rear tire. These spots are called skid patches."
+msgstr "Podés predecir cuántos puntos se van a desgastar en la cubierta trasera. Esos puntos se llaman skid patches."
+
+#: lib/fixed_gear_web/components/ranking_components.ex:554
+#, elixir-autogen, elixir-format
+msgid "and"
+msgstr "y"

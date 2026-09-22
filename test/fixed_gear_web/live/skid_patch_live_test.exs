@@ -3,6 +3,8 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
 
   import Phoenix.LiveViewTest
 
+  alias FixedGear.Bikes.Calculations
+
   test "renders a playground with default gearing and cadence", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/skid-patch")
 
@@ -20,6 +22,14 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
     assert has_element?(view, "#cadence-value", "60 rpm")
     assert has_element?(view, ~s(#cadence[min="0"][max="180"]))
     assert has_element?(view, "#ratio-motion-playground")
+
+    development =
+      Calculations.format_development(Calculations.development_m(48, 16, 28))
+
+    assert has_element?(view, "#development-playground", "#{development} m")
+    assert has_element?(view, "#hint-development-playground-toggle")
+    assert has_element?(view, "#hint-ratio-playground-toggle")
+    assert has_element?(view, "#hint-skid-patches-playground-toggle")
     assert has_element?(view, "#skid-wheel-playground")
     assert has_element?(view, "#skid-wheel-playground-count", "2")
 
@@ -39,6 +49,22 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
              view,
              "a[href='https://www.surplace.fr/ffgc/']",
              "surplace.fr/ffgc"
+           )
+
+    assert has_element?(
+             view,
+             "a[href='https://www.sheldonbrown.com/']",
+             "Sheldon Brown"
+           )
+
+    assert has_element?(view, "#hint-development-playground.opacity-0")
+
+    assert has_element?(
+             view,
+             "#hint-development-playground",
+             gettext(
+               "The distance that the bicycle moves with each revolution of the pedals."
+             )
            )
   end
 
