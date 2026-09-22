@@ -243,7 +243,7 @@ msgstr "Quedarme conectado en este dispositivo"
 #: lib/fixed_gear_web/live/ranking_live.ex:342
 #, elixir-autogen, elixir-format
 msgid "Lightest first"
-msgstr "Del más liviano al más pesado"
+msgstr "De la más liviana a la más pesada"
 
 #: lib/fixed_gear_web/live/user_live/confirmation.ex:64
 #: lib/fixed_gear_web/live/user_live/login.ex:13
