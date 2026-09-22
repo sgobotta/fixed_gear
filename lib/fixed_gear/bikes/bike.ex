@@ -18,6 +18,8 @@ defmodule FixedGear.Bikes.Bike do
     :tire_width
   ]
 
+  @primary_key {:id, :binary_id, autogenerate: true}
+  @foreign_key_type :binary_id
   schema "bikes" do
     field :name, :string
     field :owner, :string

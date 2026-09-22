@@ -36,6 +36,7 @@ defmodule FixedGear.BikesTest do
         Bikes.create_bike(valid_bike_attributes(%{weight_kg: "7.1259"}))
 
       assert Decimal.eq?(bike.weight_kg, Decimal.new("7.126"))
+      assert {:ok, _} = Ecto.UUID.cast(bike.id)
     end
 
     test "accepts optional components" do

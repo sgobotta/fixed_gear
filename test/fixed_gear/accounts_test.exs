@@ -13,6 +13,7 @@ defmodule FixedGear.AccountsTest do
 
     test "returns the user if the email exists" do
       %{id: id} = user = user_fixture()
+      assert {:ok, _} = Ecto.UUID.cast(id)
       assert %User{id: ^id} = Accounts.get_user_by_email(user.email)
     end
   end

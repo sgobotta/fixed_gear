@@ -76,13 +76,5 @@ defmodule FixedGearWeb.Admin.BikeLive.Index do
     {:noreply, assign(socket, :bikes, Bikes.list_bikes())}
   end
 
-  defp bike_for_delete(id) when is_binary(id) do
-    case Integer.parse(id) do
-      {int, ""} -> Bikes.get_bike(int)
-      _ -> nil
-    end
-  end
-
-  defp bike_for_delete(id) when is_integer(id), do: Bikes.get_bike(id)
-  defp bike_for_delete(_id), do: nil
+  defp bike_for_delete(id), do: Bikes.get_bike(id)
 end

@@ -51,14 +51,19 @@ defmodule FixedGear.Accounts do
 
   ## Examples
 
-      iex> get_user!(123)
+      iex> get_user!("11111111-1111-1111-1111-111111111111")
       %User{}
 
-      iex> get_user!(456)
+      iex> get_user!("00000000-0000-0000-0000-000000000000")
       ** (Ecto.NoResultsError)
 
   """
-  def get_user!(id), do: Repo.get!(User, id)
+  def get_user!(id) do
+    case Ecto.UUID.cast(id) do
+      {:ok, id} -> Repo.get!(User, id)
+      :error -> raise Ecto.NoResultsError, queryable: User
+    end
+  end
 
   ## User registration
 
