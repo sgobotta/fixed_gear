@@ -37,6 +37,7 @@ defmodule FixedGearWeb.SkidPatchLive do
               id="share-skid-patch"
               type="button"
               phx-hook="ShareLink"
+              phx-update="ignore"
               data-url={
                 playground_path(@chain_ring, @rear_sprocket, @tire_width, @cadence)
               }
@@ -51,12 +52,12 @@ defmodule FixedGearWeb.SkidPatchLive do
               <span data-copied-icon class="hidden">
                 <.icon name="hero-check" class="size-5" />
               </span>
+              <span
+                id="share-skid-patch-status"
+                class="sr-only"
+                aria-live="polite"
+              ></span>
             </button>
-            <span
-              id="share-skid-patch-status"
-              class="sr-only"
-              aria-live="polite"
-            ></span>
           </div>
         </header>
 
@@ -173,7 +174,7 @@ defmodule FixedGearWeb.SkidPatchLive do
       :tire_width,
       parse_option(params["tire_width"], tire_values(), @default_tire)
     )
-    |> assign(:cadence, CadenceColor.parse(params["cadence"]))
+    |> assign(:cadence, parse_cadence(params["cadence"]))
     |> assign_form()
   end
 
@@ -195,9 +196,17 @@ defmodule FixedGearWeb.SkidPatchLive do
 
   defp parse_option(value, allowed, default) do
     case Integer.parse(to_string(value || "")) do
-      {parsed, _} -> if parsed in allowed, do: parsed, else: default
-      :error -> default
+      {parsed, ""} -> if parsed in allowed, do: parsed, else: default
+      _ -> default
     end
+  end
+
+  defp parse_cadence(value) do
+    parse_option(
+      value,
+      CadenceColor.min_rpm()..CadenceColor.max_rpm(),
+      CadenceColor.default_rpm()
+    )
   end
 
   defp ring_values,
@@ -249,7 +258,7 @@ defmodule FixedGearWeb.SkidPatchLive do
 
   defp query_value(params, key) do
     case params[key] do
-      value when value in [nil, ""] -> nil
+      nil -> nil
       value -> to_string(value)
     end
   end

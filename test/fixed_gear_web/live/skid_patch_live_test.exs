@@ -256,11 +256,22 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
              view,
              "#share-skid-patch[aria-label='#{gettext("Share this setup")}']"
            )
+
+    assert has_element?(view, ~s(#share-skid-patch[phx-update="ignore"]))
   end
 
   test "drops invalid query params back to the defaults", %{conn: conn} do
     assert {:error, {:live_redirect, %{to: "/skid-patch"}}} =
              live(conn, ~p"/skid-patch?chain_ring=999&cadence=nope")
+
+    assert {:error, {:live_redirect, %{to: "/skid-patch"}}} =
+             live(conn, "/skid-patch?chain_ring=49oops&cadence=999")
+
+    assert {:error, {:live_redirect, %{to: "/skid-patch"}}} =
+             live(conn, "/skid-patch?chain_ring=")
+
+    assert {:error, {:live_redirect, %{to: "/skid-patch?chain_ring=49"}}} =
+             live(conn, "/skid-patch?chain_ring=49&cadence=999")
 
     {:ok, view, _html} = live(conn, ~p"/skid-patch")
 
