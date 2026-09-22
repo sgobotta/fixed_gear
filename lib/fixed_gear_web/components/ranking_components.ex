@@ -15,6 +15,27 @@ defmodule FixedGearWeb.RankingComponents do
   @spoke_angles Enum.map(0..(@spoke_count - 1), fn i ->
                   i * 360.0 / @spoke_count
                 end)
+  @hub_holes Enum.map(0..4, fn i -> i * 72.0 end)
+  @wheel_cx 40.0
+  @wheel_cy 40.0
+  @tire_outer 36.6
+  @tire_inner 32.9
+  @patch_outer 38.1
+  @patch_inner 31.5
+  @rim_r 31.8
+  @spoke_inner 8.2
+  @spoke_outer 31.3
+  @hub_r 7.5
+  @hub_axle_r 1.2
+  @hub_petal_r 1.45
+  @hub_petal_offset 2.7
+  @drive_width 116
+  @cog_cx 101.5
+  @cog_cy 40.0
+  @cog_face_r 6.15
+  @cog_axle_r 1.0
+  @cog_petal_r 1.2
+  @cog_petal_offset 2.2
   @reference_rpm 90
   @seconds_per_minute 60
 
@@ -168,30 +189,16 @@ defmodule FixedGearWeb.RankingComponents do
 
     step = if count > 0, do: 360 / count, else: 0
     show_ambi? = ambi_extra?(assigns.ambidextrous, count)
-    blob_n = if show_ambi?, do: count * 2, else: count
-    blob_rx = skid_blob_rx(blob_n)
-    blob_ry = blob_rx * 0.78
+    mark_n = if show_ambi?, do: count * 2, else: count
+    patch_d = tire_patch_path(skid_patch_span(mark_n))
 
     marks =
       if count > 0 do
         Enum.flat_map(0..(count - 1), fn i ->
-          one = %{
-            ambi: false,
-            angle: -i * step,
-            rx: blob_rx,
-            ry: blob_ry
-          }
+          one = %{ambi: false, angle: -i * step}
 
           if show_ambi? do
-            [
-              one,
-              %{
-                ambi: true,
-                angle: -i * step - step / 2,
-                rx: blob_rx,
-                ry: blob_ry
-              }
-            ]
+            [one, %{ambi: true, angle: -i * step - step / 2}]
           else
             [one]
           end
@@ -205,9 +212,30 @@ defmodule FixedGearWeb.RankingComponents do
     assigns =
       assigns
       |> assign(:marks, marks)
+      |> assign(:patch_d, patch_d)
       |> assign(:show_ambi, show_ambi?)
       |> assign(:displayed, displayed)
       |> assign(:spokes, @spoke_angles)
+      |> assign(:hub_holes, @hub_holes)
+      |> assign(:cx, @wheel_cx)
+      |> assign(:cy, @wheel_cy)
+      |> assign(:rim_r, @rim_r)
+      |> assign(:spoke_inner, @spoke_inner)
+      |> assign(:spoke_outer, @spoke_outer)
+      |> assign(:hub_r, @hub_r)
+      |> assign(:hub_axle_r, @hub_axle_r)
+      |> assign(:hub_petal_r, @hub_petal_r)
+      |> assign(:hub_petal_offset, @hub_petal_offset)
+      |> assign(:cog_face_r, @cog_face_r)
+      |> assign(:cog_axle_r, @cog_axle_r)
+      |> assign(:cog_petal_r, @cog_petal_r)
+      |> assign(:cog_petal_offset, @cog_petal_offset)
+      |> assign(:tire_mid, (@tire_outer + @tire_inner) / 2)
+      |> assign(:tire_width, @tire_outer - @tire_inner)
+      |> assign(:cog_cx, @cog_cx)
+      |> assign(:cog_cy, @cog_cy)
+      |> assign(:drive_width, @drive_width)
+      |> assign(:sprocket_d, sprocket_d(@cog_cx, @cog_cy, 16, 11.4, 9.35))
 
     ~H"""
     <div
@@ -220,48 +248,131 @@ defmodule FixedGearWeb.RankingComponents do
         <div
           id={"#{@id}-stage-#{@patches}-#{@displayed}"}
           phx-update="ignore"
-          class="relative size-16 shrink-0 sm:size-20"
+          class="skid-wheel-stage relative h-16 w-[5.75rem] shrink-0 sm:h-20 sm:w-[7.25rem]"
         >
           <svg
             viewBox="0 0 80 80"
-            class="skid-wheel-rotor size-full text-base-content"
+            class="skid-wheel-rotor absolute top-0 left-0 h-full w-auto text-base-content"
             aria-hidden="true"
           >
+            <defs>
+              <mask id={"#{@id}-hub-mask"}>
+                <circle cx={@cx} cy={@cy} r={@hub_r + 0.1} fill="white" />
+                <circle cx={@cx} cy={@cy} r={@hub_axle_r} fill="black" />
+                <g
+                  :for={angle <- @hub_holes}
+                  transform={"rotate(#{angle} #{@cx} #{@cy})"}
+                >
+                  <circle
+                    cx={@cx}
+                    cy={@cy - @hub_petal_offset}
+                    r={@hub_petal_r}
+                    fill="black"
+                  />
+                </g>
+              </mask>
+            </defs>
             <circle
-              cx="40"
-              cy="40"
-              r="28"
+              cx={@cx}
+              cy={@cy}
+              r={@tire_mid}
               fill="none"
               stroke="currentColor"
-              stroke-width="8"
-              class="opacity-35"
+              stroke-width={@tire_width}
+              class="opacity-70"
             />
-            <g :for={angle <- @spokes} transform={"rotate(#{angle} 40 40)"}>
+            <circle
+              cx={@cx}
+              cy={@cy}
+              r={@rim_r}
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.15"
+              class="opacity-40"
+            />
+            <g :for={angle <- @spokes} transform={"rotate(#{angle} #{@cx} #{@cy})"}>
               <line
-                x1="40"
-                y1="33.2"
-                x2="40"
-                y2="16.5"
+                x1={@cx}
+                y1={@cy - @spoke_outer}
+                x2={@cx}
+                y2={@cy - @spoke_inner}
                 stroke="currentColor"
-                stroke-width="0.7"
-                class="opacity-35"
+                stroke-width="0.45"
+                class="opacity-40"
               />
             </g>
-            <circle cx="40" cy="40" r="5.5" fill="currentColor" class="opacity-40" />
+            <circle
+              cx={@cx}
+              cy={@cy}
+              r={@hub_r}
+              fill="currentColor"
+              mask={"url(##{@id}-hub-mask)"}
+              class="opacity-90"
+            />
+            <circle
+              cx={@cx}
+              cy={@cy}
+              r={@hub_r + 0.05}
+              fill="none"
+              stroke="currentColor"
+              stroke-width="0.7"
+              class="opacity-70"
+            />
             <g
               :for={{mark, index} <- Enum.with_index(@marks)}
               id={"#{@id}-mark-#{index}"}
               class={["skid-patch", mark.ambi && "skid-patch-ambi"]}
-              transform={"rotate(#{mark.angle} 40 40)"}
+              transform={"rotate(#{mark.angle} #{@cx} #{@cy})"}
             >
-              <ellipse cx="40" cy="12" rx={mark.rx} ry={mark.ry} />
-              <ellipse
-                cx="41.8"
-                cy="10.8"
-                rx={mark.rx * 0.62}
-                ry={mark.ry * 0.58}
-              />
+              <path d={@patch_d} />
             </g>
+          </svg>
+          <svg
+            viewBox={"0 0 #{@drive_width} 80"}
+            class="skid-wheel-drive pointer-events-none absolute inset-0 size-full text-base-content"
+            aria-hidden="true"
+          >
+            <defs>
+              <mask id={"#{@id}-cog-mask"}>
+                <circle cx={@cog_cx} cy={@cog_cy} r={@cog_face_r} fill="white" />
+                <circle cx={@cog_cx} cy={@cog_cy} r={@cog_axle_r} fill="black" />
+                <g
+                  :for={angle <- @hub_holes}
+                  transform={"rotate(#{angle} #{@cog_cx} #{@cog_cy})"}
+                >
+                  <circle
+                    cx={@cog_cx}
+                    cy={@cog_cy - @cog_petal_offset}
+                    r={@cog_petal_r}
+                    fill="black"
+                  />
+                </g>
+              </mask>
+            </defs>
+            <path
+              d={"M#{@hub_r + @cx + 0.9} #{@cy - 1.45} L#{@cog_cx - 11.3} #{@cog_cy - 2.85}"}
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.05"
+              stroke-linecap="round"
+              class="opacity-80"
+            />
+            <path
+              d={"M#{@hub_r + @cx + 0.9} #{@cy + 1.45} L#{@cog_cx - 11.3} #{@cog_cy + 2.85}"}
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.05"
+              stroke-linecap="round"
+              class="opacity-80"
+            />
+            <path d={@sprocket_d} fill="currentColor" class="opacity-95" />
+            <circle
+              cx={@cog_cx}
+              cy={@cog_cy}
+              r={@cog_face_r}
+              fill="currentColor"
+              mask={"url(##{@id}-cog-mask)"}
+            />
           </svg>
           <span class="skid-wheel-ground" aria-hidden="true"></span>
           <span class="skid-sparks" aria-hidden="true"></span>
@@ -708,9 +819,50 @@ defmodule FixedGearWeb.RankingComponents do
     """
   end
 
-  defp skid_blob_rx(n) when n > 12, do: 3.8
-  defp skid_blob_rx(n) when n > 6, do: 4.7
-  defp skid_blob_rx(_n), do: 5.6
+  defp skid_patch_span(n) when n > 16, do: 7.0
+  defp skid_patch_span(n) when n > 10, do: 10.0
+  defp skid_patch_span(n) when n > 6, do: 13.0
+  defp skid_patch_span(_n), do: 18.0
+
+  defp tire_patch_path(span) do
+    half = span / 2
+    {x1, y1} = polar(@wheel_cx, @wheel_cy, @patch_outer, -half)
+    {x2, y2} = polar(@wheel_cx, @wheel_cy, @patch_outer, half)
+    {x3, y3} = polar(@wheel_cx, @wheel_cy, @patch_inner, half)
+    {x4, y4} = polar(@wheel_cx, @wheel_cy, @patch_inner, -half)
+
+    "M #{fmt(x1)} #{fmt(y1)} A #{fmt(@patch_outer)} #{fmt(@patch_outer)} 0 0 1 #{fmt(x2)} #{fmt(y2)} L #{fmt(x3)} #{fmt(y3)} A #{fmt(@patch_inner)} #{fmt(@patch_inner)} 0 0 0 #{fmt(x4)} #{fmt(y4)} Z"
+  end
+
+  defp sprocket_d(cx, cy, teeth, r_tip, r_root) do
+    step = 2 * :math.pi() / teeth
+
+    [first | rest] =
+      Enum.flat_map(0..(teeth - 1), fn i ->
+        a = i * step - :math.pi() / 2
+
+        [
+          svg_pt(cx, cy, r_root, a - step * 0.30),
+          svg_pt(cx, cy, r_tip, a - step * 0.10),
+          svg_pt(cx, cy, r_tip, a + step * 0.10),
+          svg_pt(cx, cy, r_root, a + step * 0.30)
+        ]
+      end)
+
+    "M #{first} " <> Enum.map_join(rest, " ", &"L #{&1}") <> " Z"
+  end
+
+  defp polar(cx, cy, r, deg) do
+    rad = deg * :math.pi() / 180.0
+    {cx + r * :math.sin(rad), cy - r * :math.cos(rad)}
+  end
+
+  defp svg_pt(cx, cy, r, angle) do
+    "#{fmt(cx + r * :math.cos(angle))} #{fmt(cy + r * :math.sin(angle))}"
+  end
+
+  defp fmt(n) when is_float(n), do: :erlang.float_to_binary(n, decimals: 2)
+  defp fmt(n) when is_integer(n), do: Integer.to_string(n)
 
   defp ambi_extra?(ambi, one_sided)
        when is_integer(ambi) and is_integer(one_sided) and ambi > one_sided,

@@ -121,21 +121,21 @@
 
 .skid-wheel-ground {
   position: absolute;
-  left: 50%;
-  bottom: 5%;
-  width: 46%;
-  height: 3px;
+  left: 34.5%;
+  bottom: 4%;
+  width: 30%;
+  height: 2px;
   border-radius: 999px;
   background: currentColor;
-  opacity: 0.45;
+  opacity: 0.4;
   transform: translateX(-50%);
   pointer-events: none;
 }
 
 .skid-sparks {
   position: absolute;
-  left: 50%;
-  bottom: 7%;
+  left: 34.5%;
+  bottom: 6%;
   width: 0;
   height: 0;
   pointer-events: none;
@@ -174,28 +174,28 @@
 }
 
 .skid-patch {
-  fill: oklch(0.86 0.10 350);
+  fill: oklch(0.72 0.22 350);
   transition: fill 160ms linear;
 }
 
 .skid-patch.is-marked {
-  fill: oklch(0.68 0.20 350);
+  fill: oklch(0.64 0.26 350);
 }
 
 .skid-patch.is-skidding {
-  fill: oklch(0.58 0.26 350);
+  fill: oklch(0.56 0.30 350);
 }
 
 .skid-patch-ambi {
-  fill: oklch(0.86 0.08 230);
+  fill: oklch(0.74 0.12 230);
 }
 
 .skid-patch-ambi.is-marked {
-  fill: oklch(0.72 0.12 230);
+  fill: oklch(0.66 0.16 230);
 }
 
 .skid-patch-ambi.is-skidding {
-  fill: oklch(0.58 0.14 230);
+  fill: oklch(0.58 0.18 230);
 }
 
 .skid-legend-one::before,
