@@ -274,7 +274,7 @@ defmodule FixedGearWeb.RankingComponents do
         <div
           id={"#{@id}-stage-#{@patches}-#{@displayed}-#{@chain_ring}-#{@rear_sprocket}"}
           phx-update="ignore"
-          class="skid-wheel-stage relative h-18 w-max shrink-0 [--skid-wheel-h:4.5rem] sm:h-22 sm:[--skid-wheel-h:5.5rem]"
+          class="skid-wheel-stage relative h-22 w-max shrink-0 [--skid-wheel-h:5.5rem] sm:h-26 sm:[--skid-wheel-h:6.5rem]"
         >
           <svg
             viewBox={"0 0 #{@drive.vb_w} 80"}
