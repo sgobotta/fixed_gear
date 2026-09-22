@@ -738,6 +738,7 @@ defmodule FixedGearWeb.RankingComponents do
       <div
         :if={@hint != [] && @hint_id}
         id={@hint_id}
+        aria-hidden="true"
         class="grid grid-rows-[0fr] overflow-hidden opacity-0 transition-all duration-300 ease-in-out motion-reduce:transition-none"
       >
         <div class="min-h-0 overflow-hidden">
@@ -999,6 +1000,7 @@ defmodule FixedGearWeb.RankingComponents do
     JS.toggle_class("grid-rows-[1fr] opacity-100", to: "##{id}")
     |> JS.toggle_class("grid-rows-[0fr] opacity-0", to: "##{id}")
     |> JS.toggle_attribute({"aria-expanded", "true", "false"})
+    |> JS.toggle_attribute({"aria-hidden", "true", "false"}, to: "##{id}")
   end
 
   defp keep_panel_during_collapse do

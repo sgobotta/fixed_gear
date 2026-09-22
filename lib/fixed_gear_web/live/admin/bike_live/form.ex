@@ -244,12 +244,19 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
   end
 
   def handle_event("delete", _params, socket) do
-    {:ok, _} = Bikes.delete_bike(socket.assigns.bike)
+    case Bikes.delete_bike(socket.assigns.bike) do
+      {:ok, _bike} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, gettext("Bike deleted"))
+         |> push_navigate(to: ~p"/admin/bikes")}
 
-    {:noreply,
-     socket
-     |> put_flash(:info, gettext("Bike deleted"))
-     |> push_navigate(to: ~p"/admin/bikes")}
+      {:error, _reason} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, gettext("Bike no longer exists"))
+         |> push_navigate(to: ~p"/admin/bikes")}
+    end
   end
 
   defp save_bike(socket, action, bike_params) do

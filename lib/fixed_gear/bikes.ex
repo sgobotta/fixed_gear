@@ -70,12 +70,19 @@ defmodule FixedGear.Bikes do
     |> Repo.all()
   end
 
-  def get_bike!(id) do
+  def get_bike(id) do
     Bike
     |> from(as: :bike)
     |> where([bike: b], b.id == ^id)
     |> select_list_fields()
-    |> Repo.one!()
+    |> Repo.one()
+  end
+
+  def get_bike!(id) do
+    case get_bike(id) do
+      nil -> raise Ecto.NoResultsError, queryable: Bike
+      bike -> bike
+    end
   end
 
   def get_bike_photo(id) when is_binary(id) do
@@ -111,8 +118,12 @@ defmodule FixedGear.Bikes do
     |> Repo.update()
   end
 
+  def delete_bike(%Bike{id: nil}), do: {:error, :missing}
+
   def delete_bike(%Bike{} = bike) do
     Repo.delete(bike)
+  rescue
+    Ecto.StaleEntryError -> {:error, :stale}
   end
 
   defp select_list_fields(query) do

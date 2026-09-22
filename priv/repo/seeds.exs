@@ -25,21 +25,29 @@ password =
       generated
   end
 
-case Accounts.get_user_by_email(email) do
-  %User{hashed_password: nil} = user ->
-    {:ok, {_user, _tokens}} =
-      Accounts.update_user_password(user, %{password: password})
+user =
+  case Accounts.get_user_by_email(email) do
+    %User{hashed_password: nil} = user ->
+      {:ok, {_user, _tokens}} =
+        Accounts.update_user_password(user, %{password: password})
 
-    user
-    |> User.confirm_changeset()
-    |> Repo.update!()
+      user
+      |> User.confirm_changeset()
+      |> Repo.update!()
 
-    IO.puts("Set password for existing admin #{email}")
+      IO.puts("Set password for existing admin #{email}")
+      user
 
-  %User{} ->
-    IO.puts("Admin #{email} already exists")
+    %User{} = user ->
+      IO.puts("Admin #{email} already exists")
+      user
 
-  nil ->
-    {:ok, _user} = Accounts.register_user(%{email: email, password: password})
-    IO.puts("Created admin #{email}")
-end
+    nil ->
+      {:ok, user} = Accounts.register_user(%{email: email, password: password})
+      IO.puts("Created admin #{email}")
+      user
+  end
+
+user
+|> Ecto.Changeset.change(admin: true)
+|> Repo.update!()

@@ -4,7 +4,7 @@ defmodule FixedGearWeb.Admin.BikeLive.FormTest do
   import Phoenix.LiveViewTest
   import FixedGear.BikesFixtures
 
-  setup :register_and_log_in_user
+  setup :register_and_log_in_admin
 
   test "creates a bike", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/admin/bikes/new")
@@ -245,6 +245,22 @@ defmodule FixedGearWeb.Admin.BikeLive.FormTest do
 
     bike = FixedGear.Bikes.list_bikes() |> hd()
     assert {^png, "image/png"} = FixedGear.Bikes.get_bike_photo(bike.id)
+  end
+
+  test "reports a missing bike from the edit form", %{conn: conn} do
+    bike = bike_fixture(%{name: "Already Gone"})
+    {:ok, view, _html} = live(conn, ~p"/admin/bikes/#{bike}/edit")
+
+    FixedGear.Bikes.delete_bike(bike)
+
+    {:ok, _view, html} =
+      view
+      |> element("#delete-bike")
+      |> render_click()
+      |> follow_redirect(conn, ~p"/admin/bikes")
+
+    assert html =~ gettext("Bike no longer exists")
+    refute html =~ "Already Gone"
   end
 
   test "redirects unauthenticated visitors from the form", %{conn: _conn} do

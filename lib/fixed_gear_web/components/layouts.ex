@@ -51,7 +51,7 @@ defmodule FixedGearWeb.Layouts do
         </.link>
         <nav class="flex items-center gap-3 text-sm">
           <.link
-            :if={@current_scope && @current_scope.user}
+            :if={@current_scope && @current_scope.user && @current_scope.user.admin}
             navigate={~p"/admin/bikes"}
             class="rounded-full px-3 py-1.5 transition hover:bg-base-200"
           >

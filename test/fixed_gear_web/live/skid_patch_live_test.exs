@@ -69,6 +69,12 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
            )
 
     assert has_element?(view, "#hint-development-playground.opacity-0")
+    assert has_element?(view, "#hint-development-playground[aria-hidden=true]")
+
+    assert has_element?(
+             view,
+             "#hint-development-playground-toggle[aria-expanded=false]"
+           )
 
     assert has_element?(
              view,

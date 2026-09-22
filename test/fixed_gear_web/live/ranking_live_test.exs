@@ -256,7 +256,7 @@ defmodule FixedGearWeb.RankingLiveTest do
 
   test "shows an edit pencil for signed-in admins", %{conn: conn} do
     bike = bike_fixture(%{name: "Track"})
-    conn = log_in_user(conn, user_fixture())
+    conn = log_in_user(conn, admin_user_fixture())
 
     {:ok, view, _html} = live(conn, ~p"/ranking/weight")
 
@@ -270,6 +270,18 @@ defmodule FixedGearWeb.RankingLiveTest do
       |> element("#edit-bike-#{bike.id}")
       |> render_click()
       |> follow_redirect(conn, ~p"/admin/bikes/#{bike}/edit")
+  end
+
+  test "hides admin controls from signed-in users who are not admins", %{
+    conn: conn
+  } do
+    bike = bike_fixture(%{name: "Track"})
+    conn = log_in_user(conn, user_fixture())
+
+    {:ok, view, _html} = live(conn, ~p"/ranking/weight")
+
+    refute has_element?(view, "#edit-bike-#{bike.id}")
+    refute has_element?(view, ~s(a[href="/admin/bikes"]), gettext("Admin"))
   end
 
   defp bike_index(html, id) do

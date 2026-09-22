@@ -11,7 +11,7 @@ msgstr ""
 "Language: es_AR\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:281
+#: lib/fixed_gear_web/components/ranking_components.ex:424
 #, elixir-autogen, elixir-format
 msgid "%{count} one foot"
 msgstr "%{count} con un pie"
@@ -41,8 +41,8 @@ msgstr "Admin"
 msgid "Already registered?"
 msgstr "¿Ya tenés cuenta?"
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:347
-#: lib/fixed_gear_web/live/ranking_live.ex:353
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:354
+#: lib/fixed_gear_web/live/ranking_live.ex:356
 #, elixir-autogen, elixir-format
 msgid "Aluminum"
 msgstr "Aluminio"
@@ -63,31 +63,31 @@ msgstr "Intentando reconectar"
 msgid "Back"
 msgstr "Volver"
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:271
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:278
 #, elixir-autogen, elixir-format
 msgid "Bike created"
 msgstr "Bici creada"
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:288
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:295
 #, elixir-autogen, elixir-format
 msgid "Bike updated"
 msgstr "Bici actualizada"
 
-#: lib/fixed_gear_web/live/admin/bike_live/index.ex:12
-#: lib/fixed_gear_web/live/admin/bike_live/index.ex:54
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:13
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:55
 #, elixir-autogen, elixir-format
 msgid "Bikes"
 msgstr "Bicis"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:347
+#: lib/fixed_gear_web/components/ranking_components.ex:490
 #: lib/fixed_gear_web/live/ranking_live.ex:61
-#: lib/fixed_gear_web/live/ranking_live.ex:336
+#: lib/fixed_gear_web/live/ranking_live.ex:339
 #, elixir-autogen, elixir-format
 msgid "Cadence"
 msgstr "Cadencia"
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:349
-#: lib/fixed_gear_web/live/ranking_live.ex:355
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:356
+#: lib/fixed_gear_web/live/ranking_live.ex:358
 #, elixir-autogen, elixir-format
 msgid "Carbon fiber"
 msgstr "Carbono"
@@ -108,7 +108,7 @@ msgstr "Cambiar email"
 msgid "Changing..."
 msgstr "Cambiando..."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:79
+#: lib/fixed_gear_web/components/ranking_components.ex:124
 #, elixir-autogen, elixir-format
 msgid "Collapse"
 msgstr "Contraer"
@@ -134,7 +134,7 @@ msgstr "Confirmar contraseña nueva"
 msgid "Confirming..."
 msgstr "Confirmando..."
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:343
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:350
 #, elixir-autogen, elixir-format
 msgid "Could not upload photo"
 msgstr "No se pudo subir la foto"
@@ -154,12 +154,12 @@ msgstr "Creando cuenta..."
 msgid "Current photo of %{name}"
 msgstr "Foto actual de %{name}"
 
-#: lib/fixed_gear_web/live/admin/bike_live/index.ex:32
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:33
 #, elixir-autogen, elixir-format
 msgid "Edit"
 msgstr "Editar"
 
-#: lib/fixed_gear_web/live/ranking_live.ex:108
+#: lib/fixed_gear_web/live/ranking_live.ex:111
 #, elixir-autogen, elixir-format
 msgid "Edit %{name}"
 msgstr "Editar %{name}"
@@ -169,7 +169,7 @@ msgstr "Editar %{name}"
 msgid "Edit bike"
 msgstr "Editar bici"
 
-#: lib/fixed_gear_web/live/admin/bike_live/index.ex:13
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:14
 #, elixir-autogen, elixir-format
 msgid "Edit weigh-in entries as needed."
 msgstr "Editá las entradas del pesaje."
@@ -192,18 +192,18 @@ msgstr "El link para cambiar el email es inválido o venció."
 msgid "Email changed successfully."
 msgstr "Email actualizado."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:79
+#: lib/fixed_gear_web/components/ranking_components.ex:124
 #, elixir-autogen, elixir-format
 msgid "Expand"
 msgstr "Expandir"
 
-#: lib/fixed_gear_web/live/ranking_live.ex:342
+#: lib/fixed_gear_web/live/ranking_live.ex:345
 #, elixir-autogen, elixir-format
 msgid "Fastest at %{cadence} rpm"
 msgstr "Configuración más rápida a %{cadence}rpm"
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:55
-#: lib/fixed_gear_web/live/ranking_live.ex:167
+#: lib/fixed_gear_web/live/ranking_live.ex:170
 #, elixir-autogen, elixir-format
 msgid "Frame"
 msgstr "Cuadro"
@@ -213,13 +213,13 @@ msgstr "Cuadro"
 msgid "Frame name"
 msgstr "Nombre del cuadro"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:453
+#: lib/fixed_gear_web/components/ranking_components.ex:596
 #, elixir-autogen, elixir-format
 msgid "Gearing"
 msgstr "Relación de transmisión"
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:67
-#: lib/fixed_gear_web/live/ranking_live.ex:170
+#: lib/fixed_gear_web/live/ranking_live.ex:173
 #, elixir-autogen, elixir-format
 msgid "Handlebar"
 msgstr "Manubrio"
@@ -240,7 +240,7 @@ msgstr "Email o contraseña inválidos"
 msgid "Keep me logged in on this device"
 msgstr "Quedarme conectado en este dispositivo"
 
-#: lib/fixed_gear_web/live/ranking_live.ex:339
+#: lib/fixed_gear_web/live/ranking_live.ex:342
 #, elixir-autogen, elixir-format
 msgid "Lightest first"
 msgstr "Del más liviano al más pesado"
@@ -301,13 +301,13 @@ msgid "Manage your account email address and password settings"
 msgstr "Administrá el email y la contraseña de tu cuenta"
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:40
-#: lib/fixed_gear_web/live/admin/bike_live/index.ex:22
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:23
 #, elixir-autogen, elixir-format
 msgid "Name"
 msgstr "Nombre"
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:206
-#: lib/fixed_gear_web/live/admin/bike_live/index.ex:16
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:17
 #, elixir-autogen, elixir-format
 msgid "New bike"
 msgstr "Nueva bici"
@@ -322,18 +322,18 @@ msgstr "Contraseña nueva"
 msgid "No bikes weighed yet."
 msgstr "Todavía no hay bicis pesadas."
 
-#: lib/fixed_gear_web/live/ranking_live.ex:162
+#: lib/fixed_gear_web/live/ranking_live.ex:165
 #, elixir-autogen, elixir-format
 msgid "No photo"
 msgstr "Sin foto"
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:340
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:347
 #, elixir-autogen, elixir-format
 msgid "Only one photo is allowed"
 msgstr "Solo se permite una foto"
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:41
-#: lib/fixed_gear_web/live/admin/bike_live/index.ex:23
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:24
 #, elixir-autogen, elixir-format
 msgid "Owner"
 msgstr "Dueño"
@@ -348,7 +348,7 @@ msgstr "Contraseña"
 msgid "Password updated successfully!"
 msgstr "¡Contraseña actualizada!"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:689
+#: lib/fixed_gear_web/components/ranking_components.ex:841
 #, elixir-autogen, elixir-format
 msgid "Pedal"
 msgstr "Pedal"
@@ -358,29 +358,29 @@ msgstr "Pedal"
 msgid "Photo"
 msgstr "Foto"
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:337
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:344
 #, elixir-autogen, elixir-format
 msgid "Photo is too large"
 msgstr "La foto es muy pesada"
 
-#: lib/fixed_gear_web/live/ranking_live.ex:159
+#: lib/fixed_gear_web/live/ranking_live.ex:162
 #, elixir-autogen, elixir-format
 msgid "Photo of %{name}"
 msgstr "Foto de %{name}"
 
-#: lib/fixed_gear_web/live/ranking_live.ex:345
+#: lib/fixed_gear_web/live/ranking_live.ex:348
 #, elixir-autogen, elixir-format
 msgid "Ranked by scale weight. Open a bike for gearing and details."
 msgstr "Ordenadas por peso. Abrí una bici para ver la relación de transmisión y los detalles."
 
 #: lib/fixed_gear_web/components/layouts.ex:111
 #: lib/fixed_gear_web/live/ranking_live.ex:38
-#: lib/fixed_gear_web/live/ranking_live.ex:199
+#: lib/fixed_gear_web/live/ranking_live.ex:202
 #, elixir-autogen, elixir-format
 msgid "Ranking"
 msgstr "Ranking"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:487
+#: lib/fixed_gear_web/components/ranking_components.ex:630
 #, elixir-autogen, elixir-format
 msgid "Ratio"
 msgstr "Ratio"
@@ -422,7 +422,7 @@ msgstr "Guardando..."
 msgid "Sign in to add and edit bikes."
 msgstr "Entrá para cargar y editar bicis."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:517
+#: lib/fixed_gear_web/components/ranking_components.ex:661
 #, elixir-autogen, elixir-format
 msgid "Skid patches"
 msgstr "Skid patches"
@@ -432,13 +432,13 @@ msgstr "Skid patches"
 msgid "Something went wrong!"
 msgstr "Algo salió mal"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:462
+#: lib/fixed_gear_web/components/ranking_components.ex:605
 #, elixir-autogen, elixir-format
 msgid "Speed at %{cadence} rpm"
 msgstr "Velocidad a %{cadence} rpm"
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:348
-#: lib/fixed_gear_web/live/ranking_live.ex:354
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:355
+#: lib/fixed_gear_web/live/ranking_live.ex:357
 #, elixir-autogen, elixir-format
 msgid "Steel"
 msgstr "Acero"
@@ -453,7 +453,7 @@ msgstr "El link es inválido o venció."
 msgid "Tip: If you prefer passwords, you can enable them in the user settings."
 msgstr "Tip: si preferís contraseña, la podés activar en la configuración."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:457
+#: lib/fixed_gear_web/components/ranking_components.ex:600
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:88
 #: lib/fixed_gear_web/live/skid_patch_live.ex:63
 #, elixir-autogen, elixir-format
@@ -465,7 +465,7 @@ msgstr "Cubierta"
 msgid "To see sent emails, visit"
 msgstr "Para ver los emails enviados, andá a"
 
-#: lib/fixed_gear_web/live/admin/bike_live/form.ex:342
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:349
 #, elixir-autogen, elixir-format
 msgid "Use JPEG, PNG, or WebP"
 msgstr "Usá JPEG, PNG o WebP"
@@ -480,12 +480,12 @@ msgstr "Cuenta confirmada."
 msgid "We can't find the internet"
 msgstr "No encontramos internet"
 
-#: lib/fixed_gear_web/live/ranking_live.ex:337
+#: lib/fixed_gear_web/live/ranking_live.ex:340
 #, elixir-autogen, elixir-format
 msgid "Weigh-in"
 msgstr "Pesaje"
 
-#: lib/fixed_gear_web/live/admin/bike_live/index.ex:24
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:25
 #: lib/fixed_gear_web/live/ranking_live.ex:50
 #, elixir-autogen, elixir-format
 msgid "Weight"
@@ -511,7 +511,7 @@ msgstr "Hola %{email}"
 msgid "Welcome back!"
 msgstr "¡Bienvenido de nuevo!"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:656
+#: lib/fixed_gear_web/components/ranking_components.ex:808
 #, elixir-autogen, elixir-format
 msgid "Wheel"
 msgstr "Rueda"
@@ -521,15 +521,15 @@ msgstr "Rueda"
 msgid "You are running the local mail adapter."
 msgstr "Estás usando el adaptador de mail local."
 
-#: lib/fixed_gear_web/user_auth.ex:245
-#: lib/fixed_gear_web/user_auth.ex:300
+#: lib/fixed_gear_web/user_auth.ex:248
+#: lib/fixed_gear_web/user_auth.ex:340
 #, elixir-autogen, elixir-format
 msgid "You must log in to access this page."
 msgstr "Tenés que ingresar para ver esta página."
 
 #: lib/fixed_gear_web/controllers/user_session_controller.ex:89
 #: lib/fixed_gear_web/live/user_live/settings.ex:198
-#: lib/fixed_gear_web/user_auth.ex:263
+#: lib/fixed_gear_web/user_auth.ex:284
 #, elixir-autogen, elixir-format
 msgid "You must re-authenticate to access this page."
 msgstr "Tenés que volver a identificarte para ver esta página."
@@ -539,7 +539,7 @@ msgstr "Tenés que volver a identificarte para ver esta página."
 msgid "You need to reauthenticate to perform sensitive actions on your account."
 msgstr "Tenés que volver a identificarte para hacer cambios sensibles en tu cuenta."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:279
+#: lib/fixed_gear_web/components/ranking_components.ex:422
 #, elixir-autogen, elixir-format
 msgid "both pedals"
 msgstr "con los dos pedales"
@@ -564,7 +564,7 @@ msgstr "la bandeja de mail"
 msgid "to your account now."
 msgstr "a tu cuenta."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:698
+#: lib/fixed_gear_web/components/ranking_components.ex:850
 #, elixir-autogen, elixir-format
 msgid "wheel turns per pedal stroke"
 msgstr "vueltas de rueda por pedaleada"
@@ -589,7 +589,7 @@ msgstr "El registro está cerrado."
 msgid "Could not update password."
 msgstr "No se pudo actualizar la contraseña."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:545
+#: lib/fixed_gear_web/components/ranking_components.ex:691
 #, elixir-autogen, elixir-format
 msgid "Inspired by"
 msgstr "Inspirado en"
@@ -641,7 +641,7 @@ msgid_plural "%{count} years ago"
 msgstr[0] "hace 1 año"
 msgstr[1] "hace %{count} años"
 
-#: lib/fixed_gear_web/live/ranking_live.ex:173
+#: lib/fixed_gear_web/live/ranking_live.ex:176
 #, elixir-autogen, elixir-format
 msgid "Updated"
 msgstr "Actualizada"
@@ -651,23 +651,23 @@ msgstr "Actualizada"
 msgid "just now"
 msgstr "hace un momento"
 
-#: lib/fixed_gear_web/live/ranking_live.ex:349
+#: lib/fixed_gear_web/live/ranking_live.ex:352
 #, elixir-autogen, elixir-format
 msgid "Setups from the heaviest to the lightest. Higher top speed at a lower cadence."
 msgstr "Configuraciones de las más pesadas a las menos. Mayor velocidad final a menor cadencia."
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:251
-#: lib/fixed_gear_web/live/admin/bike_live/index.ex:65
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:66
 #, elixir-autogen, elixir-format
 msgid "Bike deleted"
 msgstr "Bici eliminada"
 
-#: lib/fixed_gear_web/live/admin/bike_live/index.ex:42
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:43
 #, elixir-autogen, elixir-format
 msgid "Delete"
 msgstr "Eliminar"
 
-#: lib/fixed_gear_web/live/admin/bike_live/index.ex:40
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:41
 #, elixir-autogen, elixir-format
 msgid "Delete %{name}?"
 msgstr "¿Eliminar %{name}?"
@@ -682,32 +682,32 @@ msgstr "¿Eliminar %{name}? Esta acción no se puede deshacer."
 msgid "Delete bike"
 msgstr "Eliminar bici"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:497
+#: lib/fixed_gear_web/components/ranking_components.ex:640
 #, elixir-autogen, elixir-format
 msgid "1.9 to 2.3: lots of steep slopes"
 msgstr "1.9 a 2.3: pendientes pronunciadas"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:498
+#: lib/fixed_gear_web/components/ranking_components.ex:641
 #, elixir-autogen, elixir-format
 msgid "2.3 to 2.7: polyvalent ratio"
 msgstr "2.3 a 2.7: ratio polivalente, se adapta bien a diferentes tipos de terreno"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:587
+#: lib/fixed_gear_web/components/ranking_components.ex:734
 #, elixir-autogen, elixir-format
 msgid "About %{label}"
 msgstr "Sobre %{label}"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:469
+#: lib/fixed_gear_web/components/ranking_components.ex:612
 #, elixir-autogen, elixir-format
 msgid "Development"
 msgstr "Recorrido"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:500
+#: lib/fixed_gear_web/components/ranking_components.ex:643
 #, elixir-autogen, elixir-format
 msgid "2.7 to 3.0: high speed on flat roads (take care of your knees)"
 msgstr "2.7 a 3.0: buena velocidad en llano"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:504
+#: lib/fixed_gear_web/components/ranking_components.ex:647
 #, elixir-autogen, elixir-format
 msgid "Over 3.0: pisteritx 🔥"
 msgstr "Más de 3.0: pisteritx 🔥"
@@ -717,32 +717,45 @@ msgstr "Más de 3.0: pisteritx 🔥"
 msgid "Play with chainring, sprocket, and tire to see development, ratio, speed, and skid patches."
 msgstr "Probá plato, piñón y cubierta para ver recorrido, ratio, velocidad y skid patches."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:473
+#: lib/fixed_gear_web/components/ranking_components.ex:616
 #, elixir-autogen, elixir-format
 msgid "The distance that the bicycle moves with each revolution of the pedals."
 msgstr "La distancia que recorre la bici con cada vuelta de los pedales."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:491
+#: lib/fixed_gear_web/components/ranking_components.ex:634
 #, elixir-autogen, elixir-format
 msgid "The ratio of chainring teeth to rear sprocket teeth, in other words, how many times your rear wheel turns with each revolution of the pedals."
 msgstr "El ratio de dientes del plato al piñón: cuántas vueltas da la rueda trasera con cada vuelta de los pedales."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:496
+#: lib/fixed_gear_web/components/ranking_components.ex:639
 #, elixir-autogen, elixir-format
 msgid "Under 1.9: bike polo"
 msgstr "Menos de 1.9: bici polo, truquitos"
 
-#: lib/fixed_gear_web/components/ranking_components.ex:521
+#: lib/fixed_gear_web/components/ranking_components.ex:665
 #, elixir-autogen, elixir-format
 msgid "While skidding, you always brake with your feet — and the crank — in the same position."
 msgstr "Al skiddear, siempre frenás con los pies y la palanca en la misma posición."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:526
+#: lib/fixed_gear_web/components/ranking_components.ex:670
 #, elixir-autogen, elixir-format
 msgid "You can predict how many spots will wear on your rear tire. These spots are called skid patches."
 msgstr "Podés predecir cuántos puntos se van a desgastar en la cubierta trasera. Esos puntos se llaman skid patches."
 
-#: lib/fixed_gear_web/components/ranking_components.ex:554
+#: lib/fixed_gear_web/components/ranking_components.ex:700
 #, elixir-autogen, elixir-format
 msgid "and"
 msgstr "y"
+
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex:257
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:69
+#: lib/fixed_gear_web/live/admin/bike_live/index.ex:73
+#, elixir-autogen, elixir-format
+msgid "Bike no longer exists"
+msgstr "La bici ya no existe"
+
+#: lib/fixed_gear_web/user_auth.ex:266
+#: lib/fixed_gear_web/user_auth.ex:321
+#, elixir-autogen, elixir-format
+msgid "You are not allowed to access this page."
+msgstr "No tenés permiso para ver esta página."
