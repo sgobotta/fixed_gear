@@ -65,6 +65,22 @@ defmodule FixedGear.Bikes.CalculationsTest do
     end
   end
 
+  describe "ratio_band/1" do
+    test "uses the two-decimal value shown to the rider" do
+      assert Calculations.ratio_band(1.894) == :under_1_9
+      assert Calculations.ratio_band(1.9) == :from_1_9
+      assert Calculations.ratio_band(2.3) == :from_1_9
+      assert Calculations.ratio_band(2.31) == :from_2_3
+      assert Calculations.ratio_band(2.7) == :from_2_3
+      assert Calculations.ratio_band(3.0) == :from_2_7
+      assert Calculations.ratio_band(3.3) == :over_3_0
+    end
+
+    test "returns nil when there is no ratio" do
+      assert Calculations.ratio_band(nil) == nil
+    end
+  end
+
   test "formats display values" do
     assert Calculations.format_weight(Decimal.new("7.1")) == "7.100"
     assert Calculations.format_ratio(3.0) == "3.00"

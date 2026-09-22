@@ -427,18 +427,19 @@ const SkidWheel = {
     this.burstSparks()
     this.timer = window.setTimeout(function () {
       hook.burstSparks()
-    }, 160)
+    }, 210)
 
     this.seekMs = 0
     this.play(
       [
         { deg: contact, offset: 0, easing: "cubic-bezier(0.2, 0.85, 0.3, 1)" },
-        { deg: reverse, offset: 0.18, easing: "cubic-bezier(0.45, 0.05, 0.6, 1)" },
-        { deg: stuck, offset: 0.48, easing: "cubic-bezier(0.4, 0.1, 0.7, 1)" },
-        { deg: creep, offset: 0.78, easing: "cubic-bezier(0.55, 0, 0.7, 1)" },
+        { deg: reverse, offset: 0.14, easing: "cubic-bezier(0.45, 0.05, 0.6, 1)" },
+        { deg: stuck, offset: 0.34, easing: "linear" },
+        { deg: stuck, offset: 0.58, easing: "cubic-bezier(0.4, 0.1, 0.7, 1)" },
+        { deg: creep, offset: 0.8, easing: "cubic-bezier(0.55, 0, 0.7, 1)" },
         { deg: contact, offset: 1 }
       ],
-      560,
+      720,
       contact,
       done,
       0
