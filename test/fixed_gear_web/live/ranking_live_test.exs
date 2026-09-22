@@ -277,7 +277,7 @@ defmodule FixedGearWeb.RankingLiveTest do
 
     assert has_element?(
              view,
-             ~s(#share-bike-#{bike.id}[data-url="/ranking/#{bike.id}/weight"])
+             ~s(#share-bike-#{bike.id}[data-url="/ranking/#{bike.id}/weight"][phx-update="ignore"])
            )
 
     assert has_element?(

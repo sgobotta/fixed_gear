@@ -105,6 +105,7 @@ defmodule FixedGearWeb.RankingLive do
                   id={"share-bike-#{bike.id}"}
                   type="button"
                   phx-hook="ShareLink"
+                  phx-update="ignore"
                   data-url={ranking_href(@tab, bike.id)}
                   data-title={bike.name}
                   data-copied-label={gettext("Link copied")}
@@ -117,12 +118,12 @@ defmodule FixedGearWeb.RankingLive do
                   <span data-copied-icon class="hidden">
                     <.icon name="hero-check" class="size-5" />
                   </span>
+                  <span
+                    id={"share-bike-#{bike.id}-status"}
+                    class="sr-only"
+                    aria-live="polite"
+                  ></span>
                 </button>
-                <span
-                  id={"share-bike-#{bike.id}-status"}
-                  class="sr-only"
-                  aria-live="polite"
-                ></span>
                 <.link
                   :if={
                     @current_scope && @current_scope.user &&
