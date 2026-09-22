@@ -968,9 +968,7 @@ defmodule FixedGearWeb.RankingComponents do
       "A #{radius} #{radius} 0 1 0 #{left} #{y}"
   end
 
-  defp clamp_unit(n) when n > 1.0, do: 1.0
-  defp clamp_unit(n) when n < -1.0, do: -1.0
-  defp clamp_unit(n), do: n
+  defp clamp_unit(n), do: n |> max(-1.0) |> min(1.0)
 
   defp polar(cx, cy, r, deg) do
     rad = deg * :math.pi() / 180.0
@@ -981,8 +979,9 @@ defmodule FixedGearWeb.RankingComponents do
     "#{fmt(cx + r * :math.cos(angle))} #{fmt(cy + r * :math.sin(angle))}"
   end
 
-  defp fmt(n) when is_float(n), do: :erlang.float_to_binary(n, decimals: 2)
-  defp fmt(n) when is_integer(n), do: Integer.to_string(n)
+  defp fmt(n) when is_number(n) do
+    :erlang.float_to_binary(n * 1.0, decimals: 2)
+  end
 
   defp ambi_extra?(ambi, one_sided)
        when is_integer(ambi) and is_integer(one_sided) and ambi > one_sided,
