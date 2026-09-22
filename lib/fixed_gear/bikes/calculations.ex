@@ -105,6 +105,33 @@ defmodule FixedGear.Bikes.Calculations do
     :erlang.float_to_binary(ratio, decimals: 2)
   end
 
+  @doc """
+  Which description band the displayed ratio falls in.
+
+  Uses the same two-decimal rounding as `format_ratio/1`. Each "to"
+  band includes its upper bound. Over 3.0 starts above 3.00.
+  """
+  def ratio_band(ratio) when is_float(ratio) do
+    shown = ratio_hundredths(ratio)
+
+    cond do
+      shown < 190 -> :under_1_9
+      shown <= 230 -> :from_1_9
+      shown <= 270 -> :from_2_3
+      shown <= 300 -> :from_2_7
+      true -> :over_3_0
+    end
+  end
+
+  def ratio_band(_ratio), do: nil
+
+  defp ratio_hundredths(ratio) do
+    ratio
+    |> format_ratio()
+    |> String.replace(".", "")
+    |> String.to_integer()
+  end
+
   def format_speed(speed) when is_float(speed) do
     :erlang.float_to_binary(speed, decimals: 1)
   end

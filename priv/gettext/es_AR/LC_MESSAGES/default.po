@@ -243,7 +243,7 @@ msgstr "Quedarme conectado en este dispositivo"
 #: lib/fixed_gear_web/live/ranking_live.ex:342
 #, elixir-autogen, elixir-format
 msgid "Lightest first"
-msgstr "Del más liviano al más pesado"
+msgstr "De la más liviana a la más pesada"
 
 #: lib/fixed_gear_web/live/user_live/confirmation.ex:64
 #: lib/fixed_gear_web/live/user_live/login.ex:13
@@ -571,8 +571,18 @@ msgstr "vueltas de rueda por pedaleada"
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:113
 #, elixir-autogen, elixir-format
-msgid "Optional. On a phone this opens the camera."
-msgstr "Opcional. En el celu abre la cámara."
+msgid "Optional."
+msgstr "Opcional."
+
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex
+#, elixir-autogen, elixir-format
+msgid "Take photo"
+msgstr "Sacar foto"
+
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex
+#, elixir-autogen, elixir-format
+msgid "Choose from gallery"
+msgstr "Elegir de la galería"
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:137
 #, elixir-autogen, elixir-format
@@ -685,12 +695,12 @@ msgstr "Eliminar bici"
 #: lib/fixed_gear_web/components/ranking_components.ex:651
 #, elixir-autogen, elixir-format
 msgid "1.9 to 2.3: lots of steep slopes"
-msgstr "1.9 a 2.3: pendientes pronunciadas"
+msgstr "1.9 a 2.3: pendientes pronunciadas, truquitos"
 
 #: lib/fixed_gear_web/components/ranking_components.ex:652
 #, elixir-autogen, elixir-format
 msgid "2.3 to 2.7: polyvalent ratio"
-msgstr "2.3 a 2.7: ratio polivalente, se adapta bien a diferentes tipos de terreno"
+msgstr "2.3 a 2.7: ratio polivalente, truquitos, se adapta bien a diferentes tipos de terreno"
 
 #: lib/fixed_gear_web/components/ranking_components.ex:753
 #, elixir-autogen, elixir-format
@@ -730,7 +740,7 @@ msgstr "El ratio de dientes del plato al piñón: cuántas vueltas da la rueda t
 #: lib/fixed_gear_web/components/ranking_components.ex:650
 #, elixir-autogen, elixir-format
 msgid "Under 1.9: bike polo"
-msgstr "Menos de 1.9: bici polo, truquitos"
+msgstr "Menos de 1.9: bici polo"
 
 #: lib/fixed_gear_web/components/ranking_components.ex:676
 #, elixir-autogen, elixir-format

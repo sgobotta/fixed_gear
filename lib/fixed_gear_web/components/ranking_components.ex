@@ -587,6 +587,7 @@ defmodule FixedGearWeb.RankingComponents do
     assigns =
       assigns
       |> assign(:ratio, ratio)
+      |> assign(:ratio_band, Calculations.ratio_band(ratio))
       |> assign(:patches, patches)
       |> assign(:speed, speed)
       |> assign(:development, development)
@@ -647,15 +648,43 @@ defmodule FixedGearWeb.RankingComponents do
             )}
           </p>
           <ul class="mt-1.5 list-disc space-y-0.5 pl-4">
-            <li>{gettext("Under 1.9: bike polo")}</li>
-            <li>{gettext("1.9 to 2.3: lots of steep slopes")}</li>
-            <li>{gettext("2.3 to 2.7: polyvalent ratio")}</li>
-            <li>
+            <li
+              id={"ratio-band-#{@id_prefix}-under-1-9"}
+              aria-current={@ratio_band == :under_1_9 && "true"}
+              class={ratio_band_class(@ratio_band == :under_1_9)}
+            >
+              {gettext("Under 1.9: bike polo")}
+            </li>
+            <li
+              id={"ratio-band-#{@id_prefix}-from-1-9"}
+              aria-current={@ratio_band == :from_1_9 && "true"}
+              class={ratio_band_class(@ratio_band == :from_1_9)}
+            >
+              {gettext("1.9 to 2.3: lots of steep slopes")}
+            </li>
+            <li
+              id={"ratio-band-#{@id_prefix}-from-2-3"}
+              aria-current={@ratio_band == :from_2_3 && "true"}
+              class={ratio_band_class(@ratio_band == :from_2_3)}
+            >
+              {gettext("2.3 to 2.7: polyvalent ratio")}
+            </li>
+            <li
+              id={"ratio-band-#{@id_prefix}-from-2-7"}
+              aria-current={@ratio_band == :from_2_7 && "true"}
+              class={ratio_band_class(@ratio_band == :from_2_7)}
+            >
               {gettext(
                 "2.7 to 3.0: high speed on flat roads (take care of your knees)"
               )}
             </li>
-            <li>{gettext("Over 3.0: pisteritx 🔥")}</li>
+            <li
+              id={"ratio-band-#{@id_prefix}-over-3-0"}
+              aria-current={@ratio_band == :over_3_0 && "true"}
+              class={ratio_band_class(@ratio_band == :over_3_0)}
+            >
+              {gettext("Over 3.0: pisteritx 🔥")}
+            </li>
           </ul>
         </:hint>
         <.ratio_motion
@@ -1014,6 +1043,12 @@ defmodule FixedGearWeb.RankingComponents do
   end
 
   defp visual_pedal_seconds(_rpm), do: @seconds_per_minute / @reference_rpm
+
+  defp ratio_band_class(true) do
+    "rounded-sm bg-primary/15 px-1.5 py-0.5 font-medium text-base-content"
+  end
+
+  defp ratio_band_class(false), do: nil
 
   defp toggle_hint(id) do
     JS.toggle_class("grid-rows-[1fr] opacity-100", to: "##{id}")

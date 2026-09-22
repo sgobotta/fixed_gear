@@ -14,7 +14,7 @@ defmodule FixedGearWeb.RankingLive do
       <section class={["space-y-6", @tab == :cadence && "pb-28"]}>
         <header
           id="ranking-toolbar"
-          class="sticky top-0 z-20 -mx-4 flex flex-col gap-4 bg-base-100/95 px-4 py-4 backdrop-blur sm:mx-0 sm:px-0"
+          class="sticky top-(--app-header-height) z-20 -mx-4 flex flex-col gap-4 bg-base-100/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
         >
           <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div class="space-y-2">

@@ -42,7 +42,11 @@ defmodule FixedGearWeb.Layouts do
 
   def app(assigns) do
     ~H"""
-    <header class="border-b border-base-300/80 px-4 sm:px-6 lg:px-8">
+    <header
+      id="app-header"
+      phx-hook="AppHeader"
+      class="sticky top-0 z-40 border-b border-base-300/80 bg-base-100/95 px-4 backdrop-blur sm:px-6 lg:px-8"
+    >
       <div class="mx-auto flex max-w-4xl items-center justify-between gap-4 py-4">
         <.link navigate={~p"/ranking/weight"} class="group flex items-center gap-2">
           <span class="text-sm font-semibold tracking-[0.2em] uppercase">

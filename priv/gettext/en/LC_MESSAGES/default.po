@@ -571,7 +571,17 @@ msgstr ""
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:113
 #, elixir-autogen, elixir-format
-msgid "Optional. On a phone this opens the camera."
+msgid "Optional."
+msgstr ""
+
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex
+#, elixir-autogen, elixir-format
+msgid "Take photo"
+msgstr ""
+
+#: lib/fixed_gear_web/live/admin/bike_live/form.ex
+#, elixir-autogen, elixir-format
+msgid "Choose from gallery"
 msgstr ""
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:137

@@ -427,18 +427,19 @@ const SkidWheel = {
     this.burstSparks()
     this.timer = window.setTimeout(function () {
       hook.burstSparks()
-    }, 160)
+    }, 210)
 
     this.seekMs = 0
     this.play(
       [
         { deg: contact, offset: 0, easing: "cubic-bezier(0.2, 0.85, 0.3, 1)" },
-        { deg: reverse, offset: 0.18, easing: "cubic-bezier(0.45, 0.05, 0.6, 1)" },
-        { deg: stuck, offset: 0.48, easing: "cubic-bezier(0.4, 0.1, 0.7, 1)" },
-        { deg: creep, offset: 0.78, easing: "cubic-bezier(0.55, 0, 0.7, 1)" },
+        { deg: reverse, offset: 0.14, easing: "cubic-bezier(0.45, 0.05, 0.6, 1)" },
+        { deg: stuck, offset: 0.34, easing: "linear" },
+        { deg: stuck, offset: 0.58, easing: "cubic-bezier(0.4, 0.1, 0.7, 1)" },
+        { deg: creep, offset: 0.8, easing: "cubic-bezier(0.55, 0, 0.7, 1)" },
         { deg: contact, offset: 1 }
       ],
-      560,
+      720,
       contact,
       done,
       0
@@ -724,36 +725,52 @@ const CompressPhoto = {
   mounted() {
     this.passthrough = false
     this.busy = false
-    this.input = null
+    this.inputs = []
     this._onChange = (event) => this.handleChange(event)
-    this.bindInput()
+    this.bindInputs()
   },
 
   updated() {
-    this.bindInput()
+    this.bindInputs()
   },
 
   destroyed() {
-    this.unbindInput()
+    this.unbindInputs()
   },
 
-  bindInput() {
-    const input = this.el.querySelector("input[type=\"file\"]")
-    if (input === this.input) {
+  bindInputs() {
+    const inputs = Array.prototype.slice.call(
+      this.el.querySelectorAll("input[type=\"file\"]")
+    )
+    if (this.sameInputs(inputs)) {
       return
     }
-    this.unbindInput()
-    this.input = input
-    if (this.input) {
-      this.input.addEventListener("change", this._onChange, true)
-    }
+    this.unbindInputs()
+    this.inputs = inputs
+    const onChange = this._onChange
+    this.inputs.forEach(function (input) {
+      input.addEventListener("change", onChange, true)
+    })
   },
 
-  unbindInput() {
-    if (this.input) {
-      this.input.removeEventListener("change", this._onChange, true)
+  sameInputs(inputs) {
+    if (this.inputs.length !== inputs.length) {
+      return false
     }
-    this.input = null
+    for (let i = 0; i < inputs.length; i++) {
+      if (this.inputs[i] !== inputs[i]) {
+        return false
+      }
+    }
+    return true
+  },
+
+  unbindInputs() {
+    const onChange = this._onChange
+    this.inputs.forEach(function (input) {
+      input.removeEventListener("change", onChange, true)
+    })
+    this.inputs = []
   },
 
   handleChange(event) {
@@ -1178,11 +1195,38 @@ const BottomNav = {
   }
 }
 
+const AppHeader = {
+  mounted() {
+    const header = this
+    this.sync = function () {
+      header.measure()
+    }
+    this.measure()
+    this.observer = new ResizeObserver(this.sync)
+    this.observer.observe(this.el)
+  },
+
+  updated() {
+    this.measure()
+  },
+
+  destroyed() {
+    this.observer.disconnect()
+  },
+
+  measure() {
+    document.documentElement.style.setProperty(
+      "--app-header-height",
+      this.el.offsetHeight + "px"
+    )
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, SliderValue, BottomNav, ...colocatedHooks},
+  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, SliderValue, BottomNav, AppHeader, ...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits

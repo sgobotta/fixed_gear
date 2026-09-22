@@ -97,6 +97,19 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
              "#hint-ratio-playground",
              gettext("Over 3.0: pisteritx 🔥")
            )
+
+    assert has_element?(
+             view,
+             "#ratio-band-playground-from-2-7[aria-current=true]",
+             gettext(
+               "2.7 to 3.0: high speed on flat roads (take care of your knees)"
+             )
+           )
+
+    refute has_element?(
+             view,
+             "#ratio-band-playground-over-3-0[aria-current=true]"
+           )
   end
 
   test "updates patches and ratio when gearing changes", %{conn: conn} do
@@ -130,6 +143,17 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
     assert has_element?(view, "#skid-wheel-playground-stage-16-32-49-16")
     assert skid_patch_mark_count(render(view)) == 32
     assert has_element?(view, ~s(#ratio-motion-playground[data-cadence="90"]))
+
+    assert has_element?(
+             view,
+             "#ratio-band-playground-over-3-0[aria-current=true]",
+             gettext("Over 3.0: pisteritx 🔥")
+           )
+
+    refute has_element?(
+             view,
+             "#ratio-band-playground-from-2-7[aria-current=true]"
+           )
   end
 
   test "redraws sprockets when the patch count stays the same", %{conn: conn} do

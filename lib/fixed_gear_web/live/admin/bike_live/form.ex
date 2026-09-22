@@ -101,20 +101,45 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
             }
             alt={gettext("Current photo of %{name}", name: @bike.name)}
           />
-          <div id="photo-input" phx-hook="CompressPhoto">
-            <.live_file_input
-              upload={@uploads.photo}
-              accept="image/*"
-              capture="environment"
-              class="file-input file-input-bordered w-full"
-            />
+          <div id="photo-input" phx-hook="CompressPhoto" class="flex flex-col gap-2">
+            <label
+              id="take-photo"
+              class={[
+                "btn btn-outline w-full gap-2",
+                photo_uploading?(@uploads) && "btn-disabled"
+              ]}
+            >
+              <.live_file_input
+                upload={@uploads.camera}
+                accept="image/*"
+                capture="environment"
+                class="sr-only"
+              />
+              <.icon name="hero-camera" class="size-5" />
+              {gettext("Take photo")}
+            </label>
+            <label
+              id="pick-photo"
+              class={[
+                "btn btn-outline w-full gap-2",
+                photo_uploading?(@uploads) && "btn-disabled"
+              ]}
+            >
+              <.live_file_input
+                upload={@uploads.photo}
+                accept="image/*"
+                class="sr-only"
+              />
+              <.icon name="hero-photo" class="size-5" />
+              {gettext("Choose from gallery")}
+            </label>
           </div>
           <p class="text-xs text-base-content/55">
-            {gettext("Optional. On a phone this opens the camera.")}
+            {gettext("Optional.")}
           </p>
           <article
-            :for={entry <- @uploads.photo.entries}
-            id={"upload-#{entry.ref}"}
+            :for={{upload, entry} <- photo_entries(@uploads)}
+            id={"upload-#{upload.name}-#{entry.ref}"}
             class="space-y-2"
           >
             <div class={bike_photo_frame_class()}>
@@ -137,23 +162,24 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
               {gettext("Uploading photo...")}
             </p>
             <p
-              :for={err <- upload_errors(@uploads.photo, entry)}
+              :for={err <- upload_errors(upload, entry)}
               class="text-sm text-error"
             >
               {error_to_string(err)}
             </p>
             <button
               type="button"
-              id={"cancel-upload-#{entry.ref}"}
+              id={"cancel-upload-#{upload.name}-#{entry.ref}"}
               class="btn btn-ghost btn-sm"
               phx-click="cancel-upload"
+              phx-value-upload={upload.name}
               phx-value-ref={entry.ref}
             >
               {gettext("Remove photo")}
             </button>
           </article>
           <p
-            :for={err <- upload_errors(@uploads.photo)}
+            :for={{_upload, err} <- photo_upload_errors(@uploads)}
             class="text-sm text-error"
           >
             {error_to_string(err)}
@@ -171,7 +197,7 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
             phx-disable-with={gettext("Saving...")}
             class="btn btn-primary"
             id="save-bike"
-            disabled={photo_uploading?(@uploads.photo)}
+            disabled={photo_uploading?(@uploads)}
           >
             {gettext("Save bike")}
           </.button>
@@ -183,15 +209,19 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
 
   @impl true
   def mount(_params, _session, socket) do
+    opts = [
+      accept: ~w(.jpg .jpeg .png .webp image/jpeg image/png image/webp),
+      max_entries: 1,
+      max_file_size: 15_000_000,
+      chunk_timeout: 30_000,
+      auto_upload: true
+    ]
+
     {:ok,
      socket
-     |> allow_upload(:photo,
-       accept: ~w(.jpg .jpeg .png .webp image/jpeg image/png image/webp),
-       max_entries: 1,
-       max_file_size: 15_000_000,
-       chunk_timeout: 30_000,
-       auto_upload: true
-     )}
+     |> allow_upload(:camera, opts)
+     |> allow_upload(:photo, opts)
+     |> assign(:photo_refs, %{camera: [], photo: []})}
   end
 
   @impl true
@@ -227,20 +257,32 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
 
     {:noreply,
      socket
-     |> drop_invalid_photo()
+     |> settle_photos()
      |> assign(:form, form)}
   end
 
   def handle_event("validate", _params, socket) do
-    {:noreply, drop_invalid_photo(socket)}
+    {:noreply, settle_photos(socket)}
   end
 
-  def handle_event("cancel-upload", %{"ref" => ref}, socket) do
-    {:noreply, cancel_upload(socket, :photo, ref)}
+  def handle_event(
+        "cancel-upload",
+        %{"ref" => ref, "upload" => "camera"},
+        socket
+      ) do
+    {:noreply, socket |> cancel_upload(:camera, ref) |> remember_photo_refs()}
+  end
+
+  def handle_event(
+        "cancel-upload",
+        %{"ref" => ref, "upload" => "photo"},
+        socket
+      ) do
+    {:noreply, socket |> cancel_upload(:photo, ref) |> remember_photo_refs()}
   end
 
   def handle_event("save", %{"bike" => bike_params}, socket) do
-    save_bike(socket, socket.assigns.live_action, bike_params)
+    save_bike(settle_photos(socket), socket.assigns.live_action, bike_params)
   end
 
   def handle_event("delete", _params, socket) do
@@ -301,10 +343,17 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
   end
 
   defp consume_photo(socket) do
-    {done, in_progress} = uploaded_entries(socket, :photo)
+    case consume_named(socket, :camera) do
+      nil -> consume_named(socket, :photo)
+      photo -> photo
+    end
+  end
+
+  defp consume_named(socket, name) do
+    {done, in_progress} = uploaded_entries(socket, name)
 
     if in_progress == [] do
-      case consume_uploaded_entries(socket, :photo, fn %{path: path}, entry ->
+      case consume_uploaded_entries(socket, name, fn %{path: path}, entry ->
              {:ok, {File.read!(path), entry.client_type}}
            end) do
         [photo | _] -> photo
@@ -323,22 +372,84 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
     end)
   end
 
-  defp drop_invalid_photo(socket) do
-    Enum.reduce(socket.assigns.uploads.photo.entries, socket, fn entry, acc ->
-      errors = upload_errors(acc.assigns.uploads.photo, entry)
+  defp settle_photos(socket) do
+    socket
+    |> choose_one_photo()
+    |> drop_invalid_photo()
+    |> remember_photo_refs()
+  end
 
-      if errors == [] do
-        acc
-      else
-        acc
-        |> cancel_upload(:photo, entry.ref)
-        |> put_flash(:error, error_to_string(hd(errors)))
-      end
+  defp choose_one_photo(socket) do
+    prev = socket.assigns.photo_refs
+    camera_refs = entry_refs(socket, :camera)
+    gallery_refs = entry_refs(socket, :photo)
+
+    cond do
+      camera_refs -- prev.camera != [] ->
+        cancel_entries(socket, :photo)
+
+      gallery_refs -- prev.photo != [] ->
+        cancel_entries(socket, :camera)
+
+      true ->
+        socket
+    end
+  end
+
+  defp cancel_entries(socket, name) do
+    Enum.reduce(entry_refs(socket, name), socket, fn ref, acc ->
+      cancel_upload(acc, name, ref)
     end)
   end
 
-  defp photo_uploading?(upload) do
-    Enum.any?(upload.entries, &(&1.valid? and not &1.done?))
+  defp remember_photo_refs(socket) do
+    assign(socket, :photo_refs, %{
+      camera: entry_refs(socket, :camera),
+      photo: entry_refs(socket, :photo)
+    })
+  end
+
+  defp entry_refs(socket, name) do
+    Enum.map(socket.assigns.uploads[name].entries, & &1.ref)
+  end
+
+  defp drop_invalid_photo(socket) do
+    Enum.reduce([:camera, :photo], socket, fn name, acc ->
+      Enum.reduce(acc.assigns.uploads[name].entries, acc, fn entry, inner ->
+        errors = upload_errors(inner.assigns.uploads[name], entry)
+
+        if errors == [] do
+          inner
+        else
+          inner
+          |> cancel_upload(name, entry.ref)
+          |> put_flash(:error, error_to_string(hd(errors)))
+        end
+      end)
+    end)
+  end
+
+  defp photo_entries(uploads) do
+    Enum.flat_map([:camera, :photo], fn name ->
+      upload = Map.fetch!(uploads, name)
+      Enum.map(upload.entries, &{upload, &1})
+    end)
+  end
+
+  defp photo_upload_errors(uploads) do
+    Enum.flat_map([:camera, :photo], fn name ->
+      upload = Map.fetch!(uploads, name)
+      Enum.map(upload_errors(upload), &{upload, &1})
+    end)
+  end
+
+  defp photo_uploading?(uploads) do
+    Enum.any?([:camera, :photo], fn name ->
+      Enum.any?(
+        Map.fetch!(uploads, name).entries,
+        &(&1.valid? and not &1.done?)
+      )
+    end)
   end
 
   defp error_to_string(:too_large), do: gettext("Photo is too large")
