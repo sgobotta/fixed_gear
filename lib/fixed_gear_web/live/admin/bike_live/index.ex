@@ -31,6 +31,16 @@ defmodule FixedGearWeb.Admin.BikeLive.Index do
           >
             {gettext("Edit")}
           </.link>
+          <button
+            type="button"
+            id={"delete-bike-#{bike.id}"}
+            class="text-error"
+            phx-click="delete"
+            phx-value-id={bike.id}
+            data-confirm={gettext("Delete %{name}?", name: bike.name)}
+          >
+            {gettext("Delete")}
+          </button>
         </:action>
       </.table>
     </Layouts.app>
@@ -42,6 +52,17 @@ defmodule FixedGearWeb.Admin.BikeLive.Index do
     {:ok,
      socket
      |> assign(:page_title, gettext("Bikes"))
+     |> assign(:bikes, Bikes.list_bikes())}
+  end
+
+  @impl true
+  def handle_event("delete", %{"id" => id}, socket) do
+    bike = Bikes.get_bike!(id)
+    {:ok, _} = Bikes.delete_bike(bike)
+
+    {:noreply,
+     socket
+     |> put_flash(:info, gettext("Bike deleted"))
      |> assign(:bikes, Bikes.list_bikes())}
   end
 end

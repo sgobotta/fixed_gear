@@ -29,6 +29,22 @@ defmodule FixedGearWeb.Admin.BikeLive.FormTest do
     assert html =~ "Pre Cursa"
   end
 
+  test "deletes a bike from the edit form", %{conn: conn} do
+    bike = bike_fixture(%{name: "Doomed Bike"})
+    {:ok, view, _html} = live(conn, ~p"/admin/bikes/#{bike}/edit")
+
+    assert has_element?(view, "#delete-bike")
+
+    {:ok, _view, html} =
+      view
+      |> element("#delete-bike")
+      |> render_click()
+      |> follow_redirect(conn, ~p"/admin/bikes")
+
+    assert html =~ gettext("Bike deleted")
+    refute html =~ "Doomed Bike"
+  end
+
   test "edits a bike", %{conn: conn} do
     bike = bike_fixture(%{name: "Old Name"})
     {:ok, view, _html} = live(conn, ~p"/admin/bikes/#{bike}/edit")

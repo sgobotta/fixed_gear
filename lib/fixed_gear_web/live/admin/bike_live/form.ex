@@ -17,6 +17,17 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
           <.button navigate={~p"/admin/bikes"} class="btn-ghost">
             {gettext("Back")}
           </.button>
+          <.button
+            :if={@live_action == :edit}
+            id="delete-bike"
+            class="btn-ghost text-error"
+            phx-click="delete"
+            data-confirm={
+              gettext("Delete %{name}? This cannot be undone.", name: @bike.name)
+            }
+          >
+            {gettext("Delete bike")}
+          </.button>
         </:actions>
       </.header>
 
@@ -230,6 +241,15 @@ defmodule FixedGearWeb.Admin.BikeLive.Form do
 
   def handle_event("save", %{"bike" => bike_params}, socket) do
     save_bike(socket, socket.assigns.live_action, bike_params)
+  end
+
+  def handle_event("delete", _params, socket) do
+    {:ok, _} = Bikes.delete_bike(socket.assigns.bike)
+
+    {:noreply,
+     socket
+     |> put_flash(:info, gettext("Bike deleted"))
+     |> push_navigate(to: ~p"/admin/bikes")}
   end
 
   defp save_bike(socket, action, bike_params) do

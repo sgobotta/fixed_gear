@@ -20,5 +20,21 @@ defmodule FixedGearWeb.Admin.BikeLive.IndexTest do
     assert has_element?(view, "#bikes")
     assert has_element?(view, "#new-bike")
     assert has_element?(view, "#edit-bike-#{bike.id}")
+    assert has_element?(view, "#delete-bike-#{bike.id}")
+  end
+
+  test "deletes a bike", %{conn: conn} do
+    bike = bike_fixture(%{name: "Scrap Bike"})
+
+    {:ok, view, _html} =
+      conn
+      |> log_in_user(FixedGear.AccountsFixtures.user_fixture())
+      |> live(~p"/admin/bikes")
+
+    html = view |> element("#delete-bike-#{bike.id}") |> render_click()
+
+    assert html =~ gettext("Bike deleted")
+    refute has_element?(view, "#edit-bike-#{bike.id}")
+    refute has_element?(view, "#delete-bike-#{bike.id}")
   end
 end
