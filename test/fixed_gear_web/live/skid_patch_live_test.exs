@@ -10,6 +10,12 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
     {:ok, view, _html} = live(conn, ~p"/skid-patch")
 
     assert has_element?(view, "#skid-patch-form")
+    assert has_element?(view, "#skid-patch-controls")
+
+    html = render(view)
+    {readout_at, _} = :binary.match(html, "id=\"skid-patch-readout\"")
+    {form_at, _} = :binary.match(html, "id=\"skid-patch-form\"")
+    assert readout_at < form_at
 
     assert has_element?(
              view,

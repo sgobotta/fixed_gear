@@ -17,7 +17,7 @@ defmodule FixedGearWeb.SkidPatchLive do
       current_scope={@current_scope}
       section={:skid_patch}
     >
-      <section class="space-y-6">
+      <section class="space-y-6 pb-36">
         <header class="space-y-2">
           <p class="text-xs font-semibold tracking-[0.25em] text-base-content/50 uppercase">
             {gettext("Playground")}
@@ -32,45 +32,6 @@ defmodule FixedGearWeb.SkidPatchLive do
           </p>
         </header>
 
-        <.form
-          for={@form}
-          id="skid-patch-form"
-          phx-change="update"
-          class="space-y-5 rounded-3xl border border-base-300 bg-base-100 p-4 shadow-sm sm:p-5"
-        >
-          <div class="space-y-4">
-            <.gear_slider
-              id="chain-ring-slider"
-              input_id="chain-ring"
-              name={@form[:chain_ring].name}
-              label={gettext("Chain ring")}
-              value={@chain_ring}
-              min={Calculations.chain_ring_min()}
-              max={Calculations.chain_ring_max()}
-            />
-            <.gear_slider
-              id="rear-sprocket-slider"
-              input_id="rear-sprocket"
-              name={@form[:rear_sprocket].name}
-              label={gettext("Rear sprocket")}
-              value={@rear_sprocket}
-              min={Calculations.sprocket_min()}
-              max={Calculations.sprocket_max()}
-            />
-            <.input
-              field={@form[:tire_width]}
-              type="select"
-              label={gettext("Tire")}
-              options={Bikes.tire_options()}
-            />
-          </div>
-
-          <.cadence_slider
-            cadence={@cadence}
-            name={@form[:cadence].name}
-          />
-        </.form>
-
         <div
           id="skid-patch-readout"
           class="rounded-3xl border border-base-300 bg-base-100 p-4 shadow-sm sm:p-5"
@@ -84,6 +45,58 @@ defmodule FixedGearWeb.SkidPatchLive do
           />
         </div>
       </section>
+
+      <:bottom_dock>
+        <.form
+          for={@form}
+          id="skid-patch-form"
+          phx-change="update"
+          class="absolute inset-x-0 bottom-full z-0 px-4 pb-2 sm:px-6 lg:px-8"
+        >
+          <div
+            id="skid-patch-controls"
+            class="mx-auto max-w-4xl rounded-3xl border border-base-300 bg-base-100/95 p-4 shadow-lg backdrop-blur"
+          >
+            <div
+              class="mx-auto mb-3 h-1 w-10 rounded-full bg-base-content/15"
+              aria-hidden="true"
+            />
+            <div class="space-y-3">
+              <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+                <.gear_slider
+                  id="chain-ring-slider"
+                  input_id="chain-ring"
+                  name={@form[:chain_ring].name}
+                  label={gettext("Chain ring")}
+                  value={@chain_ring}
+                  min={Calculations.chain_ring_min()}
+                  max={Calculations.chain_ring_max()}
+                />
+                <.gear_slider
+                  id="rear-sprocket-slider"
+                  input_id="rear-sprocket"
+                  name={@form[:rear_sprocket].name}
+                  label={gettext("Rear sprocket")}
+                  value={@rear_sprocket}
+                  min={Calculations.sprocket_min()}
+                  max={Calculations.sprocket_max()}
+                />
+              </div>
+              <.input
+                field={@form[:tire_width]}
+                type="select"
+                label={gettext("Tire")}
+                options={Bikes.tire_options()}
+                class="w-full select select-sm"
+              />
+              <.cadence_slider
+                cadence={@cadence}
+                name={@form[:cadence].name}
+              />
+            </div>
+          </div>
+        </.form>
+      </:bottom_dock>
     </Layouts.app>
     """
   end
