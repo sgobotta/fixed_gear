@@ -93,7 +93,7 @@ msgid "Carbon fiber"
 msgstr "Carbono"
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:74
-#: lib/fixed_gear_web/live/skid_patch_live.ex:46
+#: lib/fixed_gear_web/live/skid_patch_live.ex:99
 #, elixir-autogen, elixir-format
 msgid "Chain ring"
 msgstr "Plato"
@@ -386,7 +386,7 @@ msgid "Ratio"
 msgstr "Ratio"
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:81
-#: lib/fixed_gear_web/live/skid_patch_live.ex:55
+#: lib/fixed_gear_web/live/skid_patch_live.ex:108
 #, elixir-autogen, elixir-format
 msgid "Rear sprocket"
 msgstr "Piñón"
@@ -455,7 +455,7 @@ msgstr "Tip: si preferís contraseña, la podés activar en la configuración."
 
 #: lib/fixed_gear_web/components/ranking_components.ex:604
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:88
-#: lib/fixed_gear_web/live/skid_patch_live.ex:63
+#: lib/fixed_gear_web/live/skid_patch_live.ex:117
 #, elixir-autogen, elixir-format
 msgid "Tire"
 msgstr "Cubierta"
@@ -604,14 +604,15 @@ msgstr "No se pudo actualizar la contraseña."
 msgid "Inspired by"
 msgstr "Inspirado en"
 
-#: lib/fixed_gear_web/live/skid_patch_live.ex:23
+#: lib/fixed_gear_web/live/skid_patch_live.ex:24
 #, elixir-autogen, elixir-format
 msgid "Playground"
 msgstr "Prueba"
 
 #: lib/fixed_gear_web/components/layouts.ex:126
-#: lib/fixed_gear_web/live/skid_patch_live.ex:26
-#: lib/fixed_gear_web/live/skid_patch_live.ex:95
+#: lib/fixed_gear_web/live/skid_patch_live.ex:27
+#: lib/fixed_gear_web/live/skid_patch_live.ex:137
+#: lib/fixed_gear_web/live/skid_patch_live.ex:267
 #, elixir-autogen, elixir-format
 msgid "Skid Patch"
 msgstr "Skid Patch"
@@ -722,7 +723,7 @@ msgstr "2.7 a 3.0: buena velocidad en llano"
 msgid "Over 3.0: pisteritx 🔥"
 msgstr "Más de 3.0: pisteritx 🔥"
 
-#: lib/fixed_gear_web/live/skid_patch_live.ex:29
+#: lib/fixed_gear_web/live/skid_patch_live.ex:30
 #, elixir-autogen, elixir-format
 msgid "Play with chainring, sprocket, and tire to see development, ratio, speed, and skid patches."
 msgstr "Probá plato, piñón y cubierta para ver recorrido, ratio, velocidad y skid patches."
@@ -780,12 +781,18 @@ msgstr "d"
 msgid "rpm means revolutions per minute: how many full turns the pedals make in one minute."
 msgstr "rpm significa revoluciones por minuto: cuántas vueltas completas dan los pedales en un minuto."
 
-#: lib/fixed_gear_web/live/ranking_live.ex:110
+#: lib/fixed_gear_web/live/ranking_live.ex:111
+#: lib/fixed_gear_web/live/skid_patch_live.ex:45
 #, elixir-autogen, elixir-format
 msgid "Link copied"
 msgstr "Enlace copiado"
 
-#: lib/fixed_gear_web/live/ranking_live.ex:112
+#: lib/fixed_gear_web/live/ranking_live.ex:113
 #, elixir-autogen, elixir-format
 msgid "Share %{name}"
 msgstr "Compartir %{name}"
+
+#: lib/fixed_gear_web/live/skid_patch_live.ex:47
+#, elixir-autogen, elixir-format
+msgid "Share this setup"
+msgstr "Compartir esta configuración"

@@ -93,7 +93,7 @@ msgid "Carbon fiber"
 msgstr ""
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:74
-#: lib/fixed_gear_web/live/skid_patch_live.ex:46
+#: lib/fixed_gear_web/live/skid_patch_live.ex:99
 #, elixir-autogen, elixir-format
 msgid "Chain ring"
 msgstr ""
@@ -386,7 +386,7 @@ msgid "Ratio"
 msgstr ""
 
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:81
-#: lib/fixed_gear_web/live/skid_patch_live.ex:55
+#: lib/fixed_gear_web/live/skid_patch_live.ex:108
 #, elixir-autogen, elixir-format
 msgid "Rear sprocket"
 msgstr ""
@@ -455,7 +455,7 @@ msgstr ""
 
 #: lib/fixed_gear_web/components/ranking_components.ex:604
 #: lib/fixed_gear_web/live/admin/bike_live/form.ex:88
-#: lib/fixed_gear_web/live/skid_patch_live.ex:63
+#: lib/fixed_gear_web/live/skid_patch_live.ex:117
 #, elixir-autogen, elixir-format
 msgid "Tire"
 msgstr ""
@@ -604,14 +604,15 @@ msgstr ""
 msgid "Inspired by"
 msgstr ""
 
-#: lib/fixed_gear_web/live/skid_patch_live.ex:23
+#: lib/fixed_gear_web/live/skid_patch_live.ex:24
 #, elixir-autogen, elixir-format
 msgid "Playground"
 msgstr ""
 
 #: lib/fixed_gear_web/components/layouts.ex:126
-#: lib/fixed_gear_web/live/skid_patch_live.ex:26
-#: lib/fixed_gear_web/live/skid_patch_live.ex:95
+#: lib/fixed_gear_web/live/skid_patch_live.ex:27
+#: lib/fixed_gear_web/live/skid_patch_live.ex:137
+#: lib/fixed_gear_web/live/skid_patch_live.ex:267
 #, elixir-autogen, elixir-format
 msgid "Skid Patch"
 msgstr ""
@@ -722,7 +723,7 @@ msgstr ""
 msgid "Over 3.0: pisteritx 🔥"
 msgstr ""
 
-#: lib/fixed_gear_web/live/skid_patch_live.ex:29
+#: lib/fixed_gear_web/live/skid_patch_live.ex:30
 #, elixir-autogen, elixir-format
 msgid "Play with chainring, sprocket, and tire to see development, ratio, speed, and skid patches."
 msgstr ""
@@ -780,12 +781,18 @@ msgstr ""
 msgid "rpm means revolutions per minute: how many full turns the pedals make in one minute."
 msgstr ""
 
-#: lib/fixed_gear_web/live/ranking_live.ex:110
+#: lib/fixed_gear_web/live/ranking_live.ex:111
+#: lib/fixed_gear_web/live/skid_patch_live.ex:45
 #, elixir-autogen, elixir-format
 msgid "Link copied"
 msgstr ""
 
-#: lib/fixed_gear_web/live/ranking_live.ex:112
+#: lib/fixed_gear_web/live/ranking_live.ex:113
 #, elixir-autogen, elixir-format
 msgid "Share %{name}"
+msgstr ""
+
+#: lib/fixed_gear_web/live/skid_patch_live.ex:47
+#, elixir-autogen, elixir-format
+msgid "Share this setup"
 msgstr ""

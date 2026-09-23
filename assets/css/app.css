@@ -302,6 +302,10 @@
   }
 }
 
+#skid-patch-controls .fieldset {
+  margin-bottom: 0;
+}
+
 .cadence-dock .cadence-slider {
   --cadence-thumb-size: 1.375rem;
   --cadence-track-height: 0.35rem;
