@@ -68,7 +68,7 @@ defmodule FixedGearWeb.UserLive.LoginTest do
 
       conn = submit_form(form, conn)
 
-      assert redirected_to(conn) == ~p"/ranking/weight"
+      assert redirected_to(conn) == ~p"/bikes/weight"
     end
 
     test "redirects to login page with a flash error if credentials are invalid",

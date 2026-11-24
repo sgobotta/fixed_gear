@@ -7,7 +7,7 @@ defmodule FixedGearWeb.CadenceColor do
 
   @min_rpm 0
   @max_rpm 180
-  @default_rpm 60
+  @default_rpm 80
 
   # {rpm, L, C, H} — hue in degrees
   @stops [

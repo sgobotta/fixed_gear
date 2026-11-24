@@ -1,14 +1,14 @@
 defmodule FixedGearWeb.PageControllerTest do
   use FixedGearWeb.ConnCase, async: true
 
-  test "GET / redirects to the ranking", %{conn: conn} do
+  test "GET / redirects to the bikes", %{conn: conn} do
     conn = get(conn, ~p"/")
-    assert redirected_to(conn) == ~p"/ranking/weight"
+    assert redirected_to(conn) == ~p"/bikes/weight"
   end
 
-  test "GET /ranking redirects to the weight ranking", %{conn: conn} do
-    conn = get(conn, ~p"/ranking")
-    assert redirected_to(conn) == ~p"/ranking/weight"
+  test "GET /bikes redirects to the weight list", %{conn: conn} do
+    conn = get(conn, ~p"/bikes")
+    assert redirected_to(conn) == ~p"/bikes/weight"
   end
 
   test "serves the cog favicon", %{conn: conn} do

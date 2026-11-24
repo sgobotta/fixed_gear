@@ -1,4 +1,4 @@
-defmodule FixedGearWeb.RankingLive do
+defmodule FixedGearWeb.BikesLive do
   use FixedGearWeb, :live_view
 
   alias FixedGear.Bikes
@@ -10,16 +10,16 @@ defmodule FixedGearWeb.RankingLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope} section={:ranking}>
+    <Layouts.app flash={@flash} current_scope={@current_scope} section={:bikes}>
       <section class={["space-y-6", @tab == :cadence && "pb-28"]}>
         <header
-          id="ranking-toolbar"
+          id="bikes-toolbar"
           class="sticky top-(--app-header-height) z-20 -mx-4 flex flex-col gap-4 bg-base-100/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
         >
           <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div class="space-y-2">
               <p
-                id="ranking-kicker"
+                id="bikes-kicker"
                 class="text-xs font-semibold tracking-[0.25em] text-base-content/50 uppercase"
               >
                 {page_kicker(@tab)}
@@ -33,29 +33,29 @@ defmodule FixedGearWeb.RankingLive do
             </div>
 
             <div
-              id="ranking-tabs"
+              id="bikes-tabs"
               role="tablist"
-              aria-label={gettext("Ranking")}
+              aria-label={gettext("Bikes")}
               class="flex w-fit rounded-full border border-base-300 bg-base-200 p-1"
             >
               <.link
                 id="tab-weight"
-                patch={ranking_href(:weight, @expanded_id)}
+                patch={bikes_href(:weight, @expanded_id)}
                 replace
                 role="tab"
                 aria-selected={to_string(@tab == :weight)}
-                aria-controls="ranking"
+                aria-controls="bikes"
                 class={tab_class(@tab == :weight)}
               >
                 {gettext("Weight")}
               </.link>
               <.link
                 id="tab-cadence"
-                patch={ranking_href(:cadence, @expanded_id)}
+                patch={bikes_href(:cadence, @expanded_id)}
                 replace
                 role="tab"
                 aria-selected={to_string(@tab == :cadence)}
-                aria-controls="ranking"
+                aria-controls="bikes"
                 class={tab_class(@tab == :cadence)}
               >
                 {gettext("Cadence")}
@@ -65,16 +65,16 @@ defmodule FixedGearWeb.RankingLive do
         </header>
 
         <div
-          id="ranking"
+          id="bikes"
           role="tabpanel"
           aria-labelledby={
             if(@tab == :weight, do: "tab-weight", else: "tab-cadence")
           }
-          phx-hook="RankingList"
+          phx-hook="BikesList"
           class="divide-y divide-base-300 overflow-hidden rounded-3xl border border-base-300 bg-base-100 shadow-sm"
         >
           <div
-            id="ranking-empty"
+            id="bikes-empty"
             class="hidden px-5 py-16 text-center text-sm text-base-content/55 only:block"
           >
             {gettext("No bikes weighed yet.")}
@@ -106,7 +106,7 @@ defmodule FixedGearWeb.RankingLive do
                   type="button"
                   phx-hook="ShareLink"
                   phx-update="ignore"
-                  data-url={ranking_href(@tab, bike.id)}
+                  data-url={bikes_href(@tab, bike.id)}
                   data-title={bike.name}
                   data-copied-label={gettext("Link copied")}
                   class="inline-flex rounded-full p-2 text-base-content/50 transition hover:bg-base-200 hover:text-base-content"
@@ -224,7 +224,7 @@ defmodule FixedGearWeb.RankingLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:page_title, gettext("Ranking"))
+     |> assign(:page_title, gettext("Bikes"))
      |> assign(:tab, :weight)
      |> assign(:cadence, CadenceColor.default_rpm())
      |> assign(:expanded_id, nil)
@@ -235,18 +235,15 @@ defmodule FixedGearWeb.RankingLive do
 
   @impl true
   def handle_params(params, _uri, socket) do
-    case accepted_tab(params["tab"]) do
-      nil ->
-        {:noreply, push_navigate(socket, to: ~p"/ranking/weight")}
+    # The router only matches /weight and /cadence, so the action is the tab.
+    tab = socket.assigns.live_action
 
-      tab ->
-        case expanded_id_from_params(params, socket.assigns.bikes) do
-          {:ok, expanded_id} ->
-            {:noreply, apply_ranking_params(socket, tab, expanded_id)}
+    case expanded_id_from_params(params, socket.assigns.bikes) do
+      {:ok, expanded_id} ->
+        {:noreply, apply_bikes_params(socket, tab, expanded_id)}
 
-          :error ->
-            {:noreply, push_navigate(socket, to: ranking_href(tab, nil))}
-        end
+      :error ->
+        {:noreply, push_navigate(socket, to: bikes_href(tab, nil))}
     end
   end
 
@@ -256,33 +253,33 @@ defmodule FixedGearWeb.RankingLive do
      socket
      |> assign(:cadence, CadenceColor.parse(cadence))
      |> assign_cadence_form()
-     |> maybe_assign_ranking()}
+     |> maybe_assign_ranked_bikes()}
   end
 
-  defp apply_ranking_params(socket, tab, expanded_id) do
+  defp apply_bikes_params(socket, tab, expanded_id) do
     previous_tab = socket.assigns.tab
 
     socket
     |> assign(:tab, tab)
     |> assign(:expanded_id, expanded_id)
-    |> maybe_assign_ranking_for_params(previous_tab)
+    |> maybe_assign_ranked_bikes_for_params(previous_tab)
   end
 
-  defp maybe_assign_ranking_for_params(socket, previous_tab) do
+  defp maybe_assign_ranked_bikes_for_params(socket, previous_tab) do
     if previous_tab == socket.assigns.tab and skip_zero_cadence_rerank?(socket) do
       socket
     else
-      assign_ranking(socket)
+      assign_ranked_bikes(socket)
     end
   end
 
-  defp maybe_assign_ranking(
+  defp maybe_assign_ranked_bikes(
          %{assigns: %{tab: :cadence, cadence: cadence}} = socket
        )
        when cadence < 1,
        do: socket
 
-  defp maybe_assign_ranking(socket), do: assign_ranking(socket)
+  defp maybe_assign_ranked_bikes(socket), do: assign_ranked_bikes(socket)
 
   defp assign_cadence_form(socket) do
     assign(
@@ -300,7 +297,7 @@ defmodule FixedGearWeb.RankingLive do
 
   defp skip_zero_cadence_rerank?(_socket), do: false
 
-  defp assign_ranking(socket) do
+  defp assign_ranked_bikes(socket) do
     ranked =
       socket.assigns.bikes
       |> rank_bikes(socket.assigns.tab, socket.assigns.cadence)
@@ -331,10 +328,6 @@ defmodule FixedGearWeb.RankingLive do
     )
   end
 
-  defp accepted_tab("cadence"), do: :cadence
-  defp accepted_tab("weight"), do: :weight
-  defp accepted_tab(_tab), do: nil
-
   defp expanded_id_from_params(%{"id" => id}, bikes) do
     case Ecto.UUID.cast(id) do
       {:ok, uuid} ->
@@ -349,17 +342,16 @@ defmodule FixedGearWeb.RankingLive do
 
   defp row_href(tab, expanded_id, bike_id) do
     if expanded_id == bike_id do
-      ranking_href(tab, nil)
+      bikes_href(tab, nil)
     else
-      ranking_href(tab, bike_id)
+      bikes_href(tab, bike_id)
     end
   end
 
-  defp ranking_href(tab, nil), do: ~p"/ranking/#{tab_param(tab)}"
-  defp ranking_href(tab, id), do: ~p"/ranking/#{id}/#{tab_param(tab)}"
-
-  defp tab_param(:cadence), do: "cadence"
-  defp tab_param(_tab), do: "weight"
+  defp bikes_href(:cadence, nil), do: ~p"/bikes/cadence"
+  defp bikes_href(:weight, nil), do: ~p"/bikes/weight"
+  defp bikes_href(:cadence, id), do: ~p"/bikes/#{id}/cadence"
+  defp bikes_href(:weight, id), do: ~p"/bikes/#{id}/weight"
 
   defp page_kicker(:cadence), do: gettext("Cadence")
   defp page_kicker(_tab), do: gettext("Weigh-in")

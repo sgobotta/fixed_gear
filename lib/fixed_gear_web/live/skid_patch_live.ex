@@ -71,7 +71,29 @@ defmodule FixedGearWeb.SkidPatchLive do
             rear_sprocket={@rear_sprocket}
             tire_width={@tire_width}
             cadence={@cadence}
-          />
+          >
+            <:tire>
+              <%!-- Lives in the card but submits with the dock form. --%>
+              <%!-- A boxless select that reads like the other values; the chevron marks it tappable. --%>
+              <div
+                id="tire-picker"
+                class="group relative inline-flex items-center [&_.fieldset]:mb-0 [&_.fieldset]:p-0"
+              >
+                <.input
+                  field={@form[:tire_width]}
+                  type="select"
+                  form="skid-patch-form"
+                  aria-label={gettext("Tire")}
+                  options={Bikes.tire_options()}
+                  class="cursor-pointer appearance-none rounded-md border-0 bg-transparent p-0 pr-5 font-[inherit] text-[length:inherit] text-inherit focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-base-content/50 [&_option]:bg-base-100"
+                />
+                <.icon
+                  name="hero-chevron-down-mini"
+                  class="pointer-events-none absolute right-0 size-4 text-base-content/50 transition-transform duration-150 group-hover:translate-y-px"
+                />
+              </div>
+            </:tire>
+          </.gear_readout>
         </div>
       </section>
 
@@ -91,7 +113,7 @@ defmodule FixedGearWeb.SkidPatchLive do
               aria-hidden="true"
             />
             <div class="space-y-3">
-              <div class="grid grid-cols-2 gap-x-4 gap-y-3">
+              <div class="space-y-3">
                 <.gear_slider
                   id="chain-ring-slider"
                   input_id="chain-ring"
@@ -111,13 +133,6 @@ defmodule FixedGearWeb.SkidPatchLive do
                   max={Calculations.sprocket_max()}
                 />
               </div>
-              <.input
-                field={@form[:tire_width]}
-                type="select"
-                label={gettext("Tire")}
-                options={Bikes.tire_options()}
-                class="w-full select select-sm"
-              />
               <.cadence_slider
                 cadence={@cadence}
                 name={@form[:cadence].name}

@@ -74,17 +74,19 @@ defmodule FixedGearWeb.Router do
 
     live_session :current_user,
       on_mount: [{FixedGearWeb.UserAuth, :mount_current_scope}] do
-      live "/ranking/:tab", RankingLive, :index
-      live "/ranking/:id/:tab", RankingLive, :show
+      live "/bikes/weight", BikesLive, :weight
+      live "/bikes/cadence", BikesLive, :cadence
+      live "/bikes/:id/weight", BikesLive, :weight
+      live "/bikes/:id/cadence", BikesLive, :cadence
       live "/skid-patch", SkidPatchLive, :index
       live "/users/log-in", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new
     end
 
     get "/", PageController, :home
-    get "/ranking", PageController, :ranking
-    get "/users/register", UserSessionController, :redirect_registration
+    get "/bikes", PageController, :home
     get "/bikes/:id/photo", BikePhotoController, :show
+    get "/users/register", UserSessionController, :redirect_registration
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
   end

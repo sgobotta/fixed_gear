@@ -58,7 +58,7 @@ defmodule FixedGearWeb.UserAuth do
     conn
     |> renew_session(nil)
     |> delete_resp_cookie(@remember_me_cookie, @remember_me_options)
-    |> redirect(to: ~p"/ranking/weight")
+    |> redirect(to: ~p"/bikes/weight")
   end
 
   @doc """
@@ -265,7 +265,7 @@ defmodule FixedGearWeb.UserAuth do
           :error,
           gettext("You are not allowed to access this page.")
         )
-        |> Phoenix.LiveView.redirect(to: ~p"/ranking/weight")
+        |> Phoenix.LiveView.redirect(to: ~p"/bikes/weight")
 
       {:halt, socket}
     end
@@ -308,7 +308,7 @@ defmodule FixedGearWeb.UserAuth do
     ~p"/users/settings"
   end
 
-  def signed_in_path(_), do: ~p"/ranking/weight"
+  def signed_in_path(_), do: ~p"/bikes/weight"
 
   @doc """
   Plug for routes that require the current user to be an admin.
@@ -319,7 +319,7 @@ defmodule FixedGearWeb.UserAuth do
     else
       conn
       |> put_flash(:error, gettext("You are not allowed to access this page."))
-      |> redirect(to: ~p"/ranking/weight")
+      |> redirect(to: ~p"/bikes/weight")
       |> halt()
     end
   end

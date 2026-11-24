@@ -33,7 +33,7 @@ defmodule FixedGearWeb.Layouts do
 
   attr :section, :atom,
     default: nil,
-    doc: "active bottom-nav section: :ranking, :skid_patch, or nil"
+    doc: "active bottom-nav section: :bikes, :skid_patch, or nil"
 
   slot :inner_block, required: true
 
@@ -48,7 +48,7 @@ defmodule FixedGearWeb.Layouts do
       class="sticky top-0 z-40 border-b border-base-300/80 bg-base-100/95 px-4 backdrop-blur sm:px-6 lg:px-8"
     >
       <div class="mx-auto flex max-w-4xl items-center justify-between gap-4 py-4">
-        <.link navigate={~p"/ranking/weight"} class="group flex items-center gap-2">
+        <.link navigate={~p"/bikes/weight"} class="group flex items-center gap-2">
           <span class="text-sm font-semibold tracking-[0.2em] uppercase">
             Fixed Gear
           </span>
@@ -104,15 +104,15 @@ defmodule FixedGearWeb.Layouts do
             </div>
           </div>
           <.link
-            id="nav-ranking"
-            navigate={~p"/ranking/weight"}
-            aria-current={@section == :ranking && "page"}
-            class={nav_tab_class(@section == :ranking)}
+            id="nav-bikes"
+            navigate={~p"/bikes/weight"}
+            aria-current={@section == :bikes && "page"}
+            class={nav_tab_class(@section == :bikes)}
           >
             <span class="nav-tab-icon inline-flex">
-              <.icon name="hero-bars-3" class="size-5" />
+              <.icon name="fg-bike" class="size-5" />
             </span>
-            {gettext("Ranking")}
+            {gettext("Bikes")}
           </.link>
           <.link
             id="nav-skid-patch"
@@ -121,7 +121,7 @@ defmodule FixedGearWeb.Layouts do
             class={nav_tab_class(@section == :skid_patch)}
           >
             <span class="nav-tab-icon inline-flex">
-              <.nav_wheel_icon />
+              <.icon name="fg-wheel" class="size-5" />
             </span>
             {gettext("Skid Patch")}
           </.link>
@@ -140,22 +140,6 @@ defmodule FixedGearWeb.Layouts do
   defp nav_tab_class(false),
     do:
       "nav-tab relative z-[1] mx-2 flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-2.5 text-xs text-base-content/45 transition-colors duration-200 hover:text-base-content"
-
-  defp nav_wheel_icon(assigns) do
-    ~H"""
-    <svg
-      viewBox="0 0 24 24"
-      class="size-5"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.8"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="8.2" />
-      <circle cx="12" cy="12" r="2.2" />
-    </svg>
-    """
-  end
 
   @doc """
   Shows the flash group with standard titles and content.

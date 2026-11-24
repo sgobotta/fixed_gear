@@ -32,9 +32,14 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
              ~s(#rear-sprocket[type="range"][min="9"][max="23"])
            )
 
-    assert has_element?(view, "#cadence-value", "60 rpm")
+    assert has_element?(view, "#cadence-value", "80 rpm")
     assert has_element?(view, ~s(#cadence[min="0"][max="180"]))
     assert has_element?(view, "#ratio-motion-playground")
+
+    assert has_element?(
+             view,
+             ~s(#skid-patch-readout select[form="skid-patch-form"])
+           )
 
     development =
       Calculations.format_development(Calculations.development_m(48, 16, 28))
@@ -67,8 +72,8 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
     assert has_element?(view, "#nav-skid-patch[aria-current=page]")
     assert has_element?(view, "#app-bottom-nav-pill")
     assert has_element?(view, ~s(#app-bottom-nav-stage[phx-update="ignore"]))
-    assert has_element?(view, "#nav-ranking")
-    refute has_element?(view, "#nav-ranking[aria-current=page]")
+    assert has_element?(view, "#nav-bikes")
+    refute has_element?(view, "#nav-bikes[aria-current=page]")
 
     assert has_element?(
              view,
@@ -276,7 +281,7 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
     {:ok, view, _html} = live(conn, ~p"/skid-patch")
 
     assert has_element?(view, "#chain-ring-value", Bikes.tooth_label(48))
-    assert has_element?(view, "#cadence-value", "60 rpm")
+    assert has_element?(view, "#cadence-value", "80 rpm")
     assert has_element?(view, ~s(#share-skid-patch[data-url="/skid-patch"]))
   end
 
