@@ -72,13 +72,12 @@ defmodule FixedGearWeb.Router do
   scope "/", FixedGearWeb do
     pipe_through [:browser]
 
-    # Before the live routes so /bikes/:id/:tab does not swallow photo URLs.
-    get "/bikes/:id/photo", BikePhotoController, :show
-
     live_session :current_user,
       on_mount: [{FixedGearWeb.UserAuth, :mount_current_scope}] do
-      live "/bikes/:tab", BikesLive, :index
-      live "/bikes/:id/:tab", BikesLive, :show
+      live "/bikes/weight", BikesLive, :weight
+      live "/bikes/cadence", BikesLive, :cadence
+      live "/bikes/:id/weight", BikesLive, :weight
+      live "/bikes/:id/cadence", BikesLive, :cadence
       live "/skid-patch", SkidPatchLive, :index
       live "/users/log-in", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new
@@ -86,6 +85,7 @@ defmodule FixedGearWeb.Router do
 
     get "/", PageController, :home
     get "/bikes", PageController, :home
+    get "/bikes/:id/photo", BikePhotoController, :show
     get "/users/register", UserSessionController, :redirect_registration
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete

@@ -1,6 +1,6 @@
 defmodule FixedGear.Bikes.Calculations do
   @moduledoc """
-  Pure gear math for ranking display.
+  Pure gear math for the bikes page.
 
   Ratio is chainring / sprocket. Tire size is used for speed at a
   given cadence, assuming 700c (ISO BSD 622mm).

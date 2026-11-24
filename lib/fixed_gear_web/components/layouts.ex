@@ -110,7 +110,7 @@ defmodule FixedGearWeb.Layouts do
             class={nav_tab_class(@section == :bikes)}
           >
             <span class="nav-tab-icon inline-flex">
-              <.nav_bike_icon />
+              <.icon name="fg-bike" class="size-5" />
             </span>
             {gettext("Bikes")}
           </.link>
@@ -121,7 +121,7 @@ defmodule FixedGearWeb.Layouts do
             class={nav_tab_class(@section == :skid_patch)}
           >
             <span class="nav-tab-icon inline-flex">
-              <.nav_wheel_icon />
+              <.icon name="fg-wheel" class="size-5" />
             </span>
             {gettext("Skid Patch")}
           </.link>
@@ -140,41 +140,6 @@ defmodule FixedGearWeb.Layouts do
   defp nav_tab_class(false),
     do:
       "nav-tab relative z-[1] mx-2 flex flex-1 flex-col items-center gap-0.5 rounded-2xl py-2.5 text-xs text-base-content/45 transition-colors duration-200 hover:text-base-content"
-
-  defp nav_bike_icon(assigns) do
-    ~H"""
-    <svg
-      viewBox="0 0 24 24"
-      class="size-5"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.8"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="5.5" cy="15.5" r="4" />
-      <circle cx="18.5" cy="15.5" r="4" />
-      <path d="M5.5 15.5 9 8h7l2.5 7.5M9 8l3.5 7.5L16 8M8 6h3M16 8l-.8-2.5H17" />
-    </svg>
-    """
-  end
-
-  defp nav_wheel_icon(assigns) do
-    ~H"""
-    <svg
-      viewBox="0 0 24 24"
-      class="size-5"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="1.8"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="8.2" />
-      <circle cx="12" cy="12" r="2.2" />
-    </svg>
-    """
-  end
 
   @doc """
   Shows the flash group with standard titles and content.

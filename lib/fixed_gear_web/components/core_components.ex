@@ -480,7 +480,7 @@ defmodule FixedGearWeb.CoreComponents do
   end
 
   @doc """
-  Renders a [Heroicon](https://heroicons.com).
+  Renders a [Heroicon](https://heroicons.com) or one of our own icons.
 
   Heroicons come in three styles – outline, solid, and mini.
   By default, the outline style is used, but solid and mini may
@@ -492,15 +492,22 @@ defmodule FixedGearWeb.CoreComponents do
   Icons are extracted from the `deps/heroicons` directory and bundled within
   your compiled app.css by the plugin in `assets/vendor/heroicons.js`.
 
+  Our own icons use the `fg-` prefix: add an SVG to `assets/icons/` and
+  `assets/icons/plugin.js` turns it into an `fg-<file name>` class.
+
   ## Examples
 
       <.icon name="hero-x-mark" />
       <.icon name="hero-arrow-path" class="ml-1 size-3 motion-safe:animate-spin" />
+      <.icon name="fg-bike" class="size-5" />
   """
   attr :name, :string, required: true
   attr :class, :any, default: "size-4"
 
-  def icon(%{name: "hero-" <> _rest} = assigns) do
+  def icon(%{name: "hero-" <> _rest} = assigns), do: mask_icon(assigns)
+  def icon(%{name: "fg-" <> _rest} = assigns), do: mask_icon(assigns)
+
+  defp mask_icon(assigns) do
     ~H"""
     <span class={[@name, @class]} />
     """

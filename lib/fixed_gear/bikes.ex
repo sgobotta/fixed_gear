@@ -1,6 +1,6 @@
 defmodule FixedGear.Bikes do
   @moduledoc """
-  Weigh-in bikes and ranking queries.
+  Weigh-in bikes and their queries.
   """
 
   use Gettext, backend: FixedGearWeb.Gettext

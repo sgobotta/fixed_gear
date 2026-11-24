@@ -1,4 +1,4 @@
-defmodule FixedGearWeb.RankingComponents do
+defmodule FixedGearWeb.BikesComponents do
   @moduledoc false
 
   use Phoenix.Component

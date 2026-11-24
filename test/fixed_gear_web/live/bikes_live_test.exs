@@ -5,7 +5,7 @@ defmodule FixedGearWeb.BikesLiveTest do
   import FixedGear.AccountsFixtures
   import FixedGear.BikesFixtures
 
-  test "renders empty ranking without a cadence slider", %{conn: conn} do
+  test "renders an empty bike list without a cadence slider", %{conn: conn} do
     {:ok, view, _html} = live(conn, ~p"/bikes/weight")
 
     assert has_element?(view, "#bikes")
@@ -14,6 +14,7 @@ defmodule FixedGearWeb.BikesLiveTest do
     assert has_element?(view, "#tab-weight")
     assert has_element?(view, ~s(#tab-weight[role="tab"][aria-selected="true"]))
     assert has_element?(view, "#nav-bikes[aria-current=page]")
+    assert has_element?(view, "#nav-bikes .fg-bike")
     assert has_element?(view, "#app-bottom-nav-pill")
     assert has_element?(view, ~s(#app-bottom-nav-stage[phx-update="ignore"]))
     assert has_element?(view, "#nav-skid-patch")
@@ -34,7 +35,12 @@ defmodule FixedGearWeb.BikesLiveTest do
     assert redirected_to(conn) == ~p"/bikes/weight"
   end
 
-  test "sends a numeric ranking url to the weight list", %{conn: conn} do
+  test "unknown tabs are not routed", %{conn: conn} do
+    assert get(conn, "/bikes/nope").status == 404
+    assert get(conn, "/bikes/#{Ecto.UUID.generate()}/nope").status == 404
+  end
+
+  test "sends a non-uuid bike url to the weight list", %{conn: conn} do
     assert {:error, {:live_redirect, %{to: to}}} =
              result = live(conn, ~p"/bikes/1/weight")
 
@@ -235,7 +241,7 @@ defmodule FixedGearWeb.BikesLiveTest do
     assert has_element?(view, ~s(#ratio-motion-#{fast.id}[data-cadence="100"]))
   end
 
-  test "keeps cadence ranking order at 0 rpm", %{conn: conn} do
+  test "keeps the cadence order at 0 rpm", %{conn: conn} do
     slow =
       bike_fixture(%{
         name: "Low gear",
