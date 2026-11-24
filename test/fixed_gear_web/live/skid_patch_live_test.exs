@@ -67,8 +67,8 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
     assert has_element?(view, "#nav-skid-patch[aria-current=page]")
     assert has_element?(view, "#app-bottom-nav-pill")
     assert has_element?(view, ~s(#app-bottom-nav-stage[phx-update="ignore"]))
-    assert has_element?(view, "#nav-ranking")
-    refute has_element?(view, "#nav-ranking[aria-current=page]")
+    assert has_element?(view, "#nav-bikes")
+    refute has_element?(view, "#nav-bikes[aria-current=page]")
 
     assert has_element?(
              view,

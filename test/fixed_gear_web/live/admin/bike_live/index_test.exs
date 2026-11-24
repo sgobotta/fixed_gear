@@ -40,7 +40,7 @@ defmodule FixedGearWeb.Admin.BikeLive.IndexTest do
   end
 
   test "redirects signed-in users who are not admins", %{conn: conn} do
-    assert {:error, {:redirect, %{to: "/ranking/weight"}}} =
+    assert {:error, {:redirect, %{to: "/bikes/weight"}}} =
              conn
              |> log_in_user(user_fixture())
              |> live(~p"/admin/bikes")

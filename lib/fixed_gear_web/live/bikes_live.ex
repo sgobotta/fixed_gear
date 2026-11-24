@@ -1,4 +1,4 @@
-defmodule FixedGearWeb.RankingLive do
+defmodule FixedGearWeb.BikesLive do
   use FixedGearWeb, :live_view
 
   alias FixedGear.Bikes
@@ -10,16 +10,16 @@ defmodule FixedGearWeb.RankingLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={@flash} current_scope={@current_scope} section={:ranking}>
+    <Layouts.app flash={@flash} current_scope={@current_scope} section={:bikes}>
       <section class={["space-y-6", @tab == :cadence && "pb-28"]}>
         <header
-          id="ranking-toolbar"
+          id="bikes-toolbar"
           class="sticky top-(--app-header-height) z-20 -mx-4 flex flex-col gap-4 bg-base-100/95 px-4 py-4 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8"
         >
           <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div class="space-y-2">
               <p
-                id="ranking-kicker"
+                id="bikes-kicker"
                 class="text-xs font-semibold tracking-[0.25em] text-base-content/50 uppercase"
               >
                 {page_kicker(@tab)}
@@ -33,9 +33,9 @@ defmodule FixedGearWeb.RankingLive do
             </div>
 
             <div
-              id="ranking-tabs"
+              id="bikes-tabs"
               role="tablist"
-              aria-label={gettext("Ranking")}
+              aria-label={gettext("Bikes")}
               class="flex w-fit rounded-full border border-base-300 bg-base-200 p-1"
             >
               <.link
@@ -44,7 +44,7 @@ defmodule FixedGearWeb.RankingLive do
                 replace
                 role="tab"
                 aria-selected={to_string(@tab == :weight)}
-                aria-controls="ranking"
+                aria-controls="bikes"
                 class={tab_class(@tab == :weight)}
               >
                 {gettext("Weight")}
@@ -55,7 +55,7 @@ defmodule FixedGearWeb.RankingLive do
                 replace
                 role="tab"
                 aria-selected={to_string(@tab == :cadence)}
-                aria-controls="ranking"
+                aria-controls="bikes"
                 class={tab_class(@tab == :cadence)}
               >
                 {gettext("Cadence")}
@@ -65,16 +65,16 @@ defmodule FixedGearWeb.RankingLive do
         </header>
 
         <div
-          id="ranking"
+          id="bikes"
           role="tabpanel"
           aria-labelledby={
             if(@tab == :weight, do: "tab-weight", else: "tab-cadence")
           }
-          phx-hook="RankingList"
+          phx-hook="BikesList"
           class="divide-y divide-base-300 overflow-hidden rounded-3xl border border-base-300 bg-base-100 shadow-sm"
         >
           <div
-            id="ranking-empty"
+            id="bikes-empty"
             class="hidden px-5 py-16 text-center text-sm text-base-content/55 only:block"
           >
             {gettext("No bikes weighed yet.")}
@@ -224,7 +224,7 @@ defmodule FixedGearWeb.RankingLive do
   def mount(_params, _session, socket) do
     {:ok,
      socket
-     |> assign(:page_title, gettext("Ranking"))
+     |> assign(:page_title, gettext("Bikes"))
      |> assign(:tab, :weight)
      |> assign(:cadence, CadenceColor.default_rpm())
      |> assign(:expanded_id, nil)
@@ -237,7 +237,7 @@ defmodule FixedGearWeb.RankingLive do
   def handle_params(params, _uri, socket) do
     case accepted_tab(params["tab"]) do
       nil ->
-        {:noreply, push_navigate(socket, to: ~p"/ranking/weight")}
+        {:noreply, push_navigate(socket, to: ~p"/bikes/weight")}
 
       tab ->
         case expanded_id_from_params(params, socket.assigns.bikes) do
@@ -355,8 +355,8 @@ defmodule FixedGearWeb.RankingLive do
     end
   end
 
-  defp ranking_href(tab, nil), do: ~p"/ranking/#{tab_param(tab)}"
-  defp ranking_href(tab, id), do: ~p"/ranking/#{id}/#{tab_param(tab)}"
+  defp ranking_href(tab, nil), do: ~p"/bikes/#{tab_param(tab)}"
+  defp ranking_href(tab, id), do: ~p"/bikes/#{id}/#{tab_param(tab)}"
 
   defp tab_param(:cadence), do: "cadence"
   defp tab_param(_tab), do: "weight"

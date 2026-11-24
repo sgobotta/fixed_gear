@@ -25,7 +25,7 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/fixed_gear"
 import topbar from "../vendor/topbar"
 
-const RankingList = {
+const BikesList = {
   mounted() {
     this.positions = {}
     this.expandedIds = []
@@ -99,7 +99,7 @@ const RankingList = {
     const hook = this
 
     window.setTimeout(function () {
-      const toolbar = document.getElementById("ranking-toolbar")
+      const toolbar = document.getElementById("bikes-toolbar")
       const topPad = toolbar ? toolbar.getBoundingClientRect().bottom : 0
       const ids = hook.expandedIds
 
@@ -122,7 +122,7 @@ const RankingList = {
         return
       }
 
-      target.classList.add("ranking-followed")
+      target.classList.add("bikes-followed")
       const r = target.getBoundingClientRect()
       const hidden = r.bottom < topPad + 8 || r.top > window.innerHeight - 8
       if (hidden) {
@@ -132,7 +132,7 @@ const RankingList = {
         })
       }
       window.setTimeout(function () {
-        target.classList.remove("ranking-followed")
+        target.classList.remove("bikes-followed")
       }, 900)
     }, delay)
   }
@@ -1341,7 +1341,7 @@ const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {RankingList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, SliderValue, BottomNav, AppHeader, ShareLink, ...colocatedHooks},
+  hooks: {BikesList, RatioMotion, SkidWheel, CompressPhoto, CadenceSlider, SliderValue, BottomNav, AppHeader, ShareLink, ...colocatedHooks},
 })
 
 // Show progress bar on live navigation and form submits
