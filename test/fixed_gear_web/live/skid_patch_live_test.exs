@@ -36,6 +36,11 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
     assert has_element?(view, ~s(#cadence[min="0"][max="180"]))
     assert has_element?(view, "#ratio-motion-playground")
 
+    assert has_element?(
+             view,
+             ~s(#skid-patch-readout select[form="skid-patch-form"])
+           )
+
     development =
       Calculations.format_development(Calculations.development_m(48, 16, 28))
 

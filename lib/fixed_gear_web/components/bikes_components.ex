@@ -563,6 +563,8 @@ defmodule FixedGearWeb.BikesComponents do
   attr :tire_width, :integer, default: nil
   attr :cadence, :integer, required: true
 
+  slot :tire, doc: "replaces the tire label, e.g. with a picker"
+
   def gear_readout(assigns) do
     ratio = Calculations.gear_ratio(assigns.chain_ring, assigns.rear_sprocket)
 
@@ -602,7 +604,11 @@ defmodule FixedGearWeb.BikesComponents do
           {Bikes.tooth_label(@chain_ring)} / {Bikes.tooth_label(@rear_sprocket)}
         </.stat>
         <.stat :if={@tire_width} label={gettext("Tire")}>
-          {Calculations.tire_label(@tire_width)}
+          <%= if @tire != [] do %>
+            {render_slot(@tire)}
+          <% else %>
+            {Calculations.tire_label(@tire_width)}
+          <% end %>
         </.stat>
         <.stat
           :if={@speed}
