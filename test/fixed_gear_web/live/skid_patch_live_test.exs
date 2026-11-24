@@ -32,7 +32,7 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
              ~s(#rear-sprocket[type="range"][min="9"][max="23"])
            )
 
-    assert has_element?(view, "#cadence-value", "60 rpm")
+    assert has_element?(view, "#cadence-value", "80 rpm")
     assert has_element?(view, ~s(#cadence[min="0"][max="180"]))
     assert has_element?(view, "#ratio-motion-playground")
 
@@ -276,7 +276,7 @@ defmodule FixedGearWeb.SkidPatchLiveTest do
     {:ok, view, _html} = live(conn, ~p"/skid-patch")
 
     assert has_element?(view, "#chain-ring-value", Bikes.tooth_label(48))
-    assert has_element?(view, "#cadence-value", "60 rpm")
+    assert has_element?(view, "#cadence-value", "80 rpm")
     assert has_element?(view, ~s(#share-skid-patch[data-url="/skid-patch"]))
   end
 
